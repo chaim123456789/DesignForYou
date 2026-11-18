@@ -27,19 +27,19 @@ Add the overall inspiration set, optional room overrides, and a function that re
 - **Verify:** Tests pass for: a room without an override gets the overall set; a room with an override gets its own set; one room's override does not change another room; clearing an override returns the room to the overall set.
 
 ### Task 4. Items with status and owner
-Add items with kind, room, value, status (default Unsure) and exactly one owner. Reject unknown statuses, missing owners and two owners.
+Add items with kind, room, value, status (default Unsure) and exactly one owner. Reject unknown statuses, missing owners, two owners, and an owner that does not match the kind.
 - **Req:** R3.1 to R3.4, R4.1 to R4.3, R4.5
 - **Verify:** Tests pass for: a new item defaults to Unsure; status "Maybe" is rejected; no owner is rejected; two owners is rejected; each item kind maps to its owner (style to Style, layout to Layout, door and window to Builder, clash to Reviewer).
 
 ### Task 5. Version history
-Add an append-only version list. Each entry has number, time, who, item, old value and new value. Numbers start at 1 and rise by 1. No edit or delete function exists.
+Add an append-only version list. Each entry has number, time, who, item, field (`value` or `status`), old value and new value. Numbers start at 1 and rise by 1. No edit or delete function exists.
 - **Req:** R8.1 to R8.3
-- **Verify:** Tests pass for: first change is version 1, next is 2; each entry has all six fields; there is no exported way to edit or remove an entry.
+- **Verify:** Tests pass for: first change is version 1, next is 2; each entry has all seven fields; there is no exported way to edit or remove an entry.
 
 ### Task 6. Gatekeeper
-Build `gatekeeper.changeItem(who, itemId, newValue)`. Order of checks: Locked is refused first (even for the owner), then a non-owner is refused, then the change is accepted and a version is written. Refusals go to the run log and write no version. Users may change status only (Locked to Unsure and back), and each status change writes a version.
+Build `createGatekeeper(project)`, which returns two functions: `changeItem(who, itemId, newValue)` and `changeStatus(who, itemId, newStatus)`. Order of checks in `changeItem`: Locked is refused first (even for the owner), then a non-owner is refused, then the change is accepted and a version is written. Refusals go to the run log and write no version. `changeStatus` is for the user only (Locked to Unsure and back); anyone else is refused. Each accepted status change writes a version. Each version has one extra field, `field` (`value` or `status`), so status changes can be replayed. Owners are strict by kind: style is owned by Style, layout by Layout, door and window by Builder, clash by Reviewer, and an item with any other owner is rejected.
 - **Req:** R3.5, R4.4, R5.1 to R5.4, R8.4
-- **Verify:** Tests pass for: owner changes an Unsure item and a version appears; the owner is refused on a Locked item and the value is identical before and after; a non-owner is refused on an Unsure item; each refusal appears in the run log with agent, item and reason; refusals create no version; a user unlocking an item makes it changeable and writes a version.
+- **Verify:** Tests pass for: owner changes an Unsure item and a version appears; the owner is refused on a Locked item and the value is identical before and after; a non-owner is refused on an Unsure item; each refusal appears in the run log with agent, item and reason; refusals create no version; a user unlocking an item (via `changeStatus`) makes it changeable and writes a version; an agent calling `changeStatus` is refused.
 
 ### Task 7. View the Brain at a past version
 Add a read-only function that returns the Brain as it was at version N.
