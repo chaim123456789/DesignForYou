@@ -82,9 +82,9 @@ Implement the Reviewer. It reads only, and checks two clash types: door or windo
 - **Verify:** Tests pass for: the sample report has at least 2 clashes, one of each type, each with all fields; a clean project gives "No clashes found"; the Reviewer changes no item owned by another agent; the report appears in version history; the label and statement are present.
 
 ### Task 15. Full sample run
-Wire the sample through the real Coordinator and the four real agents. No sample-only shortcut.
+Wire the sample through the real Coordinator and the four real agents. No sample-only shortcut. The run must use the sample Style agent (`sampleStyleAgent`), so the refusal of the Locked-item proposal shows in the run log.
 - **Req:** R5.5, R6, R7.4, R7.6, R7.7
-- **Verify:** Tests pass for: the run log order is correct; every item Locked at the start has the same value and is still Locked at the end; running twice from the same start gives identical Brain, versions and report; a search of the code finds no branch that skips the Coordinator for the sample.
+- **Verify:** Tests pass for: the run log order is correct; the run log contains a Style "refused" line for the Locked item; every item Locked at the start has the same value and is still Locked at the end; running twice from the same start gives identical Brain, versions and report; a search of the code finds no branch that skips the Coordinator for the sample.
 
 ### Task 16. Summary page
 Write `make-summary.js` to produce one HTML file with structure, items with status and owner, run log, clash report, version list, the "SAMPLE PROJECT" label and the draft statement, all in plain words.
