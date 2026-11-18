@@ -1,5 +1,5 @@
-// The Project Brain: project structure (floors and rooms).
-// Items, versions and the gatekeeper are added in later tasks.
+// The Project Brain: project structure (floors and rooms), items, versions.
+// Changes to items after they are created go through gatekeeper.js.
 
 function requireName(value, what) {
   if (typeof value !== 'string' || value.trim() === '') {
@@ -39,7 +39,16 @@ export function createProject(data) {
     throw new Error(`Project "${name}" needs at least one floor.`);
   }
   // inspiration is the overall set for the whole project (see inspiration.js).
-  return { name, inspiration: [], floors: data.floors.map(buildFloor) };
+  // items, itemStarts, versions and runLog are the rest of the Brain (see below).
+  return {
+    name,
+    inspiration: [],
+    floors: data.floors.map(buildFloor),
+    items: [],
+    itemStarts: {},
+    versions: [],
+    runLog: [],
+  };
 }
 
 // Add a floor (with at least one room) to an existing project.
@@ -75,4 +84,146 @@ export function findRoom(project, roomId) {
     if (room) return room;
   }
   return undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Items: kind, room, value, status and exactly one owner.
+// ---------------------------------------------------------------------------
+
+export const STATUSES = Object.freeze(['Locked', 'Unsure']);
+export const OWNERS = Object.freeze(['Style', 'Layout', 'Builder', 'Reviewer']);
+
+// Which agent owns which kind of item (R4.5).
+export const KIND_OWNER = Object.freeze({
+  style: 'Style',
+  layout: 'Layout',
+  door: 'Builder',
+  window: 'Builder',
+  clash: 'Reviewer',
+});
+
+export function ownerForKind(kind) {
+  const owner = KIND_OWNER[kind];
+  if (!owner) {
+    throw new Error(`Unknown kind "${kind}". Kinds are: ${Object.keys(KIND_OWNER).join(', ')}.`);
+  }
+  return owner;
+}
+
+function requireProject(project, what) {
+  if (!project || !Array.isArray(project.items) || !Array.isArray(project.versions)) {
+    throw new Error(`${what} needs a project. No project was given.`);
+  }
+}
+
+// Create an item. data: { kind, value, owner, status?, room? }.
+// Status defaults to Unsure. The owner must be given, must be exactly one
+// agent, and must be the agent that owns this kind of item.
+export function createItem(project, data) {
+  requireProject(project, 'An item');
+  const d = data || {};
+  const expectedOwner = ownerForKind(d.kind);
+
+  if (d.owner === undefined || d.owner === null || d.owner === '') {
+    throw new Error('An item needs an owner. No owner was given.');
+  }
+  if (Array.isArray(d.owner)) {
+    throw new Error('An item needs exactly one owner. More than one owner was given.');
+  }
+  if (!OWNERS.includes(d.owner)) {
+    throw new Error(`Owner "${d.owner}" is not an agent. Owners are: ${OWNERS.join(', ')}.`);
+  }
+  if (d.owner !== expectedOwner) {
+    throw new Error(`A ${d.kind} item is owned by ${expectedOwner}, not ${d.owner}.`);
+  }
+
+  const status = d.status === undefined ? 'Unsure' : d.status;
+  if (!STATUSES.includes(status)) {
+    throw new Error(`Status "${status}" is not allowed. Use Locked or Unsure.`);
+  }
+  if (d.value === undefined) {
+    throw new Error('An item needs a value.');
+  }
+  if (d.room !== undefined && !findRoom(project, d.room)) {
+    throw new Error(`Room "${d.room}" does not exist.`);
+  }
+
+  const item = {
+    id: `item-${project.items.length + 1}`,
+    kind: d.kind,
+    value: structuredClone(d.value),
+    status,
+    owner: d.owner,
+  };
+  if (d.room !== undefined) item.room = d.room;
+
+  project.items.push(item);
+  // Remember the starting state so past versions can be replayed (Task 7).
+  project.itemStarts[item.id] = {
+    value: structuredClone(item.value),
+    status,
+    createdAtVersion: project.versions.length,
+  };
+  return item;
+}
+
+export function getItem(project, itemId) {
+  requireProject(project, 'Reading an item');
+  return project.items.find((i) => i.id === itemId);
+}
+
+// ---------------------------------------------------------------------------
+// Version history: append-only. There is no function to edit or remove an entry.
+// ---------------------------------------------------------------------------
+
+// Add the next version. Only the gatekeeper should call this.
+// entry: { who, itemId, field ('value' or 'status'), oldValue, newValue, time? }
+export function appendVersion(project, entry) {
+  requireProject(project, 'A version');
+  const version = Object.freeze({
+    number: project.versions.length + 1,
+    time: entry.time || new Date().toISOString(),
+    who: entry.who,
+    item: entry.itemId,
+    field: entry.field || 'value',
+    oldValue: structuredClone(entry.oldValue),
+    newValue: structuredClone(entry.newValue),
+  });
+  project.versions.push(version);
+  return version;
+}
+
+// All versions in order. Returns copies, so the history cannot be changed through them.
+export function listVersions(project) {
+  requireProject(project, 'Listing versions');
+  return project.versions.map((v) => Object.freeze(structuredClone(v)));
+}
+
+// ---------------------------------------------------------------------------
+// Viewing the Brain as it was at a past version (read only).
+// ---------------------------------------------------------------------------
+
+// Replays versions 1 to N over each item's starting state. Works on copies,
+// so the current Brain and its history are not touched.
+// Returns { name, version, items }. Version 0 is the state before any change.
+export function getBrainAtVersion(project, number) {
+  requireProject(project, 'Viewing a past version');
+  if (!Number.isInteger(number) || number < 0 || number > project.versions.length) {
+    throw new Error(`Version ${number} does not exist. Versions go from 0 to ${project.versions.length}.`);
+  }
+
+  const items = project.items
+    .filter((item) => project.itemStarts[item.id].createdAtVersion <= number)
+    .map((item) => {
+      const start = project.itemStarts[item.id];
+      const past = { ...structuredClone(item), value: structuredClone(start.value), status: start.status };
+      return past;
+    });
+  const byId = new Map(items.map((i) => [i.id, i]));
+
+  for (const v of project.versions.slice(0, number)) {
+    const item = byId.get(v.item);
+    if (item) item[v.field] = structuredClone(v.newValue);
+  }
+  return { name: project.name, version: number, items };
 }
