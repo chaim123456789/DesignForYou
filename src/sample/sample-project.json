@@ -1,0 +1,64 @@
+{
+  "name": "Sample Two-Storey Home",
+  "isSample": true,
+  "notes": "Made-up example data. Sizes are in metres. A position is a rectangle measured from the top-left corner of its room: x and y are the corner, width runs across, depth runs down. Items point to rooms by room name.",
+  "inspiration": ["warm oak", "linen", "soft white walls"],
+  "styleConflicts": [
+    ["warm oak", "cold steel"],
+    ["linen", "glossy chrome"]
+  ],
+  "floors": [
+    {
+      "name": "Ground Floor",
+      "rooms": [
+        { "name": "Kitchen" },
+        { "name": "Living Room" }
+      ]
+    },
+    {
+      "name": "Upper Floor",
+      "rooms": [
+        { "name": "Bedroom", "override": ["cold steel", "dark slate"] },
+        { "name": "Bathroom" }
+      ]
+    }
+  ],
+  "items": [
+    {
+      "kind": "style", "owner": "Style", "status": "Locked", "room": "Kitchen",
+      "value": { "tag": "warm oak", "detail": "Oak floor in the kitchen" }
+    },
+    {
+      "kind": "style", "owner": "Style", "status": "Locked", "room": "Bedroom",
+      "value": { "tag": "warm oak", "detail": "Oak bed frame stays as it is" }
+    },
+    {
+      "kind": "style", "owner": "Style", "status": "Unsure", "room": "Living Room",
+      "value": { "tag": "linen", "detail": "Linen curtains and soft white walls" }
+    },
+    {
+      "kind": "style", "owner": "Style", "status": "Unsure", "room": "Bathroom",
+      "value": { "tag": "white tile", "detail": "Plain white wall tiles" }
+    },
+    {
+      "kind": "layout", "owner": "Layout", "status": "Unsure", "room": "Living Room",
+      "value": { "name": "Sofa", "position": { "x": 1.0, "y": 3.0, "width": 2.0, "depth": 1.0 } }
+    },
+    {
+      "kind": "door", "owner": "Builder", "status": "Unsure", "room": "Living Room",
+      "value": { "name": "Garden door", "position": { "x": 1.5, "y": 3.0, "width": 0.9, "depth": 0.9 } }
+    },
+    {
+      "kind": "door", "owner": "Builder", "status": "Unsure", "room": "Bedroom",
+      "value": { "name": "Bedroom door", "position": { "x": 0.2, "y": 0.0, "width": 0.9, "depth": 0.9 } }
+    },
+    {
+      "kind": "window", "owner": "Builder", "status": "Unsure", "room": "Kitchen",
+      "value": { "name": "Kitchen window", "position": { "x": 2.0, "y": 0.0, "width": 1.2, "depth": 0.1 } }
+    },
+    {
+      "kind": "clash", "owner": "Reviewer", "status": "Unsure",
+      "value": { "summary": "Not reviewed yet", "clashes": [] }
+    }
+  ]
+}
