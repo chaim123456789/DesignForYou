@@ -38,6 +38,7 @@ test('Task 7b step 1: labels that would collide are offset, and labels that do n
 test('Task 7b step 1: the page draws the labels itself, with textContent', () => {
   const js = read('viewer.js');
   assert.match(js, /separateLabels/);
-  assert.match(js, /\.textContent = b\.label/);
+  assert.match(js, /add\(b, b\.label/);
+  assert.match(js, /element\.textContent = text/);
   assert.doesNotMatch(js, /sprite|CanvasTexture|FontLoader/i);
 });
