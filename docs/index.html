@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'">
   <title>DesignForYou: 3D room viewer (sample)</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -55,6 +55,7 @@
     <p class="label-draft">Plans are drafts for professional review. They are not verified engineering.</p>
   </footer>
 
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
   <script type="module" src="viewer.js"></script>
 </body>
 </html>

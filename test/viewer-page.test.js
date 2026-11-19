@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { SAMPLE_LABEL, DRAFT_STATEMENT } from '../src/label.js';
 
 const read = (name) => readFileSync(new URL(`../docs/${name}`, import.meta.url), 'utf8');
@@ -37,7 +38,10 @@ test('Task 4: the content security rule is present', () => {
   assert.match(m[1], /default-src 'self'/);
   assert.doesNotMatch(m[1], /unsafe-inline|unsafe-eval|https?:/);
   // No inline script: every script tag points to a file.
-  for (const tag of html.match(/<script[^>]*>/g) || []) assert.match(tag, /src="[^"]+"/);
+  // The one allowed exception is the import map (Task 5), and only if its exact text is named by hash in the rule.
+  for (const tag of (html.match(/<script[^>]*>/g) || []).filter((t) => !/type="importmap"/.test(t))) {
+    assert.match(tag, /src="[^"]+"/);
+  }
 });
 
 test('Task 4: no outside addresses, storage, form, file upload, eval or innerHTML in the page files', () => {
@@ -56,4 +60,39 @@ test('Task 4: the slider range matches the version count', () => {
   assert.match(slider[0], new RegExp(`max="${sampleRun.versions.length}"`));
   assert.match(slider[0], new RegExp(`value="${sampleRun.versions.length}"`));
   assert.match(read('viewer.js'), /slider\.max = String\(last\)/);
+});
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const vendorDir = new URL('../docs/vendor/', import.meta.url);
+
+test('Task 5: package.json has no dependencies or devDependencies, and there is no node_modules folder', () => {
+  assert.equal(pkg.dependencies, undefined);
+  assert.equal(pkg.devDependencies, undefined);
+  assert.equal(existsSync(new URL('../node_modules', import.meta.url)), false);
+});
+
+test('Task 5: docs/vendor holds exactly the approved files', () => {
+  assert.deepEqual(readdirSync(vendorDir).sort(), ['LICENSE', 'OrbitControls.js', 'VERSION.txt', 'three.core.js', 'three.module.js']);
+});
+
+test('Task 5: VERSION.txt names the version and the MIT licence file is present', () => {
+  const version = readFileSync(new URL('VERSION.txt', vendorDir), 'utf8');
+  assert.match(version, /0\.186\.1/);
+  assert.match(version, /registry\.npmjs\.org/);
+  assert.match(readFileSync(new URL('LICENSE', vendorDir), 'utf8'), /^The MIT License/);
+});
+
+test('Task 5: the import map points only to files inside docs/vendor/, and the content security rule names its hash', () => {
+  const tags = [...html.matchAll(/<script type="importmap">([^<]*)<\/script>/g)];
+  assert.equal(tags.length, 1);
+  const map = JSON.parse(tags[0][1]);
+  const targets = Object.values(map.imports);
+  assert.ok(targets.length >= 1);
+  for (const target of targets) {
+    assert.match(target, /^\.\/vendor\/[A-Za-z.]+\.js$/);
+    assert.ok(existsSync(new URL(target.slice(2), new URL('../docs/', import.meta.url))), `${target} is missing`);
+  }
+  const hash = createHash('sha256').update(tags[0][1]).digest('base64');
+  assert.ok(html.includes(`script-src 'self' 'sha256-${hash}'`), 'the content security rule must name the import map hash');
+  assert.ok(!html.includes("'unsafe-inline'"));
 });
