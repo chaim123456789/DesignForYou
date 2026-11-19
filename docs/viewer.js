@@ -4,7 +4,7 @@
 // goes in with textContent, so a strange name can never become page code.
 // This is the only file that uses Three.js. It draws what buildScene returns
 // and nothing else.
-import { buildScene, describeItem, separateLabels, floorLabels, filterByFloor } from './scene-data.js';
+import { buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera } from './scene-data.js';
 
 // The colours, in one place. They match the legend swatches in styles.css.
 const COLOURS = {
@@ -26,6 +26,7 @@ const el = (id) => document.getElementById(id);
 let sampleRun = null;
 let currentVersion = 0;
 let openItemId = null;
+let userMovedCamera = false; // true once the visitor turns or zooms; the view then stops refitting itself
 let shownFloor = 'all'; // 'all', or a floor's order number
 
 function showError(message) {
@@ -229,25 +230,17 @@ function drawFrame() {
   });
 }
 
-// Place the camera so the whole home is in view, looking at its middle.
+// Place the camera so everything shown is completely inside the drawing, at an angle
+// that shows both floors. The maths is in scene-data.js (fitCamera) so it can be tested.
 function frameHome(boxes) {
-  const { THREE, camera, controls } = view;
-  const bounds = new THREE.Box3();
-  for (const b of boxes) {
-    bounds.expandByPoint(new THREE.Vector3(b.x, b.y, b.z));
-    bounds.expandByPoint(new THREE.Vector3(b.x + b.width, b.y + b.height, b.z + b.depth));
-  }
-  const centre = bounds.getCenter(new THREE.Vector3());
-  const radius = bounds.getSize(new THREE.Vector3()).length() / 2;
-  const fitDistance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov) / 2);
-  const aspectFactor = Math.max(1, 1.4 / camera.aspect);
-  // From the front (larger z), a little to the right and above, so x runs left to right.
-  const direction = new THREE.Vector3(0.35, 0.55, 1).normalize();
-  camera.position.copy(centre).addScaledVector(direction, fitDistance * 0.85 * aspectFactor);
-  camera.near = 0.1;
-  camera.far = fitDistance * 6;
+  const { camera, controls } = view;
+  const labels = filterByFloor(floorLabels(sampleRun), shownFloor);
+  const fit = fitCamera(viewBounds(boxes, labels), { fov: camera.fov, aspect: camera.aspect });
+  camera.position.set(...fit.position);
+  camera.near = Math.max(0.1, fit.distance / 100);
+  camera.far = fit.distance * 6;
   camera.updateProjectionMatrix();
-  controls.target.copy(centre);
+  controls.target.set(...fit.target);
   controls.update();
 }
 
@@ -258,6 +251,7 @@ function resizeScene() {
   view.renderer.setSize(width, height, false);
   view.camera.aspect = width / height;
   view.camera.updateProjectionMatrix();
+  if (!userMovedCamera && view.boxes.length > 0) frameHome(view.boxes);
   drawFrame();
 }
 
@@ -295,6 +289,7 @@ function focusItem(itemId) {
   const { THREE, camera, controls } = view;
   const box = view.boxes.find((b) => b.itemId === itemId);
   if (!THREE || !camera || !box) return;
+  userMovedCamera = true;
   const centre = new THREE.Vector3(box.x + box.width / 2, box.y + box.height / 2, box.z + box.depth / 2);
   const offset = camera.position.clone().sub(controls.target);
   const distance = Math.min(offset.length(), CLOSE_UP_DISTANCE);
@@ -330,6 +325,7 @@ async function startScene() {
     area.replaceChildren(view.renderer.domElement);
     view.controls = new OrbitControls(view.camera, view.renderer.domElement);
     view.controls.addEventListener('change', drawFrame);
+    view.controls.addEventListener('start', () => { userMovedCamera = true; });
 
     // Clicks and taps. Pressing and moving is turning the view, so it does not count as a click.
     const canvas = view.renderer.domElement;
@@ -361,11 +357,21 @@ function chooseFloor(which) {
   if (!view.THREE) return;
   const boxes = drawScene(currentVersion);
   if (openItemId !== null && !boxes.some((b) => b.itemId === openItemId)) closePanel();
+  userMovedCamera = false;
   frameHome(boxes);
   drawFrame();
 }
 
+// "Reset view": back to the starting camera for what is shown now.
+function resetView() {
+  if (!view.THREE) return;
+  userMovedCamera = false;
+  frameHome(view.boxes);
+  drawFrame();
+}
+
 function setUpFloorButtons() {
+  el('reset-view').addEventListener('click', resetView);
   for (const button of document.querySelectorAll('.floor-button')) {
     const which = button.dataset.floor === 'all' ? 'all' : Number(button.dataset.floor);
     button.addEventListener('click', () => chooseFloor(which));

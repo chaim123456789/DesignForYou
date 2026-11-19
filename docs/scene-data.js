@@ -139,6 +139,64 @@ export function filterByFloor(list, which) {
   return list.filter((b) => b.floorOrder === which || b.order === which);
 }
 
+// The box in space (metres) that the camera must keep completely in view: every box,
+// every floor label, plus a little room for the text of labels that sit above blocks.
+export function viewBounds(boxes, labels = []) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  const grow = (x, y, z) => {
+    [x, y, z].forEach((v, i) => { min[i] = Math.min(min[i], v); max[i] = Math.max(max[i], v); });
+  };
+  for (const b of boxes) {
+    grow(b.x, b.y, b.z);
+    grow(b.x + b.width, b.y + b.height, b.z + b.depth);
+  }
+  for (const l of labels) grow(l.x - 0.6, l.y, l.z);
+  max[1] += 0.5;
+  return { min, max };
+}
+
+// The starting camera: from the front, a little to the right and above, far enough back
+// that all eight corners of the bounds land inside the picture (margin 0.9 means within
+// 90% of the way from the middle to the edge). Pure maths, no Three.js.
+export const START_DIRECTION = [0.3, 0.38, 1];
+
+export function fitCamera(bounds, { fov = 45, aspect = 1.6, direction = START_DIRECTION, margin = 0.9 } = {}) {
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const unit = (a) => { const n = Math.hypot(...a); return a.map((v) => v / n); };
+  const centre = bounds.min.map((v, i) => (v + bounds.max[i]) / 2);
+  const dir = unit(direction);
+  const forward = dir.map((v) => -v);
+  const right = unit(cross(forward, [0, 1, 0]));
+  const up = cross(right, forward);
+  const tanHalf = Math.tan((fov * Math.PI) / 360);
+  const corners = [];
+  for (const x of [bounds.min[0], bounds.max[0]]) {
+    for (const y of [bounds.min[1], bounds.max[1]]) {
+      for (const z of [bounds.min[2], bounds.max[2]]) corners.push([x, y, z]);
+    }
+  }
+  const positionAt = (d) => centre.map((v, i) => v + dir[i] * d);
+  const fits = (d) => {
+    const pos = positionAt(d);
+    return corners.every((c) => {
+      const rel = c.map((v, i) => v - pos[i]);
+      const depth = dot(rel, forward);
+      if (depth <= 0.1) return false;
+      return Math.abs(dot(rel, right)) / (depth * tanHalf * aspect) <= margin
+        && Math.abs(dot(rel, up)) / (depth * tanHalf) <= margin;
+    });
+  };
+  let lo = 0;
+  let hi = 1000;
+  for (let i = 0; i < 60; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (fits(mid)) hi = mid; else lo = mid;
+  }
+  return { position: positionAt(hi), target: centre, distance: hi };
+}
+
 // The list of boxes to draw for one version.
 export function buildScene(sampleRun, version) {
   const snap = snapshotAt(sampleRun, version);

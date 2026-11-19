@@ -45,8 +45,8 @@ body {
 #scene-area {
   position: relative;
   overflow: hidden;
-  height: 55vh;
-  min-height: 300px;
+  height: 70vh;
+  min-height: 320px;
   background: #e4e7ea;
   border: 1px solid #b8bec4;
   display: flex;
@@ -85,7 +85,6 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.6rem; }
 @media (min-width: 800px) {
   #page { grid-template-columns: 2fr 1fr; }
   #page h1, #how-to-use, #error-message, #scene-area { grid-column: 1; }
-  #scene-area { min-height: 60vh; }
   #legend, #history, #clash-section, #details-panel { grid-column: 2; }
   #scene-area { grid-row: 3 / span 4; }
 }
@@ -117,5 +116,6 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.6rem; }
   border-radius: 4px;
   cursor: pointer;
 }
+#reset-view { margin-left: auto; }
 #view-controls button[aria-pressed="true"] { background: #44505a; color: #fff; }
 .floor-label { font-size: 1rem; background: #44505a; color: #fff; border-color: #44505a; }

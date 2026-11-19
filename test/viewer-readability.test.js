@@ -163,3 +163,59 @@ test('Task 7b step 5: the floor filter hides the right items', () => {
   assert.equal(filterByFloor(boxes, 1).length + filterByFloor(boxes, 2).length, boxes.length, 'every box is on exactly one floor');
   assert.deepEqual(filterByFloor(floorLabels(run), 2).map((l) => l.text), ['Upper floor']);
 });
+
+import { fitCamera, viewBounds, START_DIRECTION } from '../docs/scene-data.js';
+
+// Where a point lands on the screen for a camera at `position` looking at `target`: -1 to 1 each way.
+function project(point, { position, target }, fov, aspect) {
+  const sub = (a, b) => a.map((v, i) => v - b[i]);
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const unit = (a) => a.map((v) => v / Math.hypot(...a));
+  const forward = unit(sub(target, position));
+  const right = unit(cross(forward, [0, 1, 0]));
+  const up = cross(right, forward);
+  const rel = sub(point, position);
+  const depth = dot(rel, forward);
+  const t = Math.tan((fov * Math.PI) / 360);
+  return { x: dot(rel, right) / (depth * t * aspect), y: dot(rel, up) / (depth * t), depth };
+}
+
+test('Task 7b step 6: the starting camera keeps both floors completely inside the picture, on wide and narrow screens', () => {
+  const labels = floorLabels(run);
+  for (const aspect of [0.55, 1, 1.6, 2.2]) {
+    for (const [name, shown] of [['both floors', boxes], ['ground floor', filterByFloor(boxes, 1)], ['upper floor', filterByFloor(boxes, 2)]]) {
+      const bounds = viewBounds(shown, name === 'both floors' ? labels : filterByFloor(labels, name === 'ground floor' ? 1 : 2));
+      const cam = fitCamera(bounds, { fov: 45, aspect });
+      for (const b of shown) {
+        for (const x of [b.x, b.x + b.width]) for (const y of [b.y, b.y + b.height]) for (const z of [b.z, b.z + b.depth]) {
+          const p = project([x, y, z], cam, 45, aspect);
+          assert.ok(p.depth > 0 && Math.abs(p.x) <= 0.9 + 1e-6 && Math.abs(p.y) <= 0.9 + 1e-6, `${name}, aspect ${aspect}: ${b.label || b.key} off screen (${p.x.toFixed(2)}, ${p.y.toFixed(2)})`);
+        }
+      }
+      for (const l of name === 'both floors' ? labels : []) {
+        const p = project([l.x, l.y, l.z], cam, 45, aspect);
+        assert.ok(Math.abs(p.x) <= 0.9 && Math.abs(p.y) <= 0.9, `floor label ${l.text} off screen at aspect ${aspect}`);
+      }
+    }
+  }
+});
+
+test('Task 7b step 6: the starting camera looks from the front and above, at a moderate angle that shows both floors', () => {
+  const [x, y, z] = START_DIRECTION;
+  const elevation = (Math.atan2(y, Math.hypot(x, z)) * 180) / Math.PI;
+  assert.ok(elevation >= 15 && elevation <= 40, `elevation ${elevation.toFixed(1)} degrees`);
+  assert.ok(z > 0 && z > Math.abs(x), 'mostly from the front');
+  const cam = fitCamera(viewBounds(boxes, floorLabels(run)), { fov: 45, aspect: 1.6 });
+  const upperY = run.floors[1].elevation;
+  assert.ok(cam.position[1] > upperY, 'the camera is above the upper floor level, so it sees down onto both floors');
+});
+
+test('Task 7b step 6: the page has a "Reset view" button, wired to the starting camera, and the canvas is 70% of the screen height', () => {
+  const html = read('index.html');
+  assert.match(html, /<button type="button" id="reset-view">Reset view<\/button>/);
+  const js = read('viewer.js');
+  assert.match(js, /el\('reset-view'\)\.addEventListener\('click', resetView\)/);
+  assert.match(js, /function resetView\(\)[\s\S]*frameHome\(view\.boxes\)/);
+  assert.match(read('styles.css'), /#scene-area \{[^}]*height: 70vh;/);
+});
