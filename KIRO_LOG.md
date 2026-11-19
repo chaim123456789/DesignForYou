@@ -49,3 +49,11 @@ One entry per session.
 - **How it was verified:** `node --test` after each task. Task 12: 8 new tests (101 in total). Task 13: 8 new tests (109 in total). Task 14: 14 new tests (123 in total, 0 failing). No task failed. No installs; `package.json` is unchanged; `.gitignore` does not list `.kiro`; `LICENSE` is unchanged.
 - **Credits used:** ___
 - **Next step:** Owner reviews and merges the pull request. Then do Tasks 15 to 17 (full sample run, summary page, final check).
+
+## 2026-11-18, Session 7
+- **Kiro app used:** Web
+- **Kiro feature used:** Spec (building Tasks 15 to 17 of `.kiro/specs/project-brain/tasks.md` one at a time, each with its written check) and Steering (`working-rules.md`: small steps, report how each step was verified, no installs, stop if something fails twice, one pull request at the end).
+- **Result:** Task 15: `src/sample/run-sample.js` loads the sample into a normal Brain and runs it through the real Coordinator with `sampleStyleAgent` and the real Layout, Builder and Reviewer agents. The Reviewer gets its conflict list and sample flag from `sample-project.json`. A fixed clock makes runs repeatable. Task 16: `src/summary/make-summary.js` builds the readable HTML page, `npm run sample` writes it to `sample-summary.html`. The browser read-through is marked pending owner check, because it could not be opened from this session. Task 17: `.kiro/specs/project-brain/acceptance-checklist.md` walks every acceptance criterion; and `README.md` has a "How to run the sample" section.
+- **How it was verified:** `node --test` after each task. Task 15: 8 new tests (131 in total). Task 16: 7 new tests (138 in total). Task 17: 138 tests, 138 passed, 0 failed. Every test name quoted in the checklist was matched against the test files by a script. Unverified: R4.1 (no test), R7.6 (searched once, no test), and how the summary page looks and reads in a browser (R7.5, R10.1, R10.2). One Task 15 test failed once when the summary code first read the sample flag; the summary code was changed to use the shared label function. No task failed twice. No installs; `package.json` only gained a `sample` script; `.gitignore` does not list `.kiro`; `LICENSE` is unchanged.
+- **Credits used:** ___
+- **Next step:** Owner reviews and merges the pull request, then opens `sample-summary.html` in a browser and confirms it reads clearly.
