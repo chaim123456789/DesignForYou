@@ -4,9 +4,25 @@
 // goes in with textContent, so a strange name can never become page code.
 // This is the only file that uses Three.js. It draws what buildScene returns
 // and nothing else.
-import { buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera } from './scene-data.js';
+//
+// Every feature (slider, floor buttons, Reset view, turning, clicking, labels)
+// is set up in its own protected step (see attempt below). If one step fails, a
+// red message with the error text appears at the top of the page and the other
+// steps still run.
+const PAGE_VERSION = 'fix-viewer-1';
+// The files this page loads carry the version in their address, so a browser
+// cannot mix an old copy of one file with a new copy of another.
+const SCENE_DATA_FILE = `./scene-data.js?v=${PAGE_VERSION}`;
 
-// The colours, in one place. They match the legend swatches in styles.css.
+// Filled in by start(). These come from scene-data.js.
+let buildScene;
+let describeItem;
+let separateLabels;
+let floorLabels;
+let filterByFloor;
+let viewBounds;
+let fitCamera;
+
 const COLOURS = {
   locked: 0x0072b2,   // blue
   unsure: 0xe69f00,   // orange
@@ -29,10 +45,68 @@ let openItemId = null;
 let userMovedCamera = false; // true once the visitor turns or zooms; the view then stops refitting itself
 let shownFloor = 'all'; // 'all', or a floor's order number
 
+// ---- Problems and protected steps -----------------------------------------
+
+const FAILED = Symbol('failed');
+const shownProblems = [];
+
+// Put one line of text in the red box at the top of the page. The same line is never shown twice.
+function showProblem(text) {
+  try {
+    if (shownProblems.includes(text)) return;
+    shownProblems.push(text);
+    const box = el('error-message');
+    const lines = ['Something went wrong on this page. Please take a screenshot of this red message.', ...shownProblems];
+    box.replaceChildren(...lines.map((line) => {
+      const p = document.createElement('p');
+      p.textContent = line;
+      return p;
+    }));
+    box.hidden = false;
+  } catch (secondError) {
+    // The red box itself is broken. The browser's own error list is the last place left.
+    console.error(text, secondError);
+  }
+}
+
+function reportProblem(step, error) {
+  const detail = error && error.message ? error.message : String(error);
+  showProblem(`Step "${step}" failed: ${detail}`);
+  console.error(step, error);
+}
+
+// Run one step. If it throws (or its promise fails), show the red message and carry on.
+// Returns FAILED when the step failed, otherwise whatever the step returned.
+function attempt(step, work) {
+  try {
+    const result = work();
+    if (result && typeof result.then === 'function') {
+      return result.then((value) => value, (error) => { reportProblem(step, error); return FAILED; });
+    }
+    return result;
+  } catch (error) {
+    reportProblem(step, error);
+    return FAILED;
+  }
+}
+
+// An event handler that can never throw out of the browser's event: its failure is shown on the page.
+function guarded(step, handler) {
+  return (...args) => attempt(step, () => handler(...args));
+}
+
+// A small line at the bottom of the page. It tells the owner which copy of the script is running.
+function setScriptStatus(text) {
+  attempt('Script status line', () => { el('script-status').textContent = `Page script ${PAGE_VERSION}: ${text}`; });
+}
+
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('error', (event) => reportProblem('Unexpected error', event.error || event.message));
+  window.addEventListener('unhandledrejection', (event) => reportProblem('Unexpected error', event.reason));
+}
+
 function showError(message) {
-  const box = el('error-message');
-  box.textContent = message;
-  box.hidden = false;
+  showProblem(message);
   el('caption').textContent = 'The sample home is not shown.';
   el('clash-summary').textContent = '';
   el('clash-list').replaceChildren();
@@ -93,7 +167,7 @@ function fillClashList(version) {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = text;
-      button.addEventListener('click', () => focusItem(target));
+      button.addEventListener('click', guarded('Clash list button', () => focusItem(target)));
       li.appendChild(button);
     } else {
       li.textContent = text;
@@ -107,6 +181,12 @@ function fillClashList(version) {
 const view = { THREE: null, renderer: null, scene: null, camera: null, controls: null, group: null, labels: [], boxes: [] };
 const CLICK_MOVE_LIMIT = 5; // pixels. A press that moves further than this is a drag, not a click.
 const CLOSE_UP_DISTANCE = 9; // metres from the item when the camera turns to it
+// Camera limits. The polar angle is measured from straight up (0) to straight sideways (90 degrees = pi / 2).
+// Staying between these two means the view can never flip over the top or go under the floor.
+const MIN_POLAR_ANGLE = 0.2; // radians, about 11 degrees from straight above
+const MAX_POLAR_ANGLE = Math.PI / 2 - 0.05; // just above sideways-on
+const MIN_ZOOM_DISTANCE = 3; // metres from the point looked at
+const MAX_ZOOM_OUT = 2.5; // times the distance that fits the whole home
 
 function showSceneMessage(text) {
   const p = document.createElement('p');
@@ -204,9 +284,15 @@ function addLabels(boxes) {
 }
 
 function drawFrame() {
-  const { THREE, renderer, scene, camera } = view;
+  const { renderer, scene, camera } = view;
   renderer.render(scene, camera);
   camera.updateMatrixWorld();
+  // The drawing is already on screen. If the labels fail, only the labels are lost.
+  attempt('Placing the text labels', placeLabels);
+}
+
+function placeLabels() {
+  const { THREE, renderer, camera } = view;
   const width = renderer.domElement.clientWidth;
   const height = renderer.domElement.clientHeight;
   const v = new THREE.Vector3();
@@ -241,6 +327,7 @@ function frameHome(boxes) {
   camera.far = fit.distance * 6;
   camera.updateProjectionMatrix();
   controls.target.set(...fit.target);
+  controls.maxDistance = fit.distance * MAX_ZOOM_OUT;
   controls.update();
 }
 
@@ -255,14 +342,16 @@ function resizeScene() {
   drawFrame();
 }
 
+// Draw the blocks, then (as a separate protected step) their text labels. A failing label
+// step never stops the blocks, the clicking or the buttons.
 function drawScene(version) {
   const boxes = filterByFloor(buildScene(sampleRun, version), shownFloor);
   if (view.group) { disposeGroup(view.group); view.scene.remove(view.group); }
   view.group = new view.THREE.Group();
   for (const b of boxes) addBox(view.THREE, view.group, b);
   view.scene.add(view.group);
-  addLabels(boxes);
   view.boxes = boxes;
+  attempt('Text labels on the blocks', () => addLabels(boxes));
   return boxes;
 }
 
@@ -277,6 +366,7 @@ function pickAt(event) {
   );
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(pointer, camera);
+  if (!group) return;
   const items = group.children.filter((obj) => obj.userData && obj.userData.itemId !== undefined);
   const hits = raycaster.intersectObjects(items, false);
   if (hits.length > 0) showDetails(hits[0].object.userData.itemId);
@@ -288,7 +378,7 @@ function focusItem(itemId) {
   showDetails(itemId);
   const { THREE, camera, controls } = view;
   const box = view.boxes.find((b) => b.itemId === itemId);
-  if (!THREE || !camera || !box) return;
+  if (!THREE || !camera || !controls || !box) return;
   userMovedCamera = true;
   const centre = new THREE.Vector3(box.x + box.width / 2, box.y + box.height / 2, box.z + box.depth / 2);
   const offset = camera.position.clone().sub(controls.target);
@@ -299,20 +389,51 @@ function focusItem(itemId) {
   drawFrame();
 }
 
+// Clicks and taps. Pressing and moving is turning the view, so it does not count as a click.
+function setUpClicks() {
+  const canvas = view.renderer.domElement;
+  let pressed = null;
+  canvas.addEventListener('pointerdown', (event) => { pressed = { x: event.clientX, y: event.clientY }; });
+  canvas.addEventListener('pointerup', guarded('Clicking a block', (event) => {
+    if (!pressed) return;
+    const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
+    pressed = null;
+    if (moved <= CLICK_MOVE_LIMIT) pickAt(event);
+  }));
+}
+
+// Turning and zooming, with limits so the view cannot flip over or go under the floor.
+function setUpControls(OrbitControls) {
+  const controls = new OrbitControls(view.camera, view.renderer.domElement);
+  view.controls = controls;
+  controls.minPolarAngle = MIN_POLAR_ANGLE;
+  controls.maxPolarAngle = MAX_POLAR_ANGLE;
+  controls.minDistance = MIN_ZOOM_DISTANCE;
+  controls.addEventListener('change', guarded('Redrawing after turning', () => {
+    if (controls.target.y < 0) { // sliding the view sideways must not carry it under the floor
+      controls.target.y = 0;
+      controls.update();
+      return;
+    }
+    drawFrame();
+  }));
+  controls.addEventListener('start', () => { userMovedCamera = true; });
+}
+
 async function startScene() {
   const area = el('scene-area');
   let THREE;
   let OrbitControls;
-  try {
+  const loaded = await attempt('Loading the 3D library', async () => {
     THREE = await import('three');
     ({ OrbitControls } = await import('./vendor/OrbitControls.js'));
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    view.renderer = renderer;
-  } catch (error) {
+    view.renderer = new THREE.WebGLRenderer({ antialias: true });
+  });
+  if (loaded === FAILED) {
     showSceneMessage('The 3D view cannot be shown in this browser. The clash list and the details below still work.');
     return;
   }
-  try {
+  const built = attempt('Building the 3D scene', () => {
     view.THREE = THREE;
     view.scene = new THREE.Scene();
     view.scene.background = new THREE.Color(COLOURS.background);
@@ -320,32 +441,19 @@ async function startScene() {
     const sun = new THREE.DirectionalLight(0xffffff, 1.4);
     sun.position.set(-4, 12, 10);
     view.scene.add(sun);
-
     view.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
     area.replaceChildren(view.renderer.domElement);
-    view.controls = new OrbitControls(view.camera, view.renderer.domElement);
-    view.controls.addEventListener('change', drawFrame);
-    view.controls.addEventListener('start', () => { userMovedCamera = true; });
-
-    // Clicks and taps. Pressing and moving is turning the view, so it does not count as a click.
-    const canvas = view.renderer.domElement;
-    let pressed = null;
-    canvas.addEventListener('pointerdown', (event) => { pressed = { x: event.clientX, y: event.clientY }; });
-    canvas.addEventListener('pointerup', (event) => {
-      if (!pressed) return;
-      const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
-      pressed = null;
-      if (moved <= CLICK_MOVE_LIMIT) pickAt(event);
-    });
-
-    const boxes = drawScene(currentVersion);
-    resizeScene();
-    frameHome(boxes);
-    drawFrame();
-    new ResizeObserver(resizeScene).observe(area);
-  } catch (error) {
+  });
+  if (built === FAILED) {
     showSceneMessage('The 3D view cannot be shown in this browser. The clash list and the details below still work.');
+    return;
   }
+  // Each of these is its own step. Clicking is attached before anything is drawn.
+  attempt('Turning and zooming the view', () => setUpControls(OrbitControls));
+  attempt('Clicking on blocks', setUpClicks);
+  attempt('Drawing the blocks', () => drawScene(currentVersion));
+  attempt('Fitting the camera', () => { resizeScene(); frameHome(view.boxes); drawFrame(); });
+  attempt('Watching the window size', () => new ResizeObserver(guarded('Resizing the view', resizeScene)).observe(area));
 }
 
 // The three floor buttons: Both, Ground floor, Upper floor.
@@ -354,7 +462,7 @@ function chooseFloor(which) {
   for (const button of document.querySelectorAll('.floor-button')) {
     button.setAttribute('aria-pressed', String(button.dataset.floor === String(which)));
   }
-  if (!view.THREE) return;
+  if (!view.THREE || !view.group) return;
   const boxes = drawScene(currentVersion);
   if (openItemId !== null && !boxes.some((b) => b.itemId === openItemId)) closePanel();
   userMovedCamera = false;
@@ -364,30 +472,50 @@ function chooseFloor(which) {
 
 // "Reset view": back to the starting camera for what is shown now.
 function resetView() {
-  if (!view.THREE) return;
+  if (!view.THREE || !view.group) return;
   userMovedCamera = false;
   frameHome(view.boxes);
   drawFrame();
 }
 
 function setUpFloorButtons() {
-  el('reset-view').addEventListener('click', resetView);
   for (const button of document.querySelectorAll('.floor-button')) {
     const which = button.dataset.floor === 'all' ? 'all' : Number(button.dataset.floor);
-    button.addEventListener('click', () => chooseFloor(which));
+    button.addEventListener('click', guarded(`Floor button "${button.textContent}"`, () => chooseFloor(which)));
   }
 }
 
+function setUpResetButton() {
+  el('reset-view').addEventListener('click', guarded('Reset view button', resetView));
+}
+
+function setUpSlider(last) {
+  const slider = el('version-slider');
+  slider.min = '0';
+  slider.max = String(last);
+  slider.value = String(last);
+  slider.disabled = false;
+  slider.addEventListener('input', guarded('Version slider', () => render(Number(slider.value))));
+}
+
+// The text parts of the page for one version. Each part is its own protected step.
 function render(version) {
   currentVersion = version;
   const last = sampleRun.versions.length;
-  el('version-number').textContent = `${version} of ${last}`;
-  el('caption').textContent = version === 0 ? 'Before any change' : sampleRun.versions[version - 1].sentence;
-  fillClashList(version);
-  if (openItemId !== null) showDetails(openItemId);
+  attempt('Version number and caption', () => {
+    el('version-number').textContent = `${version} of ${last}`;
+    el('caption').textContent = version === 0 ? 'Before any change' : sampleRun.versions[version - 1].sentence;
+  });
+  attempt('Clash list', () => fillClashList(version));
+  attempt('Details panel', () => { if (openItemId !== null) showDetails(openItemId); });
 }
 
 async function start() {
+  setScriptStatus('started.');
+  const helperLoaded = await attempt('Loading scene-data.js', async () => {
+    ({ buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera } = await import(SCENE_DATA_FILE));
+  });
+  if (helperLoaded === FAILED) return;
   try {
     const response = await fetch(SAMPLE_RUN_FILE);
     if (!response.ok) throw new Error('The sample file could not be read.');
@@ -398,15 +526,13 @@ async function start() {
     return;
   }
   const last = sampleRun.versions.length;
-  const slider = el('version-slider');
-  slider.min = '0';
-  slider.max = String(last);
-  slider.value = String(last);
-  slider.disabled = false;
-  slider.addEventListener('input', () => render(Number(slider.value)));
-  setUpFloorButtons();
+  // The page controls come first and do not depend on 3D, so they work even if 3D fails.
+  attempt('Version slider', () => setUpSlider(last));
+  attempt('Floor buttons', setUpFloorButtons);
+  attempt('Reset view button', setUpResetButton);
   render(last);
   await startScene();
+  setScriptStatus('finished setting up.');
 }
 
 start();

@@ -215,7 +215,7 @@ test('Task 7b step 6: the page has a "Reset view" button, wired to the starting 
   const html = read('index.html');
   assert.match(html, /<button type="button" id="reset-view">Reset view<\/button>/);
   const js = read('viewer.js');
-  assert.match(js, /el\('reset-view'\)\.addEventListener\('click', resetView\)/);
+  assert.match(js, /el\('reset-view'\)\.addEventListener\('click', guarded\('Reset view button', resetView\)\)/);
   assert.match(js, /function resetView\(\)[\s\S]*frameHome\(view\.boxes\)/);
   assert.match(read('styles.css'), /#scene-area \{[^}]*height: 70vh;/);
 });
