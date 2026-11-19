@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "sample": "node src/summary/write-sample-summary.js"
+    "sample": "node src/summary/write-sample-summary.js",
+    "export-viewer": "node src/viewer/export-sample-run.js"
   }
 }

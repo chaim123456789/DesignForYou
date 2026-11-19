@@ -1,0 +1,961 @@
+{
+  "name": "Sample Two-Storey Home",
+  "sample": true,
+  "layout": {
+    "wallHeight": 2.6,
+    "doorHeight": 2,
+    "windowHeight": 1.2,
+    "windowBottom": 0.9,
+    "furnitureHeight": 0.8,
+    "styleMarker": {
+      "width": 0.6,
+      "depth": 0.6,
+      "height": 0.05
+    }
+  },
+  "floors": [
+    {
+      "id": "floor-1",
+      "name": "Ground Floor",
+      "order": 1,
+      "elevation": 0,
+      "rooms": [
+        {
+          "id": "floor-1-room-1",
+          "name": "Kitchen",
+          "order": 1,
+          "x": 0,
+          "z": 0,
+          "width": 5,
+          "depth": 4
+        },
+        {
+          "id": "floor-1-room-2",
+          "name": "Living Room",
+          "order": 2,
+          "x": 5.2,
+          "z": 0,
+          "width": 6,
+          "depth": 4
+        }
+      ]
+    },
+    {
+      "id": "floor-2",
+      "name": "Upper Floor",
+      "order": 2,
+      "elevation": 3,
+      "rooms": [
+        {
+          "id": "floor-2-room-1",
+          "name": "Bedroom",
+          "order": 1,
+          "x": 0,
+          "z": 0,
+          "width": 4,
+          "depth": 4
+        },
+        {
+          "id": "floor-2-room-2",
+          "name": "Bathroom",
+          "order": 2,
+          "x": 4.2,
+          "z": 0,
+          "width": 3,
+          "depth": 3
+        }
+      ]
+    }
+  ],
+  "versions": [
+    {
+      "number": 1,
+      "who": "Style",
+      "item": "item-3",
+      "field": "value",
+      "sentence": "Version 1: Style updated the style note \"Linen curtains and soft white walls\" in the Living Room"
+    },
+    {
+      "number": 2,
+      "who": "Style",
+      "item": "item-4",
+      "field": "value",
+      "sentence": "Version 2: Style updated the style note \"Plain white wall tiles\" in the Bathroom"
+    },
+    {
+      "number": 3,
+      "who": "Layout",
+      "item": "item-5",
+      "field": "value",
+      "sentence": "Version 3: Layout checked the Sofa in the Living Room"
+    },
+    {
+      "number": 4,
+      "who": "Builder",
+      "item": "item-6",
+      "field": "value",
+      "sentence": "Version 4: Builder checked the Garden door in the Living Room"
+    },
+    {
+      "number": 5,
+      "who": "Builder",
+      "item": "item-7",
+      "field": "value",
+      "sentence": "Version 5: Builder checked the Bedroom door in the Bedroom"
+    },
+    {
+      "number": 6,
+      "who": "Builder",
+      "item": "item-8",
+      "field": "value",
+      "sentence": "Version 6: Builder checked the Kitchen window in the Kitchen"
+    },
+    {
+      "number": 7,
+      "who": "Reviewer",
+      "item": "item-9",
+      "field": "value",
+      "sentence": "Version 7: Reviewer wrote the review report: 2 clashes found"
+    }
+  ],
+  "snapshots": [
+    {
+      "version": 0,
+      "items": [
+        {
+          "id": "item-1",
+          "kind": "style",
+          "name": "Oak floor in the kitchen",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-1-room-1"
+        },
+        {
+          "id": "item-2",
+          "kind": "style",
+          "name": "Oak bed frame stays as it is",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-2-room-1"
+        },
+        {
+          "id": "item-3",
+          "kind": "style",
+          "name": "Linen curtains and soft white walls",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-1-room-2"
+        },
+        {
+          "id": "item-4",
+          "kind": "style",
+          "name": "Plain white wall tiles",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-2-room-2"
+        },
+        {
+          "id": "item-5",
+          "kind": "layout",
+          "name": "Sofa",
+          "status": "Unsure",
+          "owner": "Layout",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "width": 2,
+            "depth": 1
+          }
+        },
+        {
+          "id": "item-6",
+          "kind": "door",
+          "name": "Garden door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1.5,
+            "y": 3,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-7",
+          "kind": "door",
+          "name": "Bedroom door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-2-room-1",
+          "position": {
+            "x": 0.2,
+            "y": 0,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-8",
+          "kind": "window",
+          "name": "Kitchen window",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-1",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 1.2,
+            "depth": 0.1
+          }
+        },
+        {
+          "id": "item-9",
+          "kind": "clash",
+          "name": "Review report",
+          "status": "Unsure",
+          "owner": "Reviewer",
+          "summary": "Not reviewed yet",
+          "clashes": []
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "items": [
+        {
+          "id": "item-1",
+          "kind": "style",
+          "name": "Oak floor in the kitchen",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-1-room-1"
+        },
+        {
+          "id": "item-2",
+          "kind": "style",
+          "name": "Oak bed frame stays as it is",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-2-room-1"
+        },
+        {
+          "id": "item-3",
+          "kind": "style",
+          "name": "Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-1-room-2"
+        },
+        {
+          "id": "item-4",
+          "kind": "style",
+          "name": "Plain white wall tiles",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-2-room-2"
+        },
+        {
+          "id": "item-5",
+          "kind": "layout",
+          "name": "Sofa",
+          "status": "Unsure",
+          "owner": "Layout",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "width": 2,
+            "depth": 1
+          }
+        },
+        {
+          "id": "item-6",
+          "kind": "door",
+          "name": "Garden door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1.5,
+            "y": 3,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-7",
+          "kind": "door",
+          "name": "Bedroom door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-2-room-1",
+          "position": {
+            "x": 0.2,
+            "y": 0,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-8",
+          "kind": "window",
+          "name": "Kitchen window",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-1",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 1.2,
+            "depth": 0.1
+          }
+        },
+        {
+          "id": "item-9",
+          "kind": "clash",
+          "name": "Review report",
+          "status": "Unsure",
+          "owner": "Reviewer",
+          "summary": "Not reviewed yet",
+          "clashes": []
+        }
+      ]
+    },
+    {
+      "version": 2,
+      "items": [
+        {
+          "id": "item-1",
+          "kind": "style",
+          "name": "Oak floor in the kitchen",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-1-room-1"
+        },
+        {
+          "id": "item-2",
+          "kind": "style",
+          "name": "Oak bed frame stays as it is",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-2-room-1"
+        },
+        {
+          "id": "item-3",
+          "kind": "style",
+          "name": "Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-1-room-2"
+        },
+        {
+          "id": "item-4",
+          "kind": "style",
+          "name": "Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-2-room-2"
+        },
+        {
+          "id": "item-5",
+          "kind": "layout",
+          "name": "Sofa",
+          "status": "Unsure",
+          "owner": "Layout",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "width": 2,
+            "depth": 1
+          }
+        },
+        {
+          "id": "item-6",
+          "kind": "door",
+          "name": "Garden door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1.5,
+            "y": 3,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-7",
+          "kind": "door",
+          "name": "Bedroom door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-2-room-1",
+          "position": {
+            "x": 0.2,
+            "y": 0,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-8",
+          "kind": "window",
+          "name": "Kitchen window",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-1",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 1.2,
+            "depth": 0.1
+          }
+        },
+        {
+          "id": "item-9",
+          "kind": "clash",
+          "name": "Review report",
+          "status": "Unsure",
+          "owner": "Reviewer",
+          "summary": "Not reviewed yet",
+          "clashes": []
+        }
+      ]
+    },
+    {
+      "version": 3,
+      "items": [
+        {
+          "id": "item-1",
+          "kind": "style",
+          "name": "Oak floor in the kitchen",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-1-room-1"
+        },
+        {
+          "id": "item-2",
+          "kind": "style",
+          "name": "Oak bed frame stays as it is",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-2-room-1"
+        },
+        {
+          "id": "item-3",
+          "kind": "style",
+          "name": "Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-1-room-2"
+        },
+        {
+          "id": "item-4",
+          "kind": "style",
+          "name": "Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-2-room-2"
+        },
+        {
+          "id": "item-5",
+          "kind": "layout",
+          "name": "Sofa",
+          "status": "Unsure",
+          "owner": "Layout",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "width": 2,
+            "depth": 1
+          }
+        },
+        {
+          "id": "item-6",
+          "kind": "door",
+          "name": "Garden door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1.5,
+            "y": 3,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-7",
+          "kind": "door",
+          "name": "Bedroom door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-2-room-1",
+          "position": {
+            "x": 0.2,
+            "y": 0,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-8",
+          "kind": "window",
+          "name": "Kitchen window",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-1",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 1.2,
+            "depth": 0.1
+          }
+        },
+        {
+          "id": "item-9",
+          "kind": "clash",
+          "name": "Review report",
+          "status": "Unsure",
+          "owner": "Reviewer",
+          "summary": "Not reviewed yet",
+          "clashes": []
+        }
+      ]
+    },
+    {
+      "version": 4,
+      "items": [
+        {
+          "id": "item-1",
+          "kind": "style",
+          "name": "Oak floor in the kitchen",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-1-room-1"
+        },
+        {
+          "id": "item-2",
+          "kind": "style",
+          "name": "Oak bed frame stays as it is",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-2-room-1"
+        },
+        {
+          "id": "item-3",
+          "kind": "style",
+          "name": "Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-1-room-2"
+        },
+        {
+          "id": "item-4",
+          "kind": "style",
+          "name": "Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-2-room-2"
+        },
+        {
+          "id": "item-5",
+          "kind": "layout",
+          "name": "Sofa",
+          "status": "Unsure",
+          "owner": "Layout",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "width": 2,
+            "depth": 1
+          }
+        },
+        {
+          "id": "item-6",
+          "kind": "door",
+          "name": "Garden door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1.5,
+            "y": 3,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-7",
+          "kind": "door",
+          "name": "Bedroom door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-2-room-1",
+          "position": {
+            "x": 0.2,
+            "y": 0,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-8",
+          "kind": "window",
+          "name": "Kitchen window",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-1",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 1.2,
+            "depth": 0.1
+          }
+        },
+        {
+          "id": "item-9",
+          "kind": "clash",
+          "name": "Review report",
+          "status": "Unsure",
+          "owner": "Reviewer",
+          "summary": "Not reviewed yet",
+          "clashes": []
+        }
+      ]
+    },
+    {
+      "version": 5,
+      "items": [
+        {
+          "id": "item-1",
+          "kind": "style",
+          "name": "Oak floor in the kitchen",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-1-room-1"
+        },
+        {
+          "id": "item-2",
+          "kind": "style",
+          "name": "Oak bed frame stays as it is",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-2-room-1"
+        },
+        {
+          "id": "item-3",
+          "kind": "style",
+          "name": "Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-1-room-2"
+        },
+        {
+          "id": "item-4",
+          "kind": "style",
+          "name": "Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-2-room-2"
+        },
+        {
+          "id": "item-5",
+          "kind": "layout",
+          "name": "Sofa",
+          "status": "Unsure",
+          "owner": "Layout",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "width": 2,
+            "depth": 1
+          }
+        },
+        {
+          "id": "item-6",
+          "kind": "door",
+          "name": "Garden door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1.5,
+            "y": 3,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-7",
+          "kind": "door",
+          "name": "Bedroom door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-2-room-1",
+          "position": {
+            "x": 0.2,
+            "y": 0,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-8",
+          "kind": "window",
+          "name": "Kitchen window",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-1",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 1.2,
+            "depth": 0.1
+          }
+        },
+        {
+          "id": "item-9",
+          "kind": "clash",
+          "name": "Review report",
+          "status": "Unsure",
+          "owner": "Reviewer",
+          "summary": "Not reviewed yet",
+          "clashes": []
+        }
+      ]
+    },
+    {
+      "version": 6,
+      "items": [
+        {
+          "id": "item-1",
+          "kind": "style",
+          "name": "Oak floor in the kitchen",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-1-room-1"
+        },
+        {
+          "id": "item-2",
+          "kind": "style",
+          "name": "Oak bed frame stays as it is",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-2-room-1"
+        },
+        {
+          "id": "item-3",
+          "kind": "style",
+          "name": "Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-1-room-2"
+        },
+        {
+          "id": "item-4",
+          "kind": "style",
+          "name": "Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-2-room-2"
+        },
+        {
+          "id": "item-5",
+          "kind": "layout",
+          "name": "Sofa",
+          "status": "Unsure",
+          "owner": "Layout",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "width": 2,
+            "depth": 1
+          }
+        },
+        {
+          "id": "item-6",
+          "kind": "door",
+          "name": "Garden door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1.5,
+            "y": 3,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-7",
+          "kind": "door",
+          "name": "Bedroom door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-2-room-1",
+          "position": {
+            "x": 0.2,
+            "y": 0,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-8",
+          "kind": "window",
+          "name": "Kitchen window",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-1",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 1.2,
+            "depth": 0.1
+          }
+        },
+        {
+          "id": "item-9",
+          "kind": "clash",
+          "name": "Review report",
+          "status": "Unsure",
+          "owner": "Reviewer",
+          "summary": "Not reviewed yet",
+          "clashes": []
+        }
+      ]
+    },
+    {
+      "version": 7,
+      "items": [
+        {
+          "id": "item-1",
+          "kind": "style",
+          "name": "Oak floor in the kitchen",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-1-room-1"
+        },
+        {
+          "id": "item-2",
+          "kind": "style",
+          "name": "Oak bed frame stays as it is",
+          "status": "Locked",
+          "owner": "Style",
+          "room": "floor-2-room-1"
+        },
+        {
+          "id": "item-3",
+          "kind": "style",
+          "name": "Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-1-room-2"
+        },
+        {
+          "id": "item-4",
+          "kind": "style",
+          "name": "Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)",
+          "status": "Unsure",
+          "owner": "Style",
+          "room": "floor-2-room-2"
+        },
+        {
+          "id": "item-5",
+          "kind": "layout",
+          "name": "Sofa",
+          "status": "Unsure",
+          "owner": "Layout",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "width": 2,
+            "depth": 1
+          }
+        },
+        {
+          "id": "item-6",
+          "kind": "door",
+          "name": "Garden door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-2",
+          "position": {
+            "x": 1.5,
+            "y": 3,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-7",
+          "kind": "door",
+          "name": "Bedroom door",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-2-room-1",
+          "position": {
+            "x": 0.2,
+            "y": 0,
+            "width": 0.9,
+            "depth": 0.9
+          }
+        },
+        {
+          "id": "item-8",
+          "kind": "window",
+          "name": "Kitchen window",
+          "status": "Unsure",
+          "owner": "Builder",
+          "room": "floor-1-room-1",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 1.2,
+            "depth": 0.1
+          }
+        },
+        {
+          "id": "item-9",
+          "kind": "clash",
+          "name": "Review report",
+          "status": "Unsure",
+          "owner": "Reviewer",
+          "summary": "2 clashes found",
+          "clashes": [
+            {
+              "number": 1,
+              "type": "Door or window on furniture",
+              "items": [
+                "item-6",
+                "item-5"
+              ],
+              "room": "floor-1-room-2",
+              "description": "In the Living Room, the Garden door sits where the Sofa is placed.",
+              "severity": "High"
+            },
+            {
+              "number": 2,
+              "type": "Room override against Locked item",
+              "items": [
+                "item-2"
+              ],
+              "room": "floor-2-room-1",
+              "description": "In the Bedroom, the room style \"cold steel\" conflicts with the Locked item \"Oak bed frame stays as it is\" (warm oak).",
+              "severity": "Medium"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

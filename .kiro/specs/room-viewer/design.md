@@ -1,6 +1,6 @@
 # Design: Room Viewer
 
-Status: draft, waiting for owner approval. Nothing in this design has been built or installed.
+Status: approved by the owner on 2026-11-19 (both questions answered yes, see sections 3 and 4). Nothing has been installed yet. Tasks 1 to 4 need no network.
 
 ## 1. What gets built, in one picture
 
@@ -69,7 +69,7 @@ Three.js is a free, MIT-licensed library. There are two simple ways to use it wi
 
 **Recommendation: option 2.** The files needed are the Three.js main file (plus the second file it depends on, if the chosen version has one) and one add-on file for mouse turning and zooming (`OrbitControls`). An "import map" (a short block of text in `index.html`) tells the browser where they are. It is plain text and needs no build step. Three.js's own installation guide describes this way of using it from static hosting ([Three.js installation guide](https://threejs.org/docs/#manual/en/introduction/Installation)).
 
-The exact version is chosen at install time (the latest stable release then), written down in `docs/vendor/VERSION.txt`, and the library's MIT licence text is copied next to the files. The AGPL-3.0 licence of this project is not affected.
+**Approved version: r186 (npm `three@0.186.0`, released 2026-09-08).** The owner asked for a stable official release that is at least a few weeks old. r186 is about ten weeks old. The newer r187 (2026-10-30) is only three weeks old and was not chosen. If a patch of r186 exists (for example 0.186.1), Task 5 will show it to the owner before downloading. The version is written down in `docs/vendor/VERSION.txt`, and the library's MIT licence file (`LICENSE`) is copied into `docs/vendor/` next to the files. The AGPL-3.0 licence of this project is not affected.
 
 ### How the copy would be fetched (needs your approval first)
 The copy is made by downloading the official Three.js package once and copying only the needed files into `docs/vendor/`. Nothing is added to `package.json`, there is no `node_modules` folder in the repository, and no build tool. This is the only step that needs internet access. The exact steps and file list are shown to you before anything happens.
@@ -81,8 +81,8 @@ The sandbox's **Network** setting must be changed to **Common Dependencies** for
 3. Before Task 5 (the Three.js copy), I stop and tell you: "Change Network to Common Dependencies now, then reply 'network changed'." I will not start Task 5 until you reply, and I will not download anything before you approve the exact file list.
 4. When Task 5 is done, I tell you, and you can change Network back.
 
-### Question for you (nothing is installed until you answer)
-**Do you approve option 2 (a pinned copy in `docs/vendor/`) and GitHub Pages as the way to publish?** If you prefer the CDN option, say so and R8.2, R8.5 and R9.4 will be reworded.
+### Owner decision (2026-11-19)
+**Approved:** option 2 (a pinned copy in `docs/vendor/`, with its MIT licence file next to it) and GitHub Pages as the way to publish. Nothing is downloaded until Task 5, and only after the owner approves the exact file list.
 
 ## 4. The sample run file and the Viewer layout
 
@@ -91,7 +91,7 @@ The sample data gives each item a flat position inside its room (corner, width, 
 
 | Thing | Fixed value |
 |---|---|
-| Room size | 5.0 m wide by 4.0 m deep (every room) |
+| Room size (wide by deep) | Kitchen 5.0 x 4.0 m, Living Room 6.0 x 4.0 m, Bedroom 4.0 x 4.0 m, Bathroom 3.0 x 3.0 m |
 | Gap between rooms on a floor | 0.2 m |
 | Floor to floor height | 3.0 m |
 | Wall height | 2.6 m |
@@ -100,18 +100,18 @@ The sample data gives each item a flat position inside its room (corner, width, 
 | Furniture height | 0.8 m |
 | Style marker | 0.6 m by 0.6 m, 0.05 m high, in a row along the room's front edge |
 
-These are placeholders for a made-up example. Rooms of a floor sit side by side in their stored order; floors are stacked in their stored order. The sizes fit the sample (the sofa and Garden door sit inside 5 m by 4 m). The numbers are in `viewer-layout.json` so they can be changed without touching code.
+These are placeholders for a made-up example. Rooms of a floor sit side by side in their stored order; floors are stacked in their stored order. The sizes fit the sample (the Sofa and Garden door sit inside the 6 m by 4 m Living Room; the Kitchen window and Bedroom door sit inside their rooms). On the ground floor the Kitchen (5 m) and Living Room (6 m) sit side by side, and on the upper floor the Bedroom (4 m) and Bathroom (3 m), so the home looks like a real one with rooms of different sizes. Rooms are looked up by name in the layout file. The numbers are in `viewer-layout.json` so they can be changed without touching code.
 
-**Question for you:** is it fine to use fixed room sizes like this? The other option is to add real sizes to `sample-project.json`, which changes the Project Brain sample and its tests.
+**Owner decision (2026-11-19):** fixed room sizes are fine, with different sizes per room as in the table. `sample-project.json` stays unchanged.
 
 ### What `make-sample-run.js` writes
 For a finished sample project, `makeSampleRun(project)` returns plain data:
-- `name`, `isSample`
+- `name`, `sample` (true for the sample; read through the shared label code, because an existing test allows only that code and the Reviewer to read the sample flag)
 - `floors`: each with id, name, order, and its rooms (id, name, order, and size and position from the layout)
-- `versions`: number, time, who, item, field, and a ready-made plain sentence such as "Version 3: Layout checked the Sofa" (so the page does not have to explain internal fields)
+- `versions`: number, who, item, field, and a ready-made plain sentence such as "Version 3: Layout checked the Sofa" (so the page does not have to explain internal fields)
 - `snapshots`: one entry per version from 0 to the latest. Each holds the items at that version, **taken from `getBrainAtVersion(project, n)`**, and nothing else. For each item: id, kind, name, status, owner, room id, position (if any), and for the clash item, the clash list.
 
-With 7 versions and 9 items the file stays small (a few tens of kilobytes). It carries no timestamps from the real clock; the sample uses a fixed clock, so two exports are identical (R1.3).
+With 7 versions and 9 items the file stays small (a few tens of kilobytes). It carries no times at all (the page does not need them, and a date such as 2026-01-01 would trip the personal-data pattern check as a phone number). The sample also uses a fixed clock, so two exports are identical (R1.3).
 
 `export-sample-run.js` runs `runSample()`, checks the run succeeded, calls `makeSampleRun`, and writes `docs/sample-run.json`. It is run with `npm run export-viewer` (a new script, no packages). It uses only file writing, like `write-sample-summary.js`.
 
