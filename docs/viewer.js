@@ -11,10 +11,12 @@ const COLOURS = {
   locked: 0x0072b2,   // blue
   unsure: 0xe69f00,   // orange
   clash: 0xcc0000,    // red outline
-  room: 0x9aa3ab,     // neutral grey for rooms, floors and walls
+  room: 0x7d8790,     // neutral grey for the wall outlines
+  slab: 0xf4f1e8,     // pale floor slab
+  slabEdge: 0xb9b4a6,
   doorEdge: 0x5a3a1a, // dark brown edge so doors look different from furniture
   windowEdge: 0xffffff,
-  background: 0xe4e7ea,
+  background: 0xdde3e9,
 };
 const CLASH_OUTLINE = 0.1; // metres the red outline sticks out from a clashing box
 
@@ -123,16 +125,23 @@ function addBox(THREE, group, b) {
   const centre = [b.x + b.width / 2, b.y + b.height / 2, b.z + b.depth / 2];
   const geometry = new THREE.BoxGeometry(b.width, b.height, b.depth);
 
+  if (b.type === 'floor-slab') {
+    // A solid pale slab, so furniture and panels stand out against it.
+    const slab = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: COLOURS.slab }));
+    slab.position.set(...centre);
+    slab.userData = { boxKey: b.key, type: b.type };
+    group.add(slab);
+    const rim = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: COLOURS.slabEdge }));
+    rim.position.set(...centre);
+    group.add(rim);
+    return;
+  }
+
   if (b.type === 'room') {
-    // Almost see-through, so the inside of every room can be seen. Edges give the walls and floor.
-    const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-      color: COLOURS.room, transparent: true, opacity: 0.12, depthWrite: false,
-    }));
-    mesh.position.set(...centre);
-    mesh.userData = { boxKey: b.key, type: b.type };
-    group.add(mesh);
+    // Walls are thin outlines only: no filled faces, so nothing inside is hidden.
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: COLOURS.room }));
     edges.position.set(...centre);
+    edges.userData = { boxKey: b.key, type: b.type };
     group.add(edges);
     return;
   }

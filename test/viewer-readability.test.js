@@ -104,3 +104,27 @@ test('Task 7b step 3: the sofa is about 0.8 m high, and style markers are flat p
     assert.ok(boxes.some((r) => r.type === 'room' && r.y === m.y), 'a marker lies on the floor');
   }
 });
+
+test('Task 7b step 4: each room has a solid floor slab under its floor level, and the room names stay', () => {
+  const rooms = boxes.filter((b) => b.type === 'room');
+  const slabs = boxes.filter((b) => b.type === 'floor-slab');
+  assert.equal(rooms.length, 4);
+  assert.equal(slabs.length, 4);
+  for (const r of rooms) {
+    const slab = slabs.find((s) => s.key === `slab:${r.key.slice(5)}`);
+    assert.ok(slab, `no slab for ${r.label}`);
+    assert.ok(slab.x === r.x && slab.z === r.z && slab.width === r.width && slab.depth === r.depth, 'slab matches the room');
+    assert.ok(Math.abs(slab.y + slab.height - r.y) < 1e-9, 'slab top is at the floor level');
+    assert.ok(slab.height > 0 && slab.height <= 0.2);
+  }
+  assert.deepEqual(rooms.map((r) => r.label).sort(), ['Bathroom', 'Bedroom', 'Kitchen', 'Living Room']);
+  const labelled = read('viewer.js');
+  assert.match(labelled, /b\.type === 'room'\) add\(b, b\.label, 'room-label'/);
+});
+
+test('Task 7b step 4: the page draws walls as outlines only (no filled wall faces)', () => {
+  const js = read('viewer.js');
+  const roomCode = js.slice(js.indexOf("if (b.type === 'room') {"), js.indexOf('const isWindow'));
+  assert.match(roomCode, /EdgesGeometry/);
+  assert.doesNotMatch(roomCode, /new THREE\.Mesh\(/);
+});

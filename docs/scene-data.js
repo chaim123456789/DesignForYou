@@ -15,6 +15,7 @@ const KIND_WORDS = {
 
 const MARKER_GAP = 0.1;
 const PANEL_THICKNESS = 0.1; // metres. Doors and windows are drawn as thin panels this thick.
+const SLAB_THICKNESS = 0.1; // metres. Each room's floor slab sits just under its floor level.
 const STYLE_LABEL_MAX = 24; // characters of the name kept before "(style)"
 
 // The short text drawn next to a block. Furniture, doors and windows use their name.
@@ -119,8 +120,18 @@ export function buildScene(sampleRun, version) {
   for (const floor of sampleRun.floors) {
     for (const room of floor.rooms) {
       boxes.push({
+        key: `slab:${room.id}`,
+        type: 'floor-slab',
+        floorOrder: floor.order,
+        x: room.x, y: floor.elevation - SLAB_THICKNESS, z: room.z,
+        width: room.width, height: SLAB_THICKNESS, depth: room.depth,
+        colour: 'neutral',
+        clash: false,
+      });
+      boxes.push({
         key: `room:${room.id}`,
         type: 'room',
+        floorOrder: floor.order,
         label: room.name,
         x: room.x, y: floor.elevation, z: room.z,
         width: room.width, height: L.wallHeight, depth: room.depth,
@@ -139,6 +150,7 @@ export function buildScene(sampleRun, version) {
     const base = {
       key: `item:${item.id}`,
       itemId: item.id,
+      floorOrder: floor.order,
       label: shortLabel(item),
       status: item.status,
       colour: colourFor(item.status),
