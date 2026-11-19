@@ -10,7 +10,7 @@ Inspiration upload screens, live AI mode, login, editing items in the viewer, sa
 - **Viewer**: the web page described here.
 - **Sample run file**: the file `sample-run.json`, written by the existing pipeline run (Sample mode). The Viewer reads only this file.
 - **Project Brain, item, Locked, Unsure, owner agent, clash, version**: as defined in `.kiro/specs/project-brain/requirements.md`.
-- **Viewer layout**: a small fixed table of room sizes and item heights. The sample data only has flat positions inside each room, so the Viewer needs sizes and heights to draw boxes. The layout is data, not an agent decision.
+- **Viewer layout**: a small fixed table of room sizes (different for each room) and item heights. The sample data only has flat positions inside each room, so the Viewer needs sizes and heights to draw boxes. The layout is data, not an agent decision.
 - **Box**: the plain 3D block used to draw a room, door, window, furniture piece or style marker.
 - **Style marker**: a small flat tile on the floor of a room. Style items (such as "Oak floor in the kitchen") have no position, so a marker stands for them.
 - **Past view**: the Project Brain as it was at an earlier version, shown by the Viewer. It is read only.

@@ -11,12 +11,12 @@ Rules for every task:
 
 "Req" shows which requirements the task covers.
 
-Before Task 1: the owner approves this spec and answers the two questions in `design.md` (section 3: Three.js copy and GitHub Pages; section 4: fixed room sizes).
+Owner approvals (2026-11-19): the pinned Three.js copy in `docs/vendor/` (release r186, with its MIT licence file) and GitHub Pages are approved; fixed room sizes are approved, with different sizes per room (Kitchen 5x4, Living Room 6x4, Bedroom 4x4, Bathroom 3x3 metres). `sample-project.json` stays unchanged.
 
 ---
 
 ### Task 1. Viewer layout and sample run data
-Create `src/viewer/viewer-layout.json` (the fixed sizes in `design.md` section 4) and `src/viewer/make-sample-run.js` with `makeSampleRun(project)`. The snapshots must come from `getBrainAtVersion`. Version sentences are plain words.
+Create `src/viewer/viewer-layout.json` (the fixed, per-room sizes in `design.md` section 4) and `src/viewer/make-sample-run.js` with `makeSampleRun(project)`. The snapshots must come from `getBrainAtVersion`. Version sentences are plain words.
 - **Req:** R1.4, R1.5, R1.7, R10.1
 - **Verify:** Tests pass for: the sample run data has 2 floors, 4 rooms, 7 versions and 8 snapshots (0 to 7); every snapshot equals `getBrainAtVersion` for that version; making the data does not change the Brain (deep compare before and after); each version has a sentence and none contains an id such as `item-` or `floor-`.
 
@@ -37,7 +37,7 @@ Create `docs/index.html` and `docs/styles.css`: the top and bottom label bars, t
 
 ### Task 5. Get the Three.js copy — NEEDS YOUR APPROVAL AND THE NETWORK CHANGE
 **Stop before this task.** I will tell you: "Change Network to Common Dependencies now, then reply 'network changed'." I will also show the exact version and the exact file list and wait for your approval.
-Then: download the official Three.js package once into a temporary folder outside the project, copy only the approved files into `docs/vendor/` (main file, the file it depends on if any, `OrbitControls`, and the MIT licence), write `docs/vendor/VERSION.txt`, delete the temporary folder, add the import map to `index.html`. Nothing is added to `package.json`, and no `node_modules` is created in the project.
+Then: download the official Three.js package once into a temporary folder outside the project, copy only the approved files into `docs/vendor/` (main file, the file it depends on if any, `OrbitControls`, and the MIT licence file `LICENSE`), write `docs/vendor/VERSION.txt`, delete the temporary folder, add the import map to `index.html`. Nothing is added to `package.json`, and no `node_modules` is created in the project.
 - **Req:** R9.4, R9.5, R8.2
 - **Verify:** `package.json` has no `dependencies` or `devDependencies` (test); `git status` shows no `node_modules`; the copied files are exactly the approved list; `VERSION.txt` names the version and the licence file is present; the page's import map points only to files inside `docs/vendor/`. After this task I tell you to change Network back.
 
@@ -69,7 +69,7 @@ Create `.kiro/specs/room-viewer/acceptance-checklist.md`, like the Project Brain
 ---
 
 ## Order and approvals at a glance
-1. You approve this spec and answer the two questions.
+1. You approve this spec and answer the two questions (done, 2026-11-19).
 2. Tasks 1 to 4: no network, no installs.
 3. Task 5: I stop. You change Network to Common Dependencies and approve the file list. After the task, you change it back.
 4. Tasks 6 to 10.
