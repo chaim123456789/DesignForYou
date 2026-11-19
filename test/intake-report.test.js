@@ -148,6 +148,9 @@ test('Task 5: the fixed sentence is exact, is the report sentence, and matches r
   const design = readFileSync(new URL('../.kiro/specs/intake/design.md', import.meta.url), 'utf8');
   assert.ok(requirements.includes(EXACT_SENTENCE), 'requirements.md has a different sentence');
   assert.ok(design.includes(EXACT_SENTENCE), 'design.md has a different sentence');
+  const page = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
+  assert.ok(page.includes(`<p id="start-fixed-rules">${EXACT_SENTENCE}</p>`), 'docs/index.html has a different sentence');
+  assert.equal(page.split(EXACT_SENTENCE).length - 1, 1, 'the page says it once, on the start screen');
 });
 
 test('Task 5: the sentence check fails if the sentence is changed in one place only (planted change in a copy)', () => {
@@ -160,6 +163,10 @@ test('Task 5: the sentence check fails if the sentence is changed in one place o
   assert.equal(changedCode.includes(EXACT_SENTENCE), false);
   // Change it in the spec copy only: same.
   assert.equal(requirements.replace(EXACT_SENTENCE, EXACT_SENTENCE.replace('fixed rules', 'smart rules')).includes(EXACT_SENTENCE), false);
+  // Change it in the page copy only: same.
+  const page = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
+  assert.ok(page.includes(EXACT_SENTENCE));
+  assert.equal(page.replace(EXACT_SENTENCE, EXACT_SENTENCE.replace('fixed rules', 'smart rules')).includes(EXACT_SENTENCE), false);
 });
 
 test('Task 5: a run that did not finish gives no report', () => {

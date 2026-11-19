@@ -44,6 +44,12 @@ export class FakeElement {
 
   setAttribute(name, value) { this.attributes[name] = String(value); }
   getAttribute(name) { return this.attributes[name] ?? null; }
+  hasAttribute(name) { return name in this.attributes; }
+  removeAttribute(name) { delete this.attributes[name]; }
+  // Like a browser, focusing makes this the active element. A hidden element cannot take focus.
+  focus() { if (!this.hidden && !this.disabled) this.page.document.activeElement = this; }
+  // A click from the keyboard or mouse. A disabled control ignores it.
+  click() { if (!this.disabled) this.dispatch('click'); }
   appendChild(child) { child.parent = this; this.children.push(child); return child; }
   replaceChildren(...nodes) {
     this._text = '';
@@ -123,6 +129,8 @@ export function createFakePage({ sampleRunText = readDoc('sample-run.json') } = 
       }
     },
     body: new FakeElement(page, 'body'),
+    activeElement: null,
+    title: 'Start - DesignForYou',
     getElementById(id) {
       const el = page.byId.get(id);
       if (!el) page.missingIds.push(id);
