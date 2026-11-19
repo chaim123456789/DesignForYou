@@ -77,7 +77,7 @@ Recommendation:
 
 **In-memory state (never stored, R11.2):** project name; floors (name, rooms: name, width, depth); overall notes; room overrides (room, notes, images); images (name, caption, type, size, a temporary preview address); brief; taste answers; removed profile tags; items (text, room, status, tag).
 
-**Limits** live in one file, `limits.js`, so screens, checks and tests use the same numbers: 1 to 60 characters for the name; 1 to 4 floors; 1 to 20 rooms in total; unique room names (ignoring case); 50 images in total, 10 MB each, JPEG, PNG or WebP; 30 notes per layer, 40 characters each; brief 2000; item text 80; 100 items.
+**Limits** live in one file, `limits.js`, so screens, checks and tests use the same numbers: 1 to 60 characters for the name; 1 to 4 floors; 1 to 20 rooms in total; unique room names (ignoring case); 50 images in total, 10 MB each, JPEG, PNG or WebP; 30 notes per layer, 40 characters each; brief 2000; item text 80; 100 items. Added in Task 2 because the form needs a bound (owner may change them): floor and room names 40 characters; room width and depth 1 to 30 metres; image caption 80 characters; item tag 40 characters.
 
 **Images.** Added through the browser's file picker (an `input type="file"`, with a visible label, also usable by keyboard). Each file is checked by type and size, then shown through a temporary browser address (`URL.createObjectURL`). The address is released on remove and on "Start again". The file is never read into the Brain, never sent, never put in storage. An image's text description is the visitor's caption or "Inspiration image N".
 
