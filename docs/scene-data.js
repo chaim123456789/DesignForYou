@@ -14,6 +14,7 @@ const KIND_WORDS = {
 };
 
 const MARKER_GAP = 0.1;
+const PANEL_THICKNESS = 0.1; // metres. Doors and windows are drawn as thin panels this thick.
 const STYLE_LABEL_MAX = 24; // characters of the name kept before "(style)"
 
 // The short text drawn next to a block. Furniture, doors and windows use their name.
@@ -79,6 +80,35 @@ function findRoom(sampleRun, roomId) {
   return undefined;
 }
 
+// A door or window is drawn as a thin panel lying along the wall edge nearest to its
+// footprint. The footprint (p) only decides which wall and where along it; the panel
+// has the footprint's length along the wall and PANEL_THICKNESS across it.
+// Returns the panel's corner and size inside the room, in room coordinates.
+export function wallPanel(p, room) {
+  const gaps = [
+    ['front', p.y],                              // wall at the low end of z
+    ['back', room.depth - (p.y + p.depth)],      // wall at the high end of z
+    ['left', p.x],
+    ['right', room.width - (p.x + p.width)],
+  ];
+  const [wall] = gaps.reduce((best, g) => (g[1] < best[1] ? g : best));
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  if (wall === 'front' || wall === 'back') {
+    const length = Math.min(p.width, room.width);
+    return {
+      wall, width: length, depth: PANEL_THICKNESS,
+      x: clamp(p.x, 0, room.width - length),
+      z: wall === 'front' ? 0 : room.depth - PANEL_THICKNESS,
+    };
+  }
+  const length = Math.min(p.depth, room.depth);
+  return {
+    wall, width: PANEL_THICKNESS, depth: length,
+    x: wall === 'left' ? 0 : room.width - PANEL_THICKNESS,
+    z: clamp(p.y, 0, room.depth - length),
+  };
+}
+
 // The list of boxes to draw for one version.
 export function buildScene(sampleRun, version) {
   const snap = snapshotAt(sampleRun, version);
@@ -128,16 +158,21 @@ export function buildScene(sampleRun, version) {
       });
     } else if (item.position) {
       const p = item.position;
-      let type = 'furniture';
-      let y = floor.elevation;
-      let height = L.furnitureHeight;
-      if (item.kind === 'door') { type = 'door'; height = L.doorHeight; }
-      if (item.kind === 'window') { type = 'window'; y += L.windowBottom; height = L.windowHeight; }
-      boxes.push({
-        ...base, type,
-        x: room.x + p.x, y, z: room.z + p.y,
-        width: p.width, height, depth: p.depth,
-      });
+      if (item.kind === 'door' || item.kind === 'window') {
+        const panel = wallPanel(p, room);
+        const isDoor = item.kind === 'door';
+        boxes.push({
+          ...base, type: item.kind, wall: panel.wall,
+          x: room.x + panel.x, y: floor.elevation + (isDoor ? 0 : L.windowBottom), z: room.z + panel.z,
+          width: panel.width, height: isDoor ? L.doorHeight : L.windowHeight, depth: panel.depth,
+        });
+      } else {
+        boxes.push({
+          ...base, type: 'furniture',
+          x: room.x + p.x, y: floor.elevation, z: room.z + p.y,
+          width: p.width, height: L.furnitureHeight, depth: p.depth,
+        });
+      }
     }
   }
   return boxes;
