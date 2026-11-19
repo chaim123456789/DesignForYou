@@ -2,7 +2,7 @@
 
 Covers requirements R1 to R13 in `requirements.md`. No app code is written in this step, and nothing is installed.
 
-## 1. Recommendation (needs owner approval)
+## 1. Decision (approved by the owner 2026-11-19)
 
 **Use plain JavaScript, no framework, no installed packages, as in the two earlier specs.**
 
@@ -34,7 +34,7 @@ The aim is a result that is meaningful (the visitor's inputs visibly matter) and
 3. **Images: kept in the page, not read.** They are never put into the Brain. The summary lists only how many were added. The result screen says they were not analysed. (Reading images is only possible with AI, which is a later, separate step, section 8.)
 4. **Items are all style items** (a material, colour or finish, such as "Oak floor in the kitchen"). Furniture, doors and windows need a position in the room. Asking a non-expert to type rectangle coordinates is poor, and inventing positions would make clashes look real when they are not. So Layout and Builder honestly do nothing in this version, and the screen says so. A later spec can add a simple "place on a room plan" screen.
 5. **The Reviewer's comparison list is shown.** The fixed opposite pairs (the sample has two: warm oak against cold steel, linen against glossy chrome) are displayed on the result screen under the clash report. The report is worded as "found nothing in this small list" and never as "no problems".
-6. **Optional small change, NOT in the first build (your call, see section 10):** let the Reviewer also compare the *overall* notes and style profile tags against Locked items, not only room overrides. Today, "Locked oak floor" plus a profile tag "cold steel" is not caught. With the change, the taste answers would matter more. It touches an agent file, so it needs your approval and its own tests.
+6. **Approved 2026-11-19, its own small task (Task 5b):** the Reviewer also compares the *overall* notes and style profile tags against Locked items, not only room overrides. Before this, a Locked oak floor with a profile tag "cold steel" was not caught. It touches the Reviewer file, so it has its own tests and the sample result must stay unchanged (the sample has no such conflict in overall notes; the test proves it).
 
 ### How the screens label this
 
@@ -77,7 +77,7 @@ Recommendation:
 
 **In-memory state (never stored, R11.2):** project name; floors (name, rooms: name, width, depth); overall notes; room overrides (room, notes, images); images (name, caption, type, size, a temporary preview address); brief; taste answers; removed profile tags; items (text, room, status, tag).
 
-**Limits** live in one file, `limits.js`, so screens, checks and tests use the same numbers: 1 to 60 characters for the name; 1 to 4 floors; 1 to 20 rooms in total; unique room names (ignoring case); 50 images in total, 10 MB each, JPEG, PNG or WebP; 30 notes per layer, 40 characters each; brief 2000; item text 80; 100 items.
+**Limits** live in one file, `limits.js`, so screens, checks and tests use the same numbers: 1 to 60 characters for the name; 1 to 4 floors; 1 to 20 rooms in total; unique room names (ignoring case); 50 images in total, 10 MB each, JPEG, PNG or WebP; 30 notes per layer, 40 characters each; brief 2000; item text 80; 100 items. Added in Task 2 because the form needs a bound (owner may change them): floor and room names 40 characters; room width and depth 1 to 30 metres; image caption 80 characters; item tag 40 characters.
 
 **Images.** Added through the browser's file picker (an `input type="file"`, with a visible label, also usable by keyboard). Each file is checked by type and size, then shown through a temporary browser address (`URL.createObjectURL`). The address is released on remove and on "Start again". The file is never read into the Brain, never sent, never put in storage. An image's text description is the visitor's caption or "Inspiration image N".
 
@@ -145,6 +145,14 @@ The page is static on GitHub Pages, so it has no private place to keep a key. An
 
 **Recommendation:** keep the hosted page rule-based and AI-free (as now). When live AI is wanted, choose **Option B**, built in its own spec, with: a hard daily spending cap set at the provider, a per-visitor rate limit, AI off by default and switched on by a clear opt-in, images sent only if the visitor ticks a box, and the rule-based result always available as the fallback. Use Option C only as a private way for the owner to try AI ideas without exposing anything. Avoid Option A for the public page. No AI work starts without your approval, and nothing is installed or signed up for without your yes.
 
+### 8.1 Keeping the design ready for one AI step (NOT built now)
+
+Approved direction: later, after intake works, one real AI step for the Style agent. The key stays on a server function (Option B). The rules-based Style agent stays as the fallback. To keep that easy, and without building anything now:
+- The run function in `build-brain.js` takes the agent list as a parameter (the Coordinator already accepts `options.agents`). A later step swaps the Style agent without touching the Coordinator or the other agents.
+- The AI step would be a separate file with the same shape as the rules-based Style agent: it only proposes changes, and the gatekeeper still refuses any change to a Locked item.
+- If the AI step is off, fails or times out, the rules-based Style agent runs. The result screen would say which one ran.
+- No key, no address of a server and no AI code is added now. The tests that forbid network calls stay as they are.
+
 ## 9. How the design will be checked
 
 | Requirement | Check |
@@ -159,15 +167,14 @@ The page is static on GitHub Pages, so it has no private place to keep a key. An
 | R12 | Structure tests (labels, headings, status region, tab order), contrast computed from the CSS values; real device checks listed as pending owner check |
 | R13 | Checklist script matches every quoted test name against the test files, like the earlier two specs |
 
-## 10. Open questions for the owner
+## 10. Owner decisions (all answered 2026-11-19)
 
-Two decisions I need before any code:
-1. **Approve plain JavaScript, no framework, no installs** (section 1), and **one page with the viewer as its last screen** (section 4).
-2. **Approve the three small edits to existing code** (section 3 and 5): the config file's `node:fs` import, the optional `brief`, `styleProfile` and `imageCount` fields on the Project Brain, and the viewer's "show this run data" function. Without them the browser cannot run the existing code.
-
-Smaller points where I made a choice. Tell me if any is wrong:
-- Items are style items only in this version (section 2, point 4).
-- Rooms get an optional width and depth, default 4 by 4 metres.
-- The limit of 50 images replaces "10 to 80" in `.kiro/steering/product.md`. I have not edited that file. I suggest you tell me to update it after approval.
-- Should the Reviewer also check the overall notes and style profile against Locked items (section 2, point 6)? I recommend yes, as a separate later task, but it is not in the first build.
-- The six taste questions listed in R5.1 can be reworded.
+1. Approved: plain JavaScript, no framework, no installs; one page with the viewer as its last screen.
+2. Approved: the three small edits to existing code. All existing tests must keep passing, none deleted or weakened, each edit its own small task, verified after each.
+3. `package.json` may gain a script `export-engine` that only copies files. No dependencies.
+4. `product.md` now says "up to 50 images".
+5. The Reviewer also checks overall notes and style profile tags against Locked items (Task 5b).
+6. The result screen shows the visitor's images as a mood board next to the style profile, keeps the "fixed rules, not AI" sentence and "What the design team did with your input".
+7. Items stay style-only. Room width and depth stay optional, default 4 by 4 metres.
+8. Later, not now: one real AI step for the Style agent (section 8.1).
+9. The six taste questions in R5.1 stay as written unless the owner rewords them.

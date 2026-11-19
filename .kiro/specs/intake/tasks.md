@@ -1,11 +1,12 @@
 # Tasks: Intake
 
 Rules for every task:
-- Plain JavaScript, no framework, no build tool (once approved in `design.md` section 10). **No installs, no downloads, no new dependencies.** `package.json` may only gain script lines.
+- Plain JavaScript, no framework, no build tool (approved 2026-11-19). **No installs, no downloads, no new dependencies.** `package.json` may only gain script lines (`export-engine` is approved).
+- The three edits to existing code (config loading, optional Brain fields, viewer "show this run data") are approved. Each is its own small task. No existing test may be deleted or weakened.
 - Do one task at a time, then verify it and report exactly how, before starting the next.
 - Tests are run with `node --test`. A task is not finished until its check passes. Anything only a person can judge by looking at a real device is written down as "pending owner check", never as Passed.
 - If a task fails twice, stop and explain.
-- Do not touch `LICENSE`, `sample-project.json`, `docs/sample-run.json` (except by the existing export script, with an identical result) or the Reviewer, Layout, Builder and Style agent files. Keep `.kiro` out of `.gitignore`.
+- Do not touch `LICENSE`, `sample-project.json`, `docs/sample-run.json` (except by the existing export script, with an identical result) or the agent files. The one exception is the Reviewer file in Task 5b. Keep `.kiro` out of `.gitignore`.
 - All existing tests must still pass after every task (the count at the start is 235).
 - Add no tests for things not listed here. One pull request at the end.
 
@@ -13,13 +14,13 @@ Rules for every task:
 
 ---
 
-### Task 0. Apply the owner's answers
-Update this spec and `design.md` with the owner's answers to the questions in `design.md` section 10. If the owner approves the changes to existing code, note it here. Edit `.kiro/steering/product.md` ("10 to 80" becomes "up to 50") only if the owner says so.
+### Task 0. Apply the owner's answers (DONE 2026-11-19)
+The owner's answers are recorded in `requirements.md` (Decisions from the owner), `design.md` (sections 1, 2, 8.1, 10) and in this file. `.kiro/steering/product.md` now says "up to 50 images".
 - **Req:** all
 - **Verify:** Re-read the three spec files against the answers. No code changes.
 
-### Task 1. Browser-safe engine
-(a) Change `src/agents/config.js` so `node:fs` is only used when `agent.json` files are actually read. (b) Add `src/viewer/` pure function that builds the run data from a finished project, with no file reading, and make the existing `make-sample-run.js` use it, so the sample output does not change. (c) Add `npm run export-engine`: copies `src/brain/`, the four `agent.js` files, `src/agents/config.js`, `src/coordinator.js`, `src/label.js`, `src/summary/make-summary.js` and the pure run-data function into `docs/engine/`, byte for byte.
+### Task 1. Browser-safe engine (three small steps, each verified before the next)
+(a) Change `src/agents/config.js` so `node:fs` is only used when `agent.json` files are actually read. (b) Add a `src/viewer/` pure function that builds the run data from a finished project, with no file reading, and make the existing `make-sample-run.js` use it, so the sample output does not change. (c) Add `npm run export-engine`: copies `src/brain/`, the four `agent.js` files, `src/agents/config.js`, `src/coordinator.js`, `src/label.js`, `src/summary/make-summary.js` and the pure run-data function into `docs/engine/`, byte for byte.
 - **Req:** R7.4, R11.6
 - **Verify:** All 235 existing tests pass. Running `npm run export-viewer` again gives a `docs/sample-run.json` identical to before (`git diff` empty). A test shows every file in `docs/engine/` is byte-identical to its source. A test imports `docs/engine/coordinator.js` in Node with no `node:fs` available (a stand-in that throws) and runs a tiny project. The "R7.6" tests still pass (the copies are outside `src/`, so also search `docs/engine/` for network calls and web addresses).
 
@@ -33,10 +34,15 @@ Create `docs/intake/taste.js`: the 6 questions, answers, tags and sentences, and
 - **Req:** R5
 - **Verify:** Tests: exactly 6 questions, each with 2 or 3 answers; same answers give the same profile (run twice, deep-equal); skipped questions are left out; removed tags are absent; no answers gives "No style profile yet" and no tags; a text search shows no word such as "AI" or "analysed" in the sentences.
 
-### Task 4. Build the Project Brain from the inputs
+### Task 4. Build the Project Brain from the inputs (two small steps, each verified before the next)
 (a) Allow the optional project fields `brief`, `styleProfile`, `imageCount` in the Brain (additive; the sample is unchanged). (b) Create `docs/intake/build-brain.js` (design section 5) and a function that runs the pipeline with the normal Style agent, Layout, Builder and a Reviewer given the fixed list of opposite pairs, and the fixed clock.
 - **Req:** R7.3, R7.4, R7.5, R7.6, R9.1 to R9.5
 - **Verify:** Tests: known inputs give the expected floors, rooms, inspiration, overrides and items with the right owner; Locked items are deep-equal before and after the run; two runs are deep-equal; run order in the log is Style, Layout, Builder, Reviewer; a room override "cold steel" with a Locked "warm oak" item in that room gives the expected clash; no override gives "No clashes found". A test shows no agent file mentions `brief`, `styleProfile`, `imageCount` or `images` (a planted read in a copy makes the test fail, then is removed). A Brain with a failing agent returns a failure that names the agent and keeps the inputs. A test shows the sample run output is unchanged.
+
+### Task 5b. Reviewer also checks overall notes and style profile tags (approved 2026-11-19)
+Small change to `src/agents/reviewer/agent.js` only: besides room override notes, the Reviewer compares the overall inspiration notes and style profile tags against the tag of each Locked item (in rooms without an override), using the same list of opposite pairs. Same clash report format. Tests in a new file.
+- **Req:** R9.3
+- **Verify:** All existing tests pass unchanged (including the Reviewer tests and the sample run). New tests: overall note "cold steel" with a Locked "warm oak" item gives a clash; a profile tag does too; no matching pair gives "No clashes found"; a room with an override uses the override and not the overall notes; items without a tag are skipped; the sample run output (`docs/sample-run.json` after `npm run export-viewer`) is identical (`git diff` empty). A planted fault (the check ignoring overall notes) makes a new test fail, then is removed.
 
 ### Task 5. "What the design team did with your input" report
 Create `docs/intake/report.js`: a pure function from the inputs and the finished run to the three lists (Used, Kept but not read, Nothing to do this time), the comparison list of opposite pairs, and the fixed sentence of R10.1.
@@ -69,7 +75,7 @@ Item form (text, room list from setup, Locked or Unsure with no default, optiona
 - **Verify:** Page tests: cannot add without choosing Locked or Unsure; the room list matches the rooms entered; removing a room moves to a clear message about its items (the items are removed after confirmation); the list shows status as text; item 101 refused.
 
 ### Task 11. Connect the viewer and summary, run button, result
-(a) Change `docs/viewer.js` so that it has one function "show this run data", used by "Try the sample" (fetching `sample-run.json` as today) and by the run. (b) Review screen and the "Run the design team" button (disabled with a reason until valid). (c) Result screen: viewer, summary, the "What the design team did" section, the fixed sentence, "Start again". Visitor text goes in as text only.
+(a) Change `docs/viewer.js` so that it has one function "show this run data", used by "Try the sample" (fetching `sample-run.json` as today) and by the run. (b) Review screen and the "Run the design team" button (disabled with a reason until valid). (c) Result screen: viewer, summary, a mood board of the visitor's images next to the style profile (each image with its text description), the "What the design team did" section, the fixed sentence, "Start again". Visitor text goes in as text only.
 - **Req:** R1.2, R7, R8, R9, R10
 - **Verify:** All existing viewer tests pass unchanged, or only with a path or setup edit that is listed in the report. New tests with the real `viewer.js` and the real engine copies: sample path gives the same drawing data as before and shows SAMPLE PROJECT; own path shows no SAMPLE PROJECT and shows the draft statement; a failing agent shows its name and keeps the inputs; hostile text such as `<img src=x onerror=alert(1)>` in a name, note, brief and item appears as plain text everywhere (summary included); "Start again" clears the state and releases previews; pressing the button makes no network call (stand-in `fetch` records zero calls). A planted fault (the summary inserting raw text) must make a test fail, then is removed. How the 3D view looks with a visitor's project: pending owner check.
 
@@ -84,6 +90,6 @@ Add an "Intake" section to `README.md` (how to open the page, what each screen d
 - **Verify:** `node --test` all pass; `node test-helpers/check-checklist.js` matches every quoted name; `git status` shows only intended files; `LICENSE`, `sample-project.json` and `.gitignore` unchanged; `package.json` has only new script lines and no dependencies.
 
 ### Later (not part of this spec, only if the owner approves)
-- Reviewer also checks overall notes and style profile tags against Locked items (separate task, touches the Reviewer file, with its own tests).
+- One real AI step for the Style agent: key on a server function, rules-based Style agent kept as fallback (`design.md` section 8.1). Not built now.
 - Furniture, doors and windows placed on a simple room plan.
 - Live AI mode, as its own spec (see `design.md` section 8).
