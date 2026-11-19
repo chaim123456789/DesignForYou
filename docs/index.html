@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'">
   <title>DesignForYou: 3D room viewer (sample)</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=fix-viewer-1">
 </head>
 <body>
   <header id="top-bar" class="label-bar">
@@ -13,12 +13,13 @@
     <p class="label-draft">Plans are drafts for professional review. They are not verified engineering.</p>
   </header>
 
+  <div id="error-message" role="alert" hidden></div>
+
   <main id="page">
    <div id="page-inner">
     <div id="col-main">
     <h1>Sample two-storey home</h1>
     <p id="how-to-use">How to use this: drag to turn, scroll to zoom, click a block for details, use the slider for history.</p>
-    <p id="error-message" role="alert" hidden></p>
 
     <div id="view-controls" role="group" aria-label="Choose what to show">
       <button type="button" id="floor-all" class="floor-button" data-floor="all" aria-pressed="true">Both</button>
@@ -60,6 +61,7 @@
       <div id="details-text"><p>Click a block to see its details.</p></div>
     </section>
 
+    <p id="script-status">Page script: not started yet. If this line never changes, the page script did not run.</p>
     </div>
 
    </div>
@@ -72,6 +74,6 @@
   </footer>
 
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-  <script type="module" src="viewer.js"></script>
+  <script type="module" src="viewer.js?v=fix-viewer-1"></script>
 </body>
 </html>
