@@ -108,10 +108,10 @@ These are placeholders for a made-up example. Rooms of a floor sit side by side 
 For a finished sample project, `makeSampleRun(project)` returns plain data:
 - `name`, `sample` (true for the sample; read through the shared label code, because an existing test allows only that code and the Reviewer to read the sample flag)
 - `floors`: each with id, name, order, and its rooms (id, name, order, and size and position from the layout)
-- `versions`: number, time, who, item, field, and a ready-made plain sentence such as "Version 3: Layout checked the Sofa" (so the page does not have to explain internal fields)
+- `versions`: number, who, item, field, and a ready-made plain sentence such as "Version 3: Layout checked the Sofa" (so the page does not have to explain internal fields)
 - `snapshots`: one entry per version from 0 to the latest. Each holds the items at that version, **taken from `getBrainAtVersion(project, n)`**, and nothing else. For each item: id, kind, name, status, owner, room id, position (if any), and for the clash item, the clash list.
 
-With 7 versions and 9 items the file stays small (a few tens of kilobytes). It carries no timestamps from the real clock; the sample uses a fixed clock, so two exports are identical (R1.3).
+With 7 versions and 9 items the file stays small (a few tens of kilobytes). It carries no times at all (the page does not need them, and a date such as 2026-01-01 would trip the personal-data pattern check as a phone number). The sample also uses a fixed clock, so two exports are identical (R1.3).
 
 `export-sample-run.js` runs `runSample()`, checks the run succeeded, calls `makeSampleRun`, and writes `docs/sample-run.json`. It is run with `npm run export-viewer` (a new script, no packages). It uses only file writing, like `write-sample-summary.js`.
 

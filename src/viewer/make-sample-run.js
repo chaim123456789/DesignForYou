@@ -71,9 +71,9 @@ export function makeSampleRun(project, layout = readViewerLayout()) {
   });
 
   const history = listVersions(project);
+  // No time is exported: the page does not need it, and a date such as 2026-01-01 looks like a phone number to the personal-data pattern check.
   const versions = history.map((v) => ({
     number: v.number,
-    time: v.time,
     who: v.who,
     item: v.item,
     field: v.field,

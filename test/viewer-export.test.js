@@ -51,3 +51,37 @@ test('Task 1: each version has a plain sentence and none contains an id', () => 
     assert.ok(!/item-|floor-/.test(v.sentence), `id found in: ${v.sentence}`);
   }
 });
+
+// ---- Task 2: the exported file ----
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const root = fileURLToPath(new URL('..', import.meta.url));
+const exportedPath = fileURLToPath(new URL('../docs/sample-run.json', import.meta.url));
+const runExport = () => {
+  execFileSync(process.execPath, ['src/viewer/export-sample-run.js'], { cwd: root, stdio: 'pipe' });
+  return readFileSync(exportedPath, 'utf8');
+};
+
+test('Task 2: two exports give identical text', () => {
+  assert.equal(runExport(), runExport());
+});
+
+test('Task 2: the exported file parses and matches makeSampleRun(runSample().project)', () => {
+  const text = readFileSync(exportedPath, 'utf8');
+  assert.deepEqual(JSON.parse(text), makeSampleRun(runSample().project));
+});
+
+test('Task 2: the exported file has no email, phone number, street word or web address', () => {
+  const text = readFileSync(exportedPath, 'utf8');
+  assert.doesNotMatch(text, /[\w.+-]+@[\w-]+\.[\w.]+/, 'email address');
+  assert.doesNotMatch(text, /\+?\d[\d\s().-]{8,}\d/, 'phone number');
+  assert.doesNotMatch(text, /\b\d+\s+[A-Z][a-z]+\s+(Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Close|Court|Way)\b/, 'street address');
+  assert.doesNotMatch(text, /https?:\/\/|www\./i, 'web link');
+});
+
+test('Task 2: sample-project.json is unchanged (git diff is empty)', () => {
+  const diff = execFileSync('git', ['diff', '--', 'src/sample/sample-project.json'], { cwd: root, encoding: 'utf8' });
+  assert.equal(diff, '');
+});
