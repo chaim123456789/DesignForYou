@@ -4,7 +4,7 @@
 // goes in with textContent, so a strange name can never become page code.
 // This is the only file that uses Three.js. It draws what buildScene returns
 // and nothing else.
-import { buildScene, describeItem } from './scene-data.js';
+import { buildScene, describeItem, separateLabels } from './scene-data.js';
 
 // The colours, in one place. They match the legend swatches in styles.css.
 const COLOURS = {
@@ -167,17 +167,25 @@ function addBox(THREE, group, b) {
   }
 }
 
-function addRoomLabels(boxes) {
+// Text labels are page elements laid over the drawing, so they are always readable.
+// Room names, then item names. Item labels sit above the top of their block.
+function addLabels(boxes) {
   const area = el('scene-area');
   for (const old of view.labels) old.element.remove();
   view.labels = [];
-  for (const b of boxes) {
-    if (b.type !== 'room') continue;
+  const add = (b, text, className, y) => {
     const element = document.createElement('span');
-    element.className = 'room-label';
-    element.textContent = b.label;
+    element.className = `scene-label ${className}`;
+    element.textContent = text;
     area.appendChild(element);
-    view.labels.push({ element, point: [b.x + b.width / 2, b.y + b.height, b.z + b.depth / 2] });
+    view.labels.push({ element, point: [b.x + b.width / 2, y, b.z + b.depth / 2] });
+  };
+  for (const b of boxes) {
+    if (b.itemId === undefined) continue;
+    add(b, b.label, `${b.type}-label${b.clash ? ' clash-label' : ''}`, b.y + b.height);
+  }
+  for (const b of boxes) {
+    if (b.type === 'room') add(b, b.label, 'room-label', b.y + b.height);
   }
 }
 
@@ -188,13 +196,24 @@ function drawFrame() {
   const width = renderer.domElement.clientWidth;
   const height = renderer.domElement.clientHeight;
   const v = new THREE.Vector3();
+  const shown = [];
   for (const label of view.labels) {
     v.set(...label.point).project(camera);
     const visible = v.z > -1 && v.z < 1;
     label.element.style.display = visible ? '' : 'none';
-    label.element.style.left = `${(v.x * 0.5 + 0.5) * width}px`;
-    label.element.style.top = `${(-v.y * 0.5 + 0.5) * height}px`;
+    if (!visible) continue;
+    const w = label.element.offsetWidth;
+    const h = label.element.offsetHeight;
+    // Keep the whole label inside the drawing, then move colliding labels apart.
+    const x = Math.min(Math.max((v.x * 0.5 + 0.5) * width, w / 2 + 4), width - w / 2 - 4);
+    const y = Math.min(Math.max((-v.y * 0.5 + 0.5) * height - 4, h + 4), height - 4);
+    shown.push({ label, rect: { x, y, width: w, height: h } });
   }
+  const bottoms = separateLabels(shown.map((s) => s.rect));
+  shown.forEach((s, i) => {
+    s.label.element.style.left = `${s.rect.x}px`;
+    s.label.element.style.top = `${Math.max(bottoms[i], s.rect.height + 2)}px`;
+  });
 }
 
 // Place the camera so the whole home is in view, looking at its middle.
@@ -235,7 +254,7 @@ function drawScene(version) {
   view.group = new view.THREE.Group();
   for (const b of boxes) addBox(view.THREE, view.group, b);
   view.scene.add(view.group);
-  addRoomLabels(boxes);
+  addLabels(boxes);
   view.boxes = boxes;
   return boxes;
 }

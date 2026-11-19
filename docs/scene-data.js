@@ -14,6 +14,37 @@ const KIND_WORDS = {
 };
 
 const MARKER_GAP = 0.1;
+const STYLE_LABEL_MAX = 24; // characters of the name kept before "(style)"
+
+// The short text drawn next to a block. Furniture, doors and windows use their name.
+// Style items have long sentences for names, so they are cut short and end in "(style)".
+export function shortLabel(item) {
+  if (item.kind !== 'style') return item.name;
+  let base = item.name.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+(in the \w+|stays as it is)\s*$/i, '').trim();
+  if (base.length > STYLE_LABEL_MAX) {
+    const cut = base.slice(0, STYLE_LABEL_MAX + 1).replace(/\s+\S*$/, '').trim();
+    base = `${cut}\u2026`;
+  }
+  return `${base} (style)`;
+}
+
+// Labels that would overlap on screen are moved up, one at a time, until they do not.
+// Input: one {x, y, width, height} per label in pixels, where x is the middle and y the
+// bottom edge. Earlier labels keep their place. Output: the bottom edge (y) to use for each.
+export function separateLabels(rects, gap = 2) {
+  const placed = [];
+  return rects.map((r) => {
+    let y = r.y;
+    for (let guard = 0; guard < 50; guard += 1) {
+      const hit = placed.find((p) => Math.abs(p.x - r.x) < (p.width + r.width) / 2
+        && y > p.y - p.height - gap && y - r.height - gap < p.y);
+      if (!hit) break;
+      y = hit.y - hit.height - gap;
+    }
+    placed.push({ x: r.x, y, width: r.width, height: r.height });
+    return y;
+  });
+}
 
 function snapshotAt(sampleRun, version) {
   const snap = sampleRun.snapshots.find((s) => s.version === version);
@@ -78,6 +109,7 @@ export function buildScene(sampleRun, version) {
     const base = {
       key: `item:${item.id}`,
       itemId: item.id,
+      label: shortLabel(item),
       status: item.status,
       colour: colourFor(item.status),
       clash: clashed.has(item.id),
