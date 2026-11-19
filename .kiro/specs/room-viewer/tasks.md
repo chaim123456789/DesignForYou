@@ -51,6 +51,19 @@ Raycasting for clicks and taps; fill the details panel through `describeItem`; c
 - **Req:** R4.1 to R4.8, R5.4
 - **Verify:** Logic tested through `describeItem` and the clash list (already in Task 3 and 4 tests); a test that the panel code only uses `textContent` (code search). **Clicking works in a browser: pending owner check.**
 
+### Task 7b. Viewer readability (presentation only)
+The owner opened the published viewer: the logic works, but it is hard to read. Fix the presentation only. Do not change `sample-project.json`, the Project Brain, the agents or the pipeline. Do the eight steps one at a time and verify each before the next. Page text and drawing only; the data footprint of a door or window is used only for its position and for the clash overlap.
+1. **Labels.** Every block (furniture, door, window, style marker) has a short always-visible text label with its item name, for example "Sofa", "Garden door", "Kitchen window". Style markers read like "Oak floor (style)". Labels are drawn by the page itself, not from outside. If two labels would collide, one is offset.
+2. **Doors and windows.** Doors are thin tall panels (about 0.1 m thick, about 2.0 m tall) lying along the wall edge nearest to the door's position. Windows are thin panels raised off the floor (sill about 0.9 m, height about 1.2 m). The Garden door still visibly touches or overlaps the Sofa, with the red outline.
+3. **Heights.** Furniture has a sensible height (sofa about 0.8 m). Style markers are clearly flat floor patches.
+4. **Floor slabs and walls.** Each room has a solid pale floor slab. Walls are thin outlines only. Room names stay.
+5. **Floors.** The floors are labelled "Ground floor" and "Upper floor", with three buttons: Both, Ground floor, Upper floor.
+6. **Camera.** On load the camera fits both floors completely inside the canvas at an angle that shows both floors. A "Reset view" button returns to it. The canvas is about 70% of the screen height.
+7. **Page layout.** Margins, a maximum width of about 1400 px, nothing touching the screen edge, readable fonts. The SAMPLE PROJECT bars stay visible at top and bottom.
+8. **Legend.** One more legend line: "Doors and windows are thin panels; furniture is solid; style items are flat patches".
+- **Req:** R2.2, R2.4 to R2.6, R2.8, R3.2, R9.6, R10.1
+- **Verify:** Tests (no browser) for: every block has a label; labels that collide are offset; door thickness under 0.2 m and height about 2.0 m; window sill above the floor; the Garden door box overlaps the Sofa box; sofa height; style markers flat; each room has a floor slab; floor labels; the three floor buttons exist; the floor filter hides the right items; the camera fit keeps every corner inside the canvas; the Reset view button exists; the legend line exists; the content security rule and the "no inline script, no outside address" rules still pass. How it looks (label readability, the panels, the slabs, the camera angle, the 70% canvas height, margins) is **pending owner check**, with exact things to look at listed in the pull request.
+
 ### Task 8. Version slider
 Connect the slider to the drawing: on change, rebuild the boxes for that version, refresh or close the panel, update the caption. The page starts at the latest version.
 - **Req:** R6.1 to R6.7, R3.6, R5.7

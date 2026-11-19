@@ -5,49 +5,71 @@ body {
   display: flex;
   flex-direction: column;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
   color: #222;
   background: #f4f4f2;
 }
+
+/* The bars span the screen, but their text lines up with the page below (max width 1400 px) and never touches the edge. */
 .label-bar {
   flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1rem;
+  gap: 0.25rem 1.5rem;
   align-items: baseline;
-  padding: 0.4rem 0.75rem;
+  padding: 0.5rem max(1rem, calc((100% - 1400px) / 2 + 1rem));
   background: #222;
   color: #fff;
 }
 .label-bar p { margin: 0; }
 .label-sample { font-weight: 700; letter-spacing: 0.05em; }
-.label-draft { font-size: 0.9rem; }
+.label-draft { font-size: 1rem; }
 
+/* The page scrolls; the bars do not. */
 #page {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 0.75rem;
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: 1fr;
-  align-content: start;
+  padding: 1.25rem 1rem 1.5rem;
 }
-#page h1 { font-size: 1.3rem; margin: 0; }
-#page h2 { font-size: 1rem; margin: 0 0 0.4rem; }
+#page-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+#col-main, #col-side { display: grid; gap: 0.75rem; align-content: start; min-width: 0; }
+#page h1 { font-size: 1.6rem; line-height: 1.25; margin: 0; }
+#page h2 { font-size: 1.15rem; margin: 0 0 0.4rem; }
 #how-to-use { margin: 0; }
+noscript p { margin: 0; }
 
 #error-message {
   margin: 0;
-  padding: 0.6rem;
+  padding: 0.75rem;
   background: #fde8e8;
   border: 2px solid #b00020;
 }
 
+#view-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+#view-controls button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  background: #fff;
+  border: 2px solid #44505a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#view-controls button[aria-pressed="true"] { background: #44505a; color: #fff; }
+#reset-view { margin-left: auto; }
+
 #scene-area {
   position: relative;
   overflow: hidden;
-  height: 55vh;
-  min-height: 300px;
-  background: #e4e7ea;
+  height: 70vh;
+  min-height: 320px;
+  background: #dde3e9;
   border: 1px solid #b8bec4;
   display: flex;
   align-items: center;
@@ -55,9 +77,10 @@ body {
   color: #555;
 }
 
-section { background: #fff; border: 1px solid #d5d5d0; padding: 0.6rem; }
+section { background: #fff; border: 1px solid #d5d5d0; padding: 0.75rem 1rem; }
 #legend ul, #clash-list { list-style: none; margin: 0; padding: 0; }
-#legend li, #clash-list li { margin: 0.25rem 0; }
+#legend li, #clash-list li { margin: 0.3rem 0; }
+#legend-shapes { margin: 0.6rem 0 0; }
 .swatch {
   display: inline-block;
   width: 1rem;
@@ -75,32 +98,34 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.6rem; }
   font: inherit;
   text-align: left;
   width: 100%;
-  padding: 0.4rem;
+  padding: 0.5rem;
   background: #fff;
   border: 1px solid #cc0000;
   cursor: pointer;
 }
 #details-text p { margin: 0.2rem 0; }
 
-@media (min-width: 800px) {
-  #page { grid-template-columns: 2fr 1fr; }
-  #page h1, #how-to-use, #error-message, #scene-area { grid-column: 1; }
-  #scene-area { min-height: 60vh; }
-  #legend, #history, #clash-section, #details-panel { grid-column: 2; }
-  #scene-area { grid-row: 3 / span 4; }
+@media (min-width: 900px) {
+  #page { padding: 1.5rem 1.5rem 2rem; }
+  #page-inner { grid-template-columns: minmax(0, 2.3fr) minmax(280px, 1fr); gap: 1.5rem; }
+  .label-bar { padding-inline: max(1.5rem, calc((100% - 1400px) / 2 + 1.5rem)); }
 }
 
 /* 3D drawing */
 #scene-area canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-.room-label {
+.scene-label {
   position: absolute;
   transform: translate(-50%, -100%);
   padding: 0.1rem 0.4rem;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid #8a9299;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  line-height: 1.3;
   font-weight: 600;
   pointer-events: none;
   white-space: nowrap;
 }
+.room-label { font-style: italic; color: #444; }
+.clash-label { border-color: #cc0000; border-width: 2px; }
+.floor-label { font-size: 1rem; background: #44505a; color: #fff; border-color: #44505a; }
 .scene-message { margin: 0; padding: 1rem; text-align: center; }

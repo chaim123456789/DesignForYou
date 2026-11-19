@@ -4,17 +4,19 @@
 // goes in with textContent, so a strange name can never become page code.
 // This is the only file that uses Three.js. It draws what buildScene returns
 // and nothing else.
-import { buildScene, describeItem } from './scene-data.js';
+import { buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera } from './scene-data.js';
 
 // The colours, in one place. They match the legend swatches in styles.css.
 const COLOURS = {
   locked: 0x0072b2,   // blue
   unsure: 0xe69f00,   // orange
   clash: 0xcc0000,    // red outline
-  room: 0x9aa3ab,     // neutral grey for rooms, floors and walls
+  room: 0x7d8790,     // neutral grey for the wall outlines
+  slab: 0xf4f1e8,     // pale floor slab
+  slabEdge: 0xb9b4a6,
   doorEdge: 0x5a3a1a, // dark brown edge so doors look different from furniture
   windowEdge: 0xffffff,
-  background: 0xe4e7ea,
+  background: 0xdde3e9,
 };
 const CLASH_OUTLINE = 0.1; // metres the red outline sticks out from a clashing box
 
@@ -24,6 +26,8 @@ const el = (id) => document.getElementById(id);
 let sampleRun = null;
 let currentVersion = 0;
 let openItemId = null;
+let userMovedCamera = false; // true once the visitor turns or zooms; the view then stops refitting itself
+let shownFloor = 'all'; // 'all', or a floor's order number
 
 function showError(message) {
   const box = el('error-message');
@@ -123,16 +127,23 @@ function addBox(THREE, group, b) {
   const centre = [b.x + b.width / 2, b.y + b.height / 2, b.z + b.depth / 2];
   const geometry = new THREE.BoxGeometry(b.width, b.height, b.depth);
 
+  if (b.type === 'floor-slab') {
+    // A solid pale slab, so furniture and panels stand out against it.
+    const slab = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: COLOURS.slab }));
+    slab.position.set(...centre);
+    slab.userData = { boxKey: b.key, type: b.type };
+    group.add(slab);
+    const rim = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: COLOURS.slabEdge }));
+    rim.position.set(...centre);
+    group.add(rim);
+    return;
+  }
+
   if (b.type === 'room') {
-    // Almost see-through, so the inside of every room can be seen. Edges give the walls and floor.
-    const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-      color: COLOURS.room, transparent: true, opacity: 0.12, depthWrite: false,
-    }));
-    mesh.position.set(...centre);
-    mesh.userData = { boxKey: b.key, type: b.type };
-    group.add(mesh);
+    // Walls are thin outlines only: no filled faces, so nothing inside is hidden.
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: COLOURS.room }));
     edges.position.set(...centre);
+    edges.userData = { boxKey: b.key, type: b.type };
     group.add(edges);
     return;
   }
@@ -167,17 +178,28 @@ function addBox(THREE, group, b) {
   }
 }
 
-function addRoomLabels(boxes) {
+// Text labels are page elements laid over the drawing, so they are always readable.
+// Room names, then item names. Item labels sit above the top of their block.
+function addLabels(boxes) {
   const area = el('scene-area');
   for (const old of view.labels) old.element.remove();
   view.labels = [];
-  for (const b of boxes) {
-    if (b.type !== 'room') continue;
+  const add = (b, text, className, y) => {
     const element = document.createElement('span');
-    element.className = 'room-label';
-    element.textContent = b.label;
+    element.className = `scene-label ${className}`;
+    element.textContent = text;
     area.appendChild(element);
-    view.labels.push({ element, point: [b.x + b.width / 2, b.y + b.height, b.z + b.depth / 2] });
+    view.labels.push({ element, point: [b.x + b.width / 2, y, b.z + b.depth / 2] });
+  };
+  for (const b of boxes) {
+    if (b.itemId === undefined) continue;
+    add(b, b.label, `${b.type}-label${b.clash ? ' clash-label' : ''}`, b.y + b.height);
+  }
+  for (const b of boxes) {
+    if (b.type === 'room') add(b, b.label, 'room-label', b.y + b.height);
+  }
+  for (const f of filterByFloor(floorLabels(sampleRun), shownFloor)) {
+    add({ x: f.x, z: f.z, width: 0, depth: 0 }, f.text, 'floor-label', f.y);
   }
 }
 
@@ -188,34 +210,37 @@ function drawFrame() {
   const width = renderer.domElement.clientWidth;
   const height = renderer.domElement.clientHeight;
   const v = new THREE.Vector3();
+  const shown = [];
   for (const label of view.labels) {
     v.set(...label.point).project(camera);
     const visible = v.z > -1 && v.z < 1;
     label.element.style.display = visible ? '' : 'none';
-    label.element.style.left = `${(v.x * 0.5 + 0.5) * width}px`;
-    label.element.style.top = `${(-v.y * 0.5 + 0.5) * height}px`;
+    if (!visible) continue;
+    const w = label.element.offsetWidth;
+    const h = label.element.offsetHeight;
+    // Keep the whole label inside the drawing, then move colliding labels apart.
+    const x = Math.min(Math.max((v.x * 0.5 + 0.5) * width, w / 2 + 4), width - w / 2 - 4);
+    const y = Math.min(Math.max((-v.y * 0.5 + 0.5) * height - 4, h + 4), height - 4);
+    shown.push({ label, rect: { x, y, width: w, height: h } });
   }
+  const bottoms = separateLabels(shown.map((s) => s.rect));
+  shown.forEach((s, i) => {
+    s.label.element.style.left = `${s.rect.x}px`;
+    s.label.element.style.top = `${Math.max(bottoms[i], s.rect.height + 2)}px`;
+  });
 }
 
-// Place the camera so the whole home is in view, looking at its middle.
+// Place the camera so everything shown is completely inside the drawing, at an angle
+// that shows both floors. The maths is in scene-data.js (fitCamera) so it can be tested.
 function frameHome(boxes) {
-  const { THREE, camera, controls } = view;
-  const bounds = new THREE.Box3();
-  for (const b of boxes) {
-    bounds.expandByPoint(new THREE.Vector3(b.x, b.y, b.z));
-    bounds.expandByPoint(new THREE.Vector3(b.x + b.width, b.y + b.height, b.z + b.depth));
-  }
-  const centre = bounds.getCenter(new THREE.Vector3());
-  const radius = bounds.getSize(new THREE.Vector3()).length() / 2;
-  const fitDistance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov) / 2);
-  const aspectFactor = Math.max(1, 1.4 / camera.aspect);
-  // From the front (larger z), a little to the right and above, so x runs left to right.
-  const direction = new THREE.Vector3(0.35, 0.55, 1).normalize();
-  camera.position.copy(centre).addScaledVector(direction, fitDistance * 0.85 * aspectFactor);
-  camera.near = 0.1;
-  camera.far = fitDistance * 6;
+  const { camera, controls } = view;
+  const labels = filterByFloor(floorLabels(sampleRun), shownFloor);
+  const fit = fitCamera(viewBounds(boxes, labels), { fov: camera.fov, aspect: camera.aspect });
+  camera.position.set(...fit.position);
+  camera.near = Math.max(0.1, fit.distance / 100);
+  camera.far = fit.distance * 6;
   camera.updateProjectionMatrix();
-  controls.target.copy(centre);
+  controls.target.set(...fit.target);
   controls.update();
 }
 
@@ -226,16 +251,17 @@ function resizeScene() {
   view.renderer.setSize(width, height, false);
   view.camera.aspect = width / height;
   view.camera.updateProjectionMatrix();
+  if (!userMovedCamera && view.boxes.length > 0) frameHome(view.boxes);
   drawFrame();
 }
 
 function drawScene(version) {
-  const boxes = buildScene(sampleRun, version);
+  const boxes = filterByFloor(buildScene(sampleRun, version), shownFloor);
   if (view.group) { disposeGroup(view.group); view.scene.remove(view.group); }
   view.group = new view.THREE.Group();
   for (const b of boxes) addBox(view.THREE, view.group, b);
   view.scene.add(view.group);
-  addRoomLabels(boxes);
+  addLabels(boxes);
   view.boxes = boxes;
   return boxes;
 }
@@ -263,6 +289,7 @@ function focusItem(itemId) {
   const { THREE, camera, controls } = view;
   const box = view.boxes.find((b) => b.itemId === itemId);
   if (!THREE || !camera || !box) return;
+  userMovedCamera = true;
   const centre = new THREE.Vector3(box.x + box.width / 2, box.y + box.height / 2, box.z + box.depth / 2);
   const offset = camera.position.clone().sub(controls.target);
   const distance = Math.min(offset.length(), CLOSE_UP_DISTANCE);
@@ -298,6 +325,7 @@ async function startScene() {
     area.replaceChildren(view.renderer.domElement);
     view.controls = new OrbitControls(view.camera, view.renderer.domElement);
     view.controls.addEventListener('change', drawFrame);
+    view.controls.addEventListener('start', () => { userMovedCamera = true; });
 
     // Clicks and taps. Pressing and moving is turning the view, so it does not count as a click.
     const canvas = view.renderer.domElement;
@@ -317,6 +345,36 @@ async function startScene() {
     new ResizeObserver(resizeScene).observe(area);
   } catch (error) {
     showSceneMessage('The 3D view cannot be shown in this browser. The clash list and the details below still work.');
+  }
+}
+
+// The three floor buttons: Both, Ground floor, Upper floor.
+function chooseFloor(which) {
+  shownFloor = which;
+  for (const button of document.querySelectorAll('.floor-button')) {
+    button.setAttribute('aria-pressed', String(button.dataset.floor === String(which)));
+  }
+  if (!view.THREE) return;
+  const boxes = drawScene(currentVersion);
+  if (openItemId !== null && !boxes.some((b) => b.itemId === openItemId)) closePanel();
+  userMovedCamera = false;
+  frameHome(boxes);
+  drawFrame();
+}
+
+// "Reset view": back to the starting camera for what is shown now.
+function resetView() {
+  if (!view.THREE) return;
+  userMovedCamera = false;
+  frameHome(view.boxes);
+  drawFrame();
+}
+
+function setUpFloorButtons() {
+  el('reset-view').addEventListener('click', resetView);
+  for (const button of document.querySelectorAll('.floor-button')) {
+    const which = button.dataset.floor === 'all' ? 'all' : Number(button.dataset.floor);
+    button.addEventListener('click', () => chooseFloor(which));
   }
 }
 
@@ -346,6 +404,7 @@ async function start() {
   slider.value = String(last);
   slider.disabled = false;
   slider.addEventListener('input', () => render(Number(slider.value)));
+  setUpFloorButtons();
   render(last);
   await startScene();
 }

@@ -14,6 +14,39 @@ const KIND_WORDS = {
 };
 
 const MARKER_GAP = 0.1;
+const PANEL_THICKNESS = 0.1; // metres. Doors and windows are drawn as thin panels this thick.
+const SLAB_THICKNESS = 0.1; // metres. Each room's floor slab sits just under its floor level.
+const STYLE_LABEL_MAX = 24; // characters of the name kept before "(style)"
+
+// The short text drawn next to a block. Furniture, doors and windows use their name.
+// Style items have long sentences for names, so they are cut short and end in "(style)".
+export function shortLabel(item) {
+  if (item.kind !== 'style') return item.name;
+  let base = item.name.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+(in the \w+|stays as it is)\s*$/i, '').trim();
+  if (base.length > STYLE_LABEL_MAX) {
+    const cut = base.slice(0, STYLE_LABEL_MAX + 1).replace(/\s+\S*$/, '').trim();
+    base = `${cut}\u2026`;
+  }
+  return `${base} (style)`;
+}
+
+// Labels that would overlap on screen are moved up, one at a time, until they do not.
+// Input: one {x, y, width, height} per label in pixels, where x is the middle and y the
+// bottom edge. Earlier labels keep their place. Output: the bottom edge (y) to use for each.
+export function separateLabels(rects, gap = 2) {
+  const placed = [];
+  return rects.map((r) => {
+    let y = r.y;
+    for (let guard = 0; guard < 50; guard += 1) {
+      const hit = placed.find((p) => Math.abs(p.x - r.x) < (p.width + r.width) / 2
+        && y > p.y - p.height - gap && y - r.height - gap < p.y);
+      if (!hit) break;
+      y = hit.y - hit.height - gap;
+    }
+    placed.push({ x: r.x, y, width: r.width, height: r.height });
+    return y;
+  });
+}
 
 function snapshotAt(sampleRun, version) {
   const snap = sampleRun.snapshots.find((s) => s.version === version);
@@ -48,6 +81,122 @@ function findRoom(sampleRun, roomId) {
   return undefined;
 }
 
+// A door or window is drawn as a thin panel lying along the wall edge nearest to its
+// footprint. The footprint (p) only decides which wall and where along it; the panel
+// has the footprint's length along the wall and PANEL_THICKNESS across it.
+// Returns the panel's corner and size inside the room, in room coordinates.
+export function wallPanel(p, room) {
+  const gaps = [
+    ['front', p.y],                              // wall at the low end of z
+    ['back', room.depth - (p.y + p.depth)],      // wall at the high end of z
+    ['left', p.x],
+    ['right', room.width - (p.x + p.width)],
+  ];
+  const [wall] = gaps.reduce((best, g) => (g[1] < best[1] ? g : best));
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  if (wall === 'front' || wall === 'back') {
+    const length = Math.min(p.width, room.width);
+    return {
+      wall, width: length, depth: PANEL_THICKNESS,
+      x: clamp(p.x, 0, room.width - length),
+      z: wall === 'front' ? 0 : room.depth - PANEL_THICKNESS,
+    };
+  }
+  const length = Math.min(p.depth, room.depth);
+  return {
+    wall, width: PANEL_THICKNESS, depth: length,
+    x: wall === 'left' ? 0 : room.width - PANEL_THICKNESS,
+    z: clamp(p.y, 0, room.depth - length),
+  };
+}
+
+// "Ground Floor" is shown as "Ground floor", "Upper Floor" as "Upper floor".
+export function floorLabelText(floor) {
+  const name = String(floor.name).trim();
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+const FLOOR_LABEL_SPACE = 1.4; // metres left of the home where a floor's label is placed
+
+// One label per floor, placed to the left of the home at that floor's height.
+export function floorLabels(sampleRun) {
+  const rooms = sampleRun.floors.flatMap((f) => f.rooms);
+  const left = Math.min(...rooms.map((r) => r.x));
+  return sampleRun.floors.map((floor) => {
+    const front = Math.max(...floor.rooms.map((r) => r.z + r.depth));
+    const back = Math.min(...floor.rooms.map((r) => r.z));
+    return {
+      order: floor.order,
+      text: floorLabelText(floor),
+      x: left - FLOOR_LABEL_SPACE, y: floor.elevation + 0.8, z: (back + front) / 2,
+    };
+  });
+}
+
+// Keep only the boxes (or labels) of one floor. which is "all" or a floor's order number.
+export function filterByFloor(list, which) {
+  if (which === 'all') return list;
+  return list.filter((b) => b.floorOrder === which || b.order === which);
+}
+
+// The box in space (metres) that the camera must keep completely in view: every box,
+// every floor label, plus a little room for the text of labels that sit above blocks.
+export function viewBounds(boxes, labels = []) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  const grow = (x, y, z) => {
+    [x, y, z].forEach((v, i) => { min[i] = Math.min(min[i], v); max[i] = Math.max(max[i], v); });
+  };
+  for (const b of boxes) {
+    grow(b.x, b.y, b.z);
+    grow(b.x + b.width, b.y + b.height, b.z + b.depth);
+  }
+  for (const l of labels) grow(l.x - 0.6, l.y, l.z);
+  max[1] += 0.5;
+  return { min, max };
+}
+
+// The starting camera: from the front, a little to the right and above, far enough back
+// that all eight corners of the bounds land inside the picture (margin 0.9 means within
+// 90% of the way from the middle to the edge). Pure maths, no Three.js.
+export const START_DIRECTION = [0.3, 0.38, 1];
+
+export function fitCamera(bounds, { fov = 45, aspect = 1.6, direction = START_DIRECTION, margin = 0.9 } = {}) {
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const unit = (a) => { const n = Math.hypot(...a); return a.map((v) => v / n); };
+  const centre = bounds.min.map((v, i) => (v + bounds.max[i]) / 2);
+  const dir = unit(direction);
+  const forward = dir.map((v) => -v);
+  const right = unit(cross(forward, [0, 1, 0]));
+  const up = cross(right, forward);
+  const tanHalf = Math.tan((fov * Math.PI) / 360);
+  const corners = [];
+  for (const x of [bounds.min[0], bounds.max[0]]) {
+    for (const y of [bounds.min[1], bounds.max[1]]) {
+      for (const z of [bounds.min[2], bounds.max[2]]) corners.push([x, y, z]);
+    }
+  }
+  const positionAt = (d) => centre.map((v, i) => v + dir[i] * d);
+  const fits = (d) => {
+    const pos = positionAt(d);
+    return corners.every((c) => {
+      const rel = c.map((v, i) => v - pos[i]);
+      const depth = dot(rel, forward);
+      if (depth <= 0.1) return false;
+      return Math.abs(dot(rel, right)) / (depth * tanHalf * aspect) <= margin
+        && Math.abs(dot(rel, up)) / (depth * tanHalf) <= margin;
+    });
+  };
+  let lo = 0;
+  let hi = 1000;
+  for (let i = 0; i < 60; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (fits(mid)) hi = mid; else lo = mid;
+  }
+  return { position: positionAt(hi), target: centre, distance: hi };
+}
+
 // The list of boxes to draw for one version.
 export function buildScene(sampleRun, version) {
   const snap = snapshotAt(sampleRun, version);
@@ -58,8 +207,18 @@ export function buildScene(sampleRun, version) {
   for (const floor of sampleRun.floors) {
     for (const room of floor.rooms) {
       boxes.push({
+        key: `slab:${room.id}`,
+        type: 'floor-slab',
+        floorOrder: floor.order,
+        x: room.x, y: floor.elevation - SLAB_THICKNESS, z: room.z,
+        width: room.width, height: SLAB_THICKNESS, depth: room.depth,
+        colour: 'neutral',
+        clash: false,
+      });
+      boxes.push({
         key: `room:${room.id}`,
         type: 'room',
+        floorOrder: floor.order,
         label: room.name,
         x: room.x, y: floor.elevation, z: room.z,
         width: room.width, height: L.wallHeight, depth: room.depth,
@@ -78,6 +237,8 @@ export function buildScene(sampleRun, version) {
     const base = {
       key: `item:${item.id}`,
       itemId: item.id,
+      floorOrder: floor.order,
+      label: shortLabel(item),
       status: item.status,
       colour: colourFor(item.status),
       clash: clashed.has(item.id),
@@ -96,16 +257,21 @@ export function buildScene(sampleRun, version) {
       });
     } else if (item.position) {
       const p = item.position;
-      let type = 'furniture';
-      let y = floor.elevation;
-      let height = L.furnitureHeight;
-      if (item.kind === 'door') { type = 'door'; height = L.doorHeight; }
-      if (item.kind === 'window') { type = 'window'; y += L.windowBottom; height = L.windowHeight; }
-      boxes.push({
-        ...base, type,
-        x: room.x + p.x, y, z: room.z + p.y,
-        width: p.width, height, depth: p.depth,
-      });
+      if (item.kind === 'door' || item.kind === 'window') {
+        const panel = wallPanel(p, room);
+        const isDoor = item.kind === 'door';
+        boxes.push({
+          ...base, type: item.kind, wall: panel.wall,
+          x: room.x + panel.x, y: floor.elevation + (isDoor ? 0 : L.windowBottom), z: room.z + panel.z,
+          width: panel.width, height: isDoor ? L.doorHeight : L.windowHeight, depth: panel.depth,
+        });
+      } else {
+        boxes.push({
+          ...base, type: 'furniture',
+          x: room.x + p.x, y: floor.elevation, z: room.z + p.y,
+          width: p.width, height: L.furnitureHeight, depth: p.depth,
+        });
+      }
     }
   }
   return boxes;
