@@ -1,13 +1,21 @@
 // Loads the agent.json settings files. Each agent has its own folder and file.
 // The Reviewer is always on: its "enabled" setting is ignored (R6.7).
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+// The Node file tools are fetched only when the agent.json files are really read,
+// so a browser can load this file and pass its own configs to the Coordinator.
 
 // The fixed run order (R6.1).
 export const AGENT_ORDER = Object.freeze(['Style', 'Layout', 'Builder', 'Reviewer']);
 
-const here = path.dirname(fileURLToPath(import.meta.url));
+function nodeTools() {
+  if (typeof process === 'undefined' || typeof process.getBuiltinModule !== 'function') {
+    throw new Error('Reading agent.json files needs Node.js. In a browser, pass the configs directly.');
+  }
+  return {
+    fs: process.getBuiltinModule('node:fs'),
+    path: process.getBuiltinModule('node:path'),
+    url: process.getBuiltinModule('node:url'),
+  };
+}
 
 // Check one config object. Returns { name, enabled }.
 export function validateAgentConfig(config, expectedName) {
@@ -29,11 +37,13 @@ export function validateAgentConfig(config, expectedName) {
 }
 
 // Load one agent's agent.json from <baseDir>/<lowercase name>/agent.json.
-export function loadAgentConfig(name, baseDir = here) {
-  const file = path.join(baseDir, name.toLowerCase(), 'agent.json');
+export function loadAgentConfig(name, baseDir) {
+  const { fs, path, url } = nodeTools();
+  const dir = baseDir === undefined ? path.dirname(url.fileURLToPath(import.meta.url)) : baseDir;
+  const file = path.join(dir, name.toLowerCase(), 'agent.json');
   let text;
   try {
-    text = readFileSync(file, 'utf8');
+    text = fs.readFileSync(file, 'utf8');
   } catch {
     throw new Error(`The ${name} agent config file is missing: ${file}`);
   }
@@ -47,6 +57,6 @@ export function loadAgentConfig(name, baseDir = here) {
 }
 
 // Load all four configs, in run order.
-export function loadAllAgentConfigs(baseDir = here) {
+export function loadAllAgentConfigs(baseDir) {
   return AGENT_ORDER.map((name) => loadAgentConfig(name, baseDir));
 }
