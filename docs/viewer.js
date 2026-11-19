@@ -89,7 +89,7 @@ function fillClashList(version) {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = text;
-      button.addEventListener('click', () => showDetails(target));
+      button.addEventListener('click', () => focusItem(target));
       li.appendChild(button);
     } else {
       li.textContent = text;
@@ -100,7 +100,9 @@ function fillClashList(version) {
 
 // ---- 3D drawing -----------------------------------------------------------
 
-const view = { THREE: null, renderer: null, scene: null, camera: null, controls: null, group: null, labels: [] };
+const view = { THREE: null, renderer: null, scene: null, camera: null, controls: null, group: null, labels: [], boxes: [] };
+const CLICK_MOVE_LIMIT = 5; // pixels. A press that moves further than this is a drag, not a click.
+const CLOSE_UP_DISTANCE = 9; // metres from the item when the camera turns to it
 
 function showSceneMessage(text) {
   const p = document.createElement('p');
@@ -234,7 +236,40 @@ function drawScene(version) {
   for (const b of boxes) addBox(view.THREE, view.group, b);
   view.scene.add(view.group);
   addRoomLabels(boxes);
+  view.boxes = boxes;
   return boxes;
+}
+
+// A click or tap on the drawing: open the nearest item under the pointer, or close the panel
+// when the click lands on empty space or on a room.
+function pickAt(event) {
+  const { THREE, renderer, camera, group } = view;
+  const rect = renderer.domElement.getBoundingClientRect();
+  const pointer = new THREE.Vector2(
+    ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    -((event.clientY - rect.top) / rect.height) * 2 + 1,
+  );
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(pointer, camera);
+  const items = group.children.filter((obj) => obj.userData && obj.userData.itemId !== undefined);
+  const hits = raycaster.intersectObjects(items, false);
+  if (hits.length > 0) showDetails(hits[0].object.userData.itemId);
+  else closePanel();
+}
+
+// Open the details of an item. With the 3D view running, also turn the camera toward it.
+function focusItem(itemId) {
+  showDetails(itemId);
+  const { THREE, camera, controls } = view;
+  const box = view.boxes.find((b) => b.itemId === itemId);
+  if (!THREE || !camera || !box) return;
+  const centre = new THREE.Vector3(box.x + box.width / 2, box.y + box.height / 2, box.z + box.depth / 2);
+  const offset = camera.position.clone().sub(controls.target);
+  const distance = Math.min(offset.length(), CLOSE_UP_DISTANCE);
+  camera.position.copy(centre).addScaledVector(offset.normalize(), distance);
+  controls.target.copy(centre);
+  controls.update();
+  drawFrame();
 }
 
 async function startScene() {
@@ -263,6 +298,17 @@ async function startScene() {
     area.replaceChildren(view.renderer.domElement);
     view.controls = new OrbitControls(view.camera, view.renderer.domElement);
     view.controls.addEventListener('change', drawFrame);
+
+    // Clicks and taps. Pressing and moving is turning the view, so it does not count as a click.
+    const canvas = view.renderer.domElement;
+    let pressed = null;
+    canvas.addEventListener('pointerdown', (event) => { pressed = { x: event.clientX, y: event.clientY }; });
+    canvas.addEventListener('pointerup', (event) => {
+      if (!pressed) return;
+      const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
+      pressed = null;
+      if (moved <= CLICK_MOVE_LIMIT) pickAt(event);
+    });
 
     const boxes = drawScene(currentVersion);
     resizeScene();

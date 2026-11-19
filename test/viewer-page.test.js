@@ -96,3 +96,25 @@ test('Task 5: the import map points only to files inside docs/vendor/, and the c
   assert.ok(html.includes(`script-src 'self' 'sha256-${hash}'`), 'the content security rule must name the import map hash');
   assert.ok(!html.includes("'unsafe-inline'"));
 });
+
+test('Task 7: the details panel code fills the panel with textContent only, and has no editing controls', () => {
+  const script = read('viewer.js');
+  const functionBody = (name) => {
+    const start = script.indexOf(`function ${name}(`);
+    assert.ok(start >= 0, `function ${name} not found`);
+    const end = script.indexOf('\nfunction ', start + 1);
+    return script.slice(start, end === -1 ? undefined : end);
+  };
+  for (const name of ['showDetails', 'closePanel']) {
+    const body = functionBody(name);
+    assert.match(body, /textContent/, `${name} should use textContent`);
+    assert.doesNotMatch(body, /createElement\('(input|textarea|select|button|form)'\)/, `${name} must not add editing controls`);
+  }
+  // No way anywhere in the page script to turn text into markup.
+  for (const banned of ['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'document.write', 'DOMParser', 'createContextualFragment']) {
+    assert.ok(!script.includes(banned), `viewer.js uses ${banned}`);
+  }
+  // The page has no editing controls in the details area either.
+  const panel = html.match(/<section id="details-panel"[\s\S]*?<\/section>/)[0];
+  assert.doesNotMatch(panel, /<(input|textarea|select|button|form)\b/);
+});
