@@ -27,6 +27,15 @@ const STEPS = SCREENS.filter((s) => s.step !== null);
 const el = (id) => document.getElementById(id);
 let currentScreen = 'start';
 
+// The visitor's project, in the page's memory only. It is created when the state code has loaded.
+let appState = null;
+
+// The code of each screen is loaded on its own, with the cache tag in its address, in a protected
+// step. A screen whose file cannot be loaded shows the red message and the others still work.
+const STATE_FILE = `./state.js?v=${PAGE_VERSION}`;
+const LIMITS_FILE = `./limits.js?v=${PAGE_VERSION}`;
+const SETUP_SCREEN_FILE = `./setup-screen.js?v=${PAGE_VERSION}`;
+
 // ---- Problems and protected steps (same pattern as viewer.js, own red box) -------------------
 
 const FAILED = Symbol('failed');
@@ -99,6 +108,7 @@ function show(id, { moveFocus = true } = {}) {
   });
   attempt('Page title', () => { document.title = `${screen.name} - DesignForYou`; });
   attempt('Step text, Back and Next', () => updateNavigation(screen));
+  attempt('Clearing the status line', () => { el('action-status').textContent = ''; });
   // Focus moves to the new heading only when the visitor changes screen, not when the page first loads.
   if (moveFocus) {
     attempt('Moving the keyboard focus', () => {
@@ -149,6 +159,23 @@ function setUpResultBackButton() {
   el('result-back').addEventListener('click', guarded('Back to start button', () => show('start')));
 }
 
+// What the screens share: the status line that announces additions and removals (role="status").
+function announce(text) {
+  attempt('Status line', () => { el('action-status').textContent = text; });
+}
+
+async function loadProjectData() {
+  const stateCode = await import(STATE_FILE);
+  const limitsCode = await import(LIMITS_FILE);
+  appState = stateCode.createState();
+  return { api: stateCode, limits: limitsCode.LIMITS };
+}
+
+async function loadSetupScreen(data) {
+  const { setUpSetupScreen } = await import(SETUP_SCREEN_FILE);
+  setUpSetupScreen({ el, attempt, guarded, announce, getState: () => appState, ...data });
+}
+
 // The order matters little, but each step is protected on its own.
 async function start() {
   setScriptStatus('started.');
@@ -158,6 +185,8 @@ async function start() {
   attempt('Next button', setUpNextButton);
   attempt('Back to start button', setUpResultBackButton);
   attempt('Start screen', () => show('start', { moveFocus: false }));
+  const data = await attempt('Loading the project data code', loadProjectData);
+  if (data !== FAILED) await attempt('Setup screen', () => loadSetupScreen(data));
   setScriptStatus('finished setting up.');
 }
 

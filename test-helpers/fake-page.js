@@ -51,6 +51,7 @@ export class FakeElement {
   // A click from the keyboard or mouse. A disabled control ignores it.
   click() { if (!this.disabled) this.dispatch('click'); }
   appendChild(child) { child.parent = this; this.children.push(child); return child; }
+  append(...nodes) { nodes.forEach((n) => this.appendChild(n)); }
   replaceChildren(...nodes) {
     this._text = '';
     this.children.forEach((c) => { c.parent = null; });

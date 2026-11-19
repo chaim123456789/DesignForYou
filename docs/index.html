@@ -18,6 +18,7 @@
 
   <main id="page">
     <p id="step-text" class="step-text" hidden></p>
+    <p id="action-status" class="action-status" role="status" aria-live="polite"></p>
 
     <div id="screen-start" class="screen">
       <h1 id="heading-start" tabindex="-1">DesignForYou</h1>
@@ -32,7 +33,56 @@
 
     <div id="screen-setup" class="screen" hidden>
       <h1 id="heading-setup" tabindex="-1">Set up your project</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="setup-intro">Name your project, then add its floors and rooms. Nothing is saved: if you close or reload this page, what you entered is lost.</p>
+      <p id="setup-needs" class="setup-needs">Still needed before you can run the design team: a project name, a floor and a room.</p>
+
+      <div class="panel" role="group" aria-labelledby="name-heading">
+        <h2 id="name-heading">Project name</h2>
+        <label for="project-name">Project name (required)</label>
+        <p id="project-name-hint" class="hint">Up to 60 characters.</p>
+        <input type="text" id="project-name" class="text-input" autocomplete="off" aria-describedby="project-name-hint">
+        <p id="project-name-error" class="field-error" hidden></p>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="floors-heading">
+        <h2 id="floors-heading">Add a floor</h2>
+        <label for="floor-name">Floor name</label>
+        <p id="floor-name-hint" class="hint">For example "Ground floor". A project has 1 to 4 floors.</p>
+        <div class="field-row">
+          <input type="text" id="floor-name" class="text-input" autocomplete="off" aria-describedby="floor-name-hint">
+          <button type="button" id="add-floor" class="action-button">Add floor</button>
+        </div>
+        <p id="floor-name-error" class="field-error" hidden></p>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="rooms-heading">
+        <h2 id="rooms-heading">Add a room</h2>
+        <label for="room-floor">Floor for this room</label>
+        <select id="room-floor" class="text-input" aria-describedby="room-floor-hint"></select>
+        <p id="room-floor-hint" class="hint">Add a floor first. Then choose it here.</p>
+        <p id="room-floor-error" class="field-error" hidden></p>
+
+        <label for="room-name">Room name</label>
+        <p id="room-name-hint" class="hint">For example "Kitchen". Up to 20 rooms in total. Each room needs a different name.</p>
+        <input type="text" id="room-name" class="text-input" autocomplete="off" aria-describedby="room-name-hint">
+        <p id="room-name-error" class="field-error" hidden></p>
+
+        <p id="room-size-hint" class="hint">Width and depth are optional. They are only used to draw the 3D view. They are not the real size of your home. If you leave them as 4, the room is drawn 4 metres by 4 metres.</p>
+        <label for="room-width">Width (metres)</label>
+        <input type="text" id="room-width" class="text-input" inputmode="decimal" autocomplete="off" value="4" aria-describedby="room-size-hint">
+        <p id="room-width-error" class="field-error" hidden></p>
+        <label for="room-depth">Depth (metres)</label>
+        <input type="text" id="room-depth" class="text-input" inputmode="decimal" autocomplete="off" value="4" aria-describedby="room-size-hint">
+        <p id="room-depth-error" class="field-error" hidden></p>
+
+        <button type="button" id="add-room" class="action-button">Add room</button>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="list-heading">
+        <h2 id="list-heading" tabindex="-1">Your floors and rooms</h2>
+        <p id="list-empty">Nothing added yet.</p>
+        <ul id="floor-list" class="entry-list"></ul>
+      </div>
     </div>
 
     <div id="screen-inspiration" class="screen" hidden>

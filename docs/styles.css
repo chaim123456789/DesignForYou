@@ -185,3 +185,52 @@ body:not([data-screen="result"]) .label-sample { display: none; }
   border-bottom: 3px solid #b00020;
 }
 #intake-error-message p { margin: 0.2rem 0; }
+
+/* ---- Project setup screen (build-intake-1) ---- */
+.panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; padding: 0.75rem 1rem; background: #fff; border: 1px solid #8a9299; }
+.panel h2 { margin: 0; }
+.panel label { display: block; margin-top: 0.5rem; font-weight: 600; }
+.panel p { margin: 0; }
+.hint { color: #444; }
+.text-input {
+  font: inherit;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  color: #222;
+  background: #fff;
+  border: 2px solid #44505a;
+  border-radius: 4px;
+}
+.text-input[aria-invalid="true"] { border-color: #b00020; }
+.field-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.field-row .text-input { flex: 1 1 12rem; width: auto; }
+.field-error { padding-left: 0.5rem; color: #8a0000; font-weight: 600; border-left: 4px solid #b00020; }
+.setup-needs { padding: 0.5rem 0.75rem; background: #fff; border-left: 4px solid #44505a; }
+
+/* The status line that announces additions and removals stays in view while the page scrolls. */
+.action-status {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  max-width: 46rem;
+  margin: 0 auto 0.75rem;
+  padding: 0.5rem 0.75rem;
+  color: #0b2a4a;
+  background: #e3edf7;
+  border-left: 4px solid #0b3d91;
+  font-weight: 600;
+}
+.action-status:empty { margin: 0; padding: 0; border: 0; }
+
+.entry-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.room-list { margin: 0.5rem 0 0 1rem; }
+.entry { padding: 0.5rem; border: 1px solid #8a9299; background: #f7f7f5; }
+.entry-row, .rename-row, .confirm-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.entry-name { font-weight: 600; overflow-wrap: anywhere; }
+.entry-detail { color: #444; }
+.entry-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-left: auto; }
+.rename-row .text-input { flex: 1 1 12rem; width: auto; }
+.rename-row label { flex: 1 1 100%; margin: 0; }
+.rename-row .field-error { flex: 1 1 100%; }
+.confirm-row p { flex: 1 1 100%; }
