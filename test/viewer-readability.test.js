@@ -219,3 +219,25 @@ test('Task 7b step 6: the page has a "Reset view" button, wired to the starting 
   assert.match(js, /function resetView\(\)[\s\S]*frameHome\(view\.boxes\)/);
   assert.match(read('styles.css'), /#scene-area \{[^}]*height: 70vh;/);
 });
+
+test('Task 7b step 7: the page has margins, a 1400 px maximum width and readable fonts, and the two label bars stay outside the scrolling area', () => {
+  const css = read('styles.css');
+  const rule = (selector) => {
+    const m = css.match(new RegExp(`(?:^|\\n)${selector.replace(/[#.]/g, "\\$&")} \\{([^}]*)\\}`));
+    assert.ok(m, `no css rule for ${selector}`);
+    return m[1];
+  };
+  assert.match(rule('#page-inner'), /max-width: 1400px/);
+  assert.match(rule('#page-inner'), /margin: 0 auto/);
+  assert.match(rule('#page'), /padding: [\d.]+rem/, 'the page has side margins');
+  assert.match(rule('.label-bar'), /padding: [\d.]+rem max\(1rem/, 'the bars keep their text off the screen edge');
+  assert.match(rule('body'), /font-size: 1rem/);
+  assert.match(rule('#page'), /overflow-y: auto/);
+  const sizes = [...css.matchAll(/font-size: ([\d.]+)rem/g)].map((m) => Number(m[1]));
+  assert.ok(sizes.length > 0 && Math.min(...sizes) >= 0.9, `smallest font ${Math.min(...sizes)}rem`);
+  // The bars are the page's top and bottom siblings of the scrolling <main>, not inside it.
+  const html = read('index.html');
+  const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'));
+  assert.ok(!main.includes('label-bar') && !main.includes('<header') && !main.includes('<footer'));
+  assert.ok(html.indexOf('</header>') < html.indexOf('<main') && html.indexOf('</main>') < html.indexOf('<footer'));
+});
