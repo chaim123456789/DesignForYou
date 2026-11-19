@@ -1,6 +1,6 @@
 # Acceptance checklist: Project Brain and Sample-mode Pipeline
 
-Checked on 2026-11-18 (Task 17). `node --test` result at that time: 138 tests, 138 passed, 0 failed.
+Checked on 2026-11-18 (Task 17), updated on 2026-11-19 (R4.1 and R7.6 tests added). `node --test` result now: 146 tests, 146 passed, 0 failed. At Task 17 it was 138 tests, 138 passed.
 
 Key: **Passed** means a named automated test proves it. **Unverified** means no test or step proves it yet. Test names are the exact names in `test/`.
 
@@ -34,7 +34,7 @@ Key: **Passed** means a named automated test proves it. **Unverified** means no 
 ## R4. One Project Brain, one owner per item
 | # | Status | Proof |
 |---|---|---|
-| 4.1 | **Unverified** | No test checks "exactly one Project Brain per project". In the code a project is one object that holds all its items, but nothing tests that. |
+| 4.1 | Passed | "R4.1: one project is one Brain that holds all its own items, versions and run log"; "R4.1: two projects have two separate Brains that share nothing"; "R4.1: two sample runs give two separate Brains"; "R4.1: no source file keeps a second, shared Brain at the top level of a module (code search)". The last one is a pattern search for a top-level `let`, so it is a guard, not a proof. The first three are the main proof. |
 | 4.2 | Passed | "R4.2: an owner that is not one of the four agents is rejected"; "R4.5: each item kind maps to its owner" |
 | 4.3 | Passed | "R4.3: an item with no owner is rejected"; "R4.3: an item with two owners is rejected" |
 | 4.4 | Passed | "R4.4: a non-owner is refused on an Unsure item"; "R4.4: a proposal for an item the agent does not own is refused and logged, with no version" |
@@ -69,7 +69,7 @@ Key: **Passed** means a named automated test proves it. **Unverified** means no 
 | 7.3 | Passed | "R7.3: the sample has at least 1 room override, and it is on the bedroom" |
 | 7.4 | Passed | "R7.4: no shortcut around the Coordinator (code search)"; "R7.4: the sample gives the same result as a plain Coordinator run with the same agents" |
 | 7.5 | Passed for the report and the summary page text. **Browser view unverified** | "R7.5/R9.7: the sample report carries the label and the draft statement"; "R7.5/R10.1: the summary contains the SAMPLE PROJECT label and the draft statement"; "R7.5: the label text contains SAMPLE PROJECT and the draft statement". Nobody has yet looked at the page in a browser (pending owner check). |
-| 7.6 | **Unverified** | No test checks that Sample mode is the only mode. A search of `src/` for network calls, web addresses and environment variables found none, but that was a one-off search, not a test. |
+| 7.6 | Passed | "R7.6: src/ has no network calls (code search)"; "R7.6: src/ has no web addresses (code search)"; "R7.6: src/ reads no environment variables (code search)"; "R7.6: there is only one way to run, and it is the sample (no mode switch)". These are pattern searches over every `.js`, `.json` and `.html` file in `src/`, so they catch the usual ways to do each thing but cannot catch every possible disguise. |
 | 7.7 | Passed | "R7.7: running the sample twice gives an identical Brain, versions, run log and report" |
 | 7.8 | Passed | "R7.8: no personal data (no emails, phone numbers, street addresses, links)". This is a pattern search, so it cannot catch every possible kind of personal data. |
 
@@ -107,6 +107,6 @@ Key: **Passed** means a named automated test proves it. **Unverified** means no 
 - Installs: none. `package.json` has no `dependencies` or `devDependencies`. It gained one script (`sample`) in Task 16.
 
 ## Unverified, in short
-1. R4.1: one Project Brain per project (no test).
-2. R7.6: Sample mode is the only mode (searched once, no test).
-3. R7.5, R10.1, R10.2: how the page looks and reads in a browser (pending owner check).
+1. R7.5, R10.1, R10.2: how the page looks and reads in a browser (pending owner check).
+
+R4.1 and R7.6 were unverified on 2026-11-18 and now have tests. Each new test was also shown to fail when a violation was planted (a `fetch` call, a web address, `process.env`, and a shared items list), then the planted change was removed.
