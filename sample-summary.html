@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SAMPLE PROJECT: Sample Two-Storey Home: summary</title>
+<style>
+body { font-family: Arial, Helvetica, sans-serif; max-width: 1000px; margin: 24px auto; padding: 0 16px; color: #222; line-height: 1.4; }
+.label { background: #b00020; color: #fff; padding: 8px 12px; font-weight: bold; font-size: 1.2em; }
+.statement { border: 2px solid #b00020; padding: 8px 12px; }
+table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; }
+th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; vertical-align: top; }
+th { background: #eee; }
+.locked { font-weight: bold; color: #b00020; }
+</style>
+</head>
+<body>
+<p class="label">SAMPLE PROJECT</p>
+<p class="statement">Plans are drafts for professional review. They are not verified engineering.</p>
+<h1>Sample Two-Storey Home: summary</h1>
+<h2>Project structure</h2>
+<p>Project name: <strong>Sample Two-Storey Home</strong></p>
+<p>Overall style for the whole project: warm oak, linen, soft white walls</p>
+<ul>
+<li><strong>Ground Floor</strong><ul>
+<li>Kitchen: uses the overall style</li>
+<li>Living Room: uses the overall style</li>
+</ul></li>
+<li><strong>Upper Floor</strong><ul>
+<li>Bedroom: own style: cold steel, dark slate (replaces the overall style in this room)</li>
+<li>Bathroom: uses the overall style</li>
+</ul></li>
+</ul>
+<h2>Items, with status and owner</h2>
+<table>
+<tr><th>Item</th><th>Type</th><th>Room</th><th>Status</th><th>Owner</th><th>Current value</th></tr>
+<tr>
+<td>Oak floor in the kitchen</td><td>Style</td><td>Kitchen</td>
+<td class="locked">Locked</td><td>Style</td><td>Oak floor in the kitchen</td></tr>
+<tr>
+<td>Oak bed frame stays as it is</td><td>Style</td><td>Bedroom</td>
+<td class="locked">Locked</td><td>Style</td><td>Oak bed frame stays as it is</td></tr>
+<tr>
+<td>Linen curtains and soft white walls</td><td>Style</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Style</td><td>Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr>
+<td>Plain white wall tiles</td><td>Style</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Style</td><td>Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr>
+<td>Sofa</td><td>Furniture and layout</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Layout</td><td>Sofa (1.0 m from the left, 3.0 m from the top, 2.0 m wide, 1.0 m deep; Placement checked by Layout)</td></tr>
+<tr>
+<td>Garden door</td><td>Door</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Builder</td><td>Garden door (1.5 m from the left, 3.0 m from the top, 0.9 m wide, 0.9 m deep; Opening checked by Builder)</td></tr>
+<tr>
+<td>Bedroom door</td><td>Door</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Builder</td><td>Bedroom door (0.2 m from the left, 0.0 m from the top, 0.9 m wide, 0.9 m deep; Opening checked by Builder)</td></tr>
+<tr>
+<td>Kitchen window</td><td>Window</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Builder</td><td>Kitchen window (2.0 m from the left, 0.0 m from the top, 1.2 m wide, 0.1 m deep; Opening checked by Builder)</td></tr>
+<tr>
+<td>The clash report</td><td>Clash report</td><td>Whole project</td>
+<td class="unsure">Unsure</td><td>Reviewer</td><td>2 clashes found</td></tr>
+</table>
+<h2>Run log</h2>
+<table>
+<tr><th>Step</th><th>Agent</th><th>What happened</th><th>Details</th></tr>
+<tr><td>1</td><td>Style</td><td>Started</td><td></td></tr>
+<tr><td>2</td><td>Style</td><td>Refused</td><td>item: Oak floor in the kitchen. Item &quot;Oak floor in the kitchen&quot; is Locked and cannot be changed.</td></tr>
+<tr><td>3</td><td>Style</td><td>Finished</td><td></td></tr>
+<tr><td>4</td><td>Layout</td><td>Started</td><td></td></tr>
+<tr><td>5</td><td>Layout</td><td>Finished</td><td></td></tr>
+<tr><td>6</td><td>Builder</td><td>Started</td><td></td></tr>
+<tr><td>7</td><td>Builder</td><td>Finished</td><td></td></tr>
+<tr><td>8</td><td>Reviewer</td><td>Started</td><td></td></tr>
+<tr><td>9</td><td>Reviewer</td><td>Finished</td><td></td></tr>
+</table>
+<h2>Clash report</h2>
+<p>2 clashes found. The Reviewer reports clashes and does not fix them.</p>
+<table>
+<tr><th>No.</th><th>How serious</th><th>Kind of clash</th><th>Room</th><th>Items involved</th><th>What is wrong</th></tr>
+<tr><td>1</td><td>High</td><td>Door or window on furniture</td>
+<td>Living Room</td><td>Garden door and Sofa</td><td>In the Living Room, the Garden door sits where the Sofa is placed.</td></tr>
+<tr><td>2</td><td>Medium</td><td>Room override against Locked item</td>
+<td>Bedroom</td><td>Oak bed frame stays as it is</td><td>In the Bedroom, the room style &quot;cold steel&quot; conflicts with the Locked item &quot;Oak bed frame stays as it is&quot; (warm oak).</td></tr>
+</table>
+<h2>Version history</h2>
+<p>The times below come from a fixed sample clock, so every run of the sample looks the same.</p>
+<table>
+<tr><th>Version</th><th>Time</th><th>Changed by</th><th>Item</th><th>What changed</th><th>Before</th><th>After</th></tr>
+<tr><td>1</td><td>2026-01-01T00:00:00.000Z</td><td>Style</td>
+<td>Linen curtains and soft white walls</td><td>Value</td><td>Linen curtains and soft white walls</td><td>Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr><td>2</td><td>2026-01-01T00:00:01.000Z</td><td>Style</td>
+<td>Plain white wall tiles</td><td>Value</td><td>Plain white wall tiles</td><td>Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr><td>3</td><td>2026-01-01T00:00:02.000Z</td><td>Layout</td>
+<td>Sofa</td><td>Value</td><td>Sofa (1.0 m from the left, 3.0 m from the top, 2.0 m wide, 1.0 m deep)</td><td>Sofa (1.0 m from the left, 3.0 m from the top, 2.0 m wide, 1.0 m deep; Placement checked by Layout)</td></tr>
+<tr><td>4</td><td>2026-01-01T00:00:03.000Z</td><td>Builder</td>
+<td>Garden door</td><td>Value</td><td>Garden door (1.5 m from the left, 3.0 m from the top, 0.9 m wide, 0.9 m deep)</td><td>Garden door (1.5 m from the left, 3.0 m from the top, 0.9 m wide, 0.9 m deep; Opening checked by Builder)</td></tr>
+<tr><td>5</td><td>2026-01-01T00:00:04.000Z</td><td>Builder</td>
+<td>Bedroom door</td><td>Value</td><td>Bedroom door (0.2 m from the left, 0.0 m from the top, 0.9 m wide, 0.9 m deep)</td><td>Bedroom door (0.2 m from the left, 0.0 m from the top, 0.9 m wide, 0.9 m deep; Opening checked by Builder)</td></tr>
+<tr><td>6</td><td>2026-01-01T00:00:05.000Z</td><td>Builder</td>
+<td>Kitchen window</td><td>Value</td><td>Kitchen window (2.0 m from the left, 0.0 m from the top, 1.2 m wide, 0.1 m deep)</td><td>Kitchen window (2.0 m from the left, 0.0 m from the top, 1.2 m wide, 0.1 m deep; Opening checked by Builder)</td></tr>
+<tr><td>7</td><td>2026-01-01T00:00:06.000Z</td><td>Reviewer</td>
+<td>The clash report</td><td>Value</td><td>Not reviewed yet</td><td>2 clashes found</td></tr>
+</table>
+<p class="statement">SAMPLE PROJECT</p>
+<p class="statement">Plans are drafts for professional review. They are not verified engineering.</p>
+</body>
+</html>
