@@ -106,7 +106,7 @@ These are placeholders for a made-up example. Rooms of a floor sit side by side 
 
 ### What `make-sample-run.js` writes
 For a finished sample project, `makeSampleRun(project)` returns plain data:
-- `name`, `isSample`
+- `name`, `sample` (true for the sample; read through the shared label code, because an existing test allows only that code and the Reviewer to read the sample flag)
 - `floors`: each with id, name, order, and its rooms (id, name, order, and size and position from the layout)
 - `versions`: number, time, who, item, field, and a ready-made plain sentence such as "Version 3: Layout checked the Sofa" (so the page does not have to explain internal fields)
 - `snapshots`: one entry per version from 0 to the latest. Each holds the items at that version, **taken from `getBrainAtVersion(project, n)`**, and nothing else. For each item: id, kind, name, status, owner, room id, position (if any), and for the clash item, the clash list.

@@ -1,0 +1,17 @@
+{
+  "notes": "Fixed numbers for the 3D viewer, in metres. The sample data has no room sizes or heights, so they are kept here. Room sizes are looked up by room name.",
+  "gapBetweenRooms": 0.2,
+  "floorToFloorHeight": 3.0,
+  "wallHeight": 2.6,
+  "doorHeight": 2.0,
+  "windowHeight": 1.2,
+  "windowBottom": 0.9,
+  "furnitureHeight": 0.8,
+  "styleMarker": { "width": 0.6, "depth": 0.6, "height": 0.05 },
+  "rooms": {
+    "Kitchen": { "width": 5.0, "depth": 4.0 },
+    "Living Room": { "width": 6.0, "depth": 4.0 },
+    "Bedroom": { "width": 4.0, "depth": 4.0 },
+    "Bathroom": { "width": 3.0, "depth": 3.0 }
+  }
+}
