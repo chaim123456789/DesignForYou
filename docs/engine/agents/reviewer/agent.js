@@ -8,14 +8,20 @@
 //
 // Two checks (R9.3):
 //  1. A door or window whose position overlaps furniture in the same room.
-//  2. A room override that conflicts with a Locked style item in that room.
+//  2. A room's style notes that conflict with a Locked style item in that room.
 //     "Conflicts" uses the pairs in options.styleConflicts, for example
-//     [["warm oak", "cold steel"]].
+//     [["warm oak", "cold steel"]]. Only Locked items that have a tag are compared.
+//     (a) A room with an override: the override notes are compared.
+//     (b) A room without an override: the overall notes and style profile tags
+//         (the project's overall set) are compared. An override replaces the
+//         overall set for its room, so the overall set is not used there.
 import { getEffectiveInspiration } from '../../brain/inspiration.js';
 import { getLabels } from '../../label.js';
 
 const OWNER = 'Reviewer';
 export const NO_CLASHES = 'No clashes found';
+// Added to the report only when nothing is found, so "No clashes found" is never read as "no problems".
+export const NO_CLASHES_NOTE = 'The Reviewer found nothing in this small list of opposite pairs. This does not mean there are no problems.';
 
 // True if two rectangles share any area. Touching edges do not count.
 function overlaps(a, b) {
@@ -58,18 +64,22 @@ function overrideAgainstLockedClashes(view, conflicts) {
   const rooms = view.floors.flatMap((f) => f.rooms);
   const lockedStyle = view.items.filter((i) => i.kind === 'style' && i.status === 'Locked' && i.room);
   for (const room of rooms) {
-    if (!room.override || room.override.length === 0) continue;
-    const overrideRefs = getEffectiveInspiration(view, room.id);
+    const hasOverride = Boolean(room.override && room.override.length > 0);
+    // The room's own notes if it has an override, otherwise the overall set.
+    const refs = getEffectiveInspiration(view, room.id);
     for (const item of lockedStyle.filter((i) => i.room === room.id)) {
       const tag = item.value && item.value.tag;
-      const opposite = overrideRefs.find((ref) =>
+      if (!tag) continue;
+      const opposite = refs.find((ref) =>
         conflicts.some(([x, y]) => (x === tag && y === ref) || (y === tag && x === ref)));
       if (opposite === undefined) continue;
       clashes.push({
-        type: 'Room override against Locked item',
+        type: hasOverride ? 'Room override against Locked item' : 'Overall style against Locked item',
         items: [item.id],
         room: room.id,
-        description: `In the ${room.name}, the room style "${opposite}" conflicts with the Locked item "${item.value.detail}" (${tag}).`,
+        description: hasOverride
+          ? `In the ${room.name}, the room style "${opposite}" conflicts with the Locked item "${item.value.detail}" (${tag}).`
+          : `In the ${room.name}, the overall style "${opposite}" conflicts with the Locked item "${item.value.detail}" (${tag}).`,
         severity: 'Medium',
       });
     }
@@ -95,7 +105,9 @@ export function createReviewerAgent(options = {}) {
     const numbered = clashes.map((c, index) => ({ number: index + 1, ...c }));
     const labels = getLabels({ isSample: Boolean(options.isSample || view.isSample) });
     const summary = numbered.length === 0 ? NO_CLASHES : `${numbered.length} ${numbered.length === 1 ? "clash" : "clashes"} found`;
-    return [{ itemId: reportItem.id, newValue: { summary, clashes: numbered, labels } }];
+    const newValue = { summary, clashes: numbered, labels };
+    if (numbered.length === 0) newValue.note = NO_CLASHES_NOTE;
+    return [{ itemId: reportItem.id, newValue }];
   };
 }
 
