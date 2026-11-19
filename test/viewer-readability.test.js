@@ -91,3 +91,16 @@ test('Task 7b step 2: the Garden door panel still touches or overlaps the Sofa, 
   assert.ok(door.clash && sofa.clash);
   assert.match(read('viewer.js'), /COLOURS\.clash/);
 });
+
+test('Task 7b step 3: the sofa is about 0.8 m high, and style markers are flat patches lying on the floor', () => {
+  const sofa = byLabel('Sofa');
+  assert.ok(sofa.height >= 0.7 && sofa.height <= 0.9, `sofa is ${sofa.height} m high`);
+  assert.ok(sofa.height > Math.min(sofa.width, sofa.depth) * 0.3, 'furniture is a solid block, not a sheet');
+  const markers = boxes.filter((b) => b.type === 'style-marker');
+  assert.equal(markers.length, 4);
+  for (const m of markers) {
+    assert.ok(m.height <= 0.06, `${m.label} is ${m.height} m high`);
+    assert.ok(m.height * 5 < Math.min(m.width, m.depth), 'a marker is much wider than it is high');
+    assert.ok(boxes.some((r) => r.type === 'room' && r.y === m.y), 'a marker lies on the floor');
+  }
+});
