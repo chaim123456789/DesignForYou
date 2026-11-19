@@ -1,0 +1,88 @@
+/* The two label bars are outside the scrolling area, so they are always visible. */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #222;
+  background: #f4f4f2;
+}
+.label-bar {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  padding: 0.4rem 0.75rem;
+  background: #222;
+  color: #fff;
+}
+.label-bar p { margin: 0; }
+.label-sample { font-weight: 700; letter-spacing: 0.05em; }
+.label-draft { font-size: 0.9rem; }
+
+#page {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+  align-content: start;
+}
+#page h1 { font-size: 1.3rem; margin: 0; }
+#page h2 { font-size: 1rem; margin: 0 0 0.4rem; }
+#how-to-use { margin: 0; }
+
+#error-message {
+  margin: 0;
+  padding: 0.6rem;
+  background: #fde8e8;
+  border: 2px solid #b00020;
+}
+
+#scene-area {
+  min-height: 45vh;
+  background: #e4e7ea;
+  border: 1px solid #b8bec4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+}
+
+section { background: #fff; border: 1px solid #d5d5d0; padding: 0.6rem; }
+#legend ul, #clash-list { list-style: none; margin: 0; padding: 0; }
+#legend li, #clash-list li { margin: 0.25rem 0; }
+.swatch {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  vertical-align: middle;
+  border: 1px solid #222;
+}
+.swatch-locked { background: #0072b2; }
+.swatch-unsure { background: #e69f00; }
+.swatch-clash { background: #fff; border: 3px solid #cc0000; }
+
+#version-slider { width: 100%; margin: 0.4rem 0; }
+#caption { margin: 0; font-weight: 600; }
+#clash-list button {
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  padding: 0.4rem;
+  background: #fff;
+  border: 1px solid #cc0000;
+  cursor: pointer;
+}
+#details-text p { margin: 0.2rem 0; }
+
+@media (min-width: 800px) {
+  #page { grid-template-columns: 2fr 1fr; }
+  #page h1, #how-to-use, #error-message, #scene-area { grid-column: 1; }
+  #scene-area { min-height: 60vh; }
+  #legend, #history, #clash-section, #details-panel { grid-column: 2; }
+  #scene-area { grid-row: 3 / span 4; }
+}
