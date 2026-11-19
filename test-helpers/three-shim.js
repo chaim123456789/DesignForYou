@@ -10,5 +10,5 @@ export class WebGLRenderer {
   }
   setSize() {}
   // The real renderer also brings every object's position up to date before drawing; the picking code relies on that.
-  render(scene) { scene.updateMatrixWorld(); globalThis.__fakePage.renders += 1; }
+  render(scene) { scene.updateMatrixWorld(); globalThis.__fakePage.scene = scene; globalThis.__fakePage.renders += 1; }
 }

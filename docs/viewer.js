@@ -9,7 +9,7 @@
 // is set up in its own protected step (see attempt below). If one step fails, a
 // red message with the error text appears at the top of the page and the other
 // steps still run.
-const PAGE_VERSION = 'fix-viewer-1';
+const PAGE_VERSION = 'build-viewer-3';
 // The files this page loads carry the version in their address, so a browser
 // cannot mix an old copy of one file with a new copy of another.
 const SCENE_DATA_FILE = `./scene-data.js?v=${PAGE_VERSION}`;
@@ -44,6 +44,8 @@ let currentVersion = 0;
 let openItemId = null;
 let userMovedCamera = false; // true once the visitor turns or zooms; the view then stops refitting itself
 let shownFloor = 'all'; // 'all', or a floor's order number
+let hoveredItemId = null; // the block under the mouse, if any
+let showAllLabels = false; // the "Show all labels" checkbox
 
 // ---- Problems and protected steps -----------------------------------------
 
@@ -134,6 +136,7 @@ function closePanel() {
   const p = document.createElement('p');
   p.textContent = 'Click a block to see its details.';
   el('details-text').replaceChildren(p);
+  refreshLabels();
 }
 
 function showDetails(itemId) {
@@ -148,6 +151,7 @@ function showDetails(itemId) {
     p.textContent = line;
     return p;
   }));
+  refreshLabels();
 }
 
 function fillClashList(version) {
@@ -260,26 +264,38 @@ function addBox(THREE, group, b) {
 
 // Text labels are page elements laid over the drawing, so they are always readable.
 // Room names, then item names. Item labels sit above the top of their block.
+// Which labels are shown: room and floor names always; a block's label only when it is under
+// the mouse, selected, part of a clash, or when "Show all labels" is ticked.
+function labelIsWanted(label) {
+  if (label.always || showAllLabels || label.clash) return true;
+  return label.itemId !== undefined && (label.itemId === hoveredItemId || label.itemId === openItemId);
+}
+
+// Show or hide labels after the hover, selection or checkbox changed.
+function refreshLabels() {
+  if (view.renderer && view.scene && view.camera) attempt('Updating the text labels', drawFrame);
+}
+
 function addLabels(boxes) {
   const area = el('scene-area');
   for (const old of view.labels) old.element.remove();
   view.labels = [];
-  const add = (b, text, className, y) => {
+  const add = (b, text, className, y, extra) => {
     const element = document.createElement('span');
     element.className = `scene-label ${className}`;
     element.textContent = text;
     area.appendChild(element);
-    view.labels.push({ element, point: [b.x + b.width / 2, y, b.z + b.depth / 2] });
+    view.labels.push({ element, point: [b.x + b.width / 2, y, b.z + b.depth / 2], ...extra });
   };
   for (const b of boxes) {
     if (b.itemId === undefined) continue;
-    add(b, b.label, `${b.type}-label${b.clash ? ' clash-label' : ''}`, b.y + b.height);
+    add(b, b.label, `${b.type}-label${b.clash ? ' clash-label' : ''}`, b.y + b.height, { itemId: b.itemId, clash: Boolean(b.clash) });
   }
   for (const b of boxes) {
-    if (b.type === 'room') add(b, b.label, 'room-label', b.y + b.height);
+    if (b.type === 'room') add(b, b.label, 'room-label', b.y + b.height, { always: true });
   }
   for (const f of filterByFloor(floorLabels(sampleRun), shownFloor)) {
-    add({ x: f.x, z: f.z, width: 0, depth: 0 }, f.text, 'floor-label', f.y);
+    add({ x: f.x, z: f.z, width: 0, depth: 0 }, f.text, 'floor-label', f.y, { always: true });
   }
 }
 
@@ -299,7 +315,7 @@ function placeLabels() {
   const shown = [];
   for (const label of view.labels) {
     v.set(...label.point).project(camera);
-    const visible = v.z > -1 && v.z < 1;
+    const visible = labelIsWanted(label) && v.z > -1 && v.z < 1;
     label.element.style.display = visible ? '' : 'none';
     if (!visible) continue;
     const w = label.element.offsetWidth;
@@ -357,7 +373,7 @@ function drawScene(version) {
 
 // A click or tap on the drawing: open the nearest item under the pointer, or close the panel
 // when the click lands on empty space or on a room.
-function pickAt(event) {
+function itemUnder(event) {
   const { THREE, renderer, camera, group } = view;
   const rect = renderer.domElement.getBoundingClientRect();
   const pointer = new THREE.Vector2(
@@ -366,11 +382,24 @@ function pickAt(event) {
   );
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(pointer, camera);
-  if (!group) return;
+  if (!group) return undefined;
   const items = group.children.filter((obj) => obj.userData && obj.userData.itemId !== undefined);
   const hits = raycaster.intersectObjects(items, false);
-  if (hits.length > 0) showDetails(hits[0].object.userData.itemId);
+  return hits.length > 0 ? hits[0].object.userData.itemId : undefined;
+}
+
+function pickAt(event) {
+  const itemId = itemUnder(event);
+  if (itemId !== undefined) showDetails(itemId);
   else closePanel();
+}
+
+// The block under the mouse gets its label shown while the mouse is over it.
+function setHovered(itemId) {
+  const next = itemId === undefined ? null : itemId;
+  if (next === hoveredItemId) return;
+  hoveredItemId = next;
+  refreshLabels();
 }
 
 // Open the details of an item. With the 3D view running, also turn the camera toward it.
@@ -394,6 +423,11 @@ function setUpClicks() {
   const canvas = view.renderer.domElement;
   let pressed = null;
   canvas.addEventListener('pointerdown', (event) => { pressed = { x: event.clientX, y: event.clientY }; });
+  canvas.addEventListener('pointermove', guarded('Hovering over a block', (event) => {
+    if (event.buttons) return; // turning the view, not pointing
+    setHovered(itemUnder(event));
+  }));
+  canvas.addEventListener('pointerleave', guarded('Mouse leaving the drawing', () => setHovered(undefined)));
   canvas.addEventListener('pointerup', guarded('Clicking a block', (event) => {
     if (!pressed) return;
     const moved = Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y);
@@ -485,6 +519,16 @@ function setUpFloorButtons() {
   }
 }
 
+// The "Show all labels" checkbox (off by default).
+function setUpLabelsCheckbox() {
+  const box = el('show-all-labels');
+  showAllLabels = Boolean(box.checked);
+  box.addEventListener('change', guarded('Show all labels checkbox', () => {
+    showAllLabels = Boolean(box.checked);
+    refreshLabels();
+  }));
+}
+
 function setUpResetButton() {
   el('reset-view').addEventListener('click', guarded('Reset view button', resetView));
 }
@@ -530,6 +574,7 @@ async function start() {
   attempt('Version slider', () => setUpSlider(last));
   attempt('Floor buttons', setUpFloorButtons);
   attempt('Reset view button', setUpResetButton);
+  attempt('Show all labels checkbox', setUpLabelsCheckbox);
   render(last);
   await startScene();
   setScriptStatus('finished setting up.');

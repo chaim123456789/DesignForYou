@@ -139,3 +139,5 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.75rem 1rem; }
 .clash-label { border-color: #cc0000; border-width: 2px; }
 .floor-label { font-size: 1rem; background: #44505a; color: #fff; border-color: #44505a; }
 .scene-message { margin: 0; padding: 1rem; text-align: center; }
+
+#show-all-labels-label { display: inline-flex; align-items: center; gap: 0.4rem; margin-left: 0.5rem; font-size: 1rem; }
