@@ -112,6 +112,7 @@ Acceptance criteria:
 4. The result screen has a section "What the design team did with your input" (see R10).
 5. The visitor can go back to the start screen ("Start again"). This clears everything entered, including the image previews.
 6. The existing sample result and the existing viewer behaviour do not change. The existing viewer tests still pass.
+7. The result screen shows the visitor's own images as a mood board next to the style profile (sentences and tags). Each image has its text description (R3.3). The images stay in the page only (R11). The mood board is only shown, not read by any helper (R9.5).
 
 ### R9. What the helpers do with the visitor's input
 **As a visitor, I want the result to be meaningful and not to claim more than it did.**
@@ -119,7 +120,7 @@ Acceptance criteria:
 Acceptance criteria:
 1. The helpers use only these inputs: the notes (overall and per room), the style profile tags, the items (name, room, status, tag), and the structure (floors, rooms).
 2. The Style agent, for each Unsure style item, adds the room's effective inspiration (room override if there is one, otherwise the overall notes and profile tags) to the item's detail. This is the existing behaviour.
-3. The Reviewer checks one thing: whether a room's override notes conflict with the tag of a Locked item in that same room, using a small fixed list of opposite pairs (for example "warm oak" and "cold steel"). This is the existing check. It only looks at rooms that have an override, and only at items that have a tag. The list of pairs is shown to the visitor on the result screen so the visitor sees exactly what was compared.
+3. The Reviewer checks one thing: whether notes conflict with the tag of a Locked item, using a small fixed list of opposite pairs (for example "warm oak" and "cold steel"). Two cases: (a) a room's override notes against Locked items in that same room (the existing check, only for rooms that have an override); (b) the overall inspiration notes and the style profile tags against Locked items, in rooms without an override (new, approved 2026-11-19, own task and tests). It only looks at items that have a tag. The list of pairs is shown to the visitor on the result screen so the visitor sees exactly what was compared.
 4. The Layout and Builder agents have nothing to do with the visitor's input in this version, because the visitor adds no positions, doors or windows. The result screen says so ("Layout and Builder had nothing to place").
 5. The images and the brief are not read by any helper. They are kept for the visitor's own view (images stay in the page, not in the Brain) and, for the brief, in the summary.
 6. No text on any screen says or suggests that the helpers understood the images or the brief, designed the home, or used AI.
@@ -172,5 +173,11 @@ Acceptance criteria:
 3. The README says how to open the page and what each screen does, in short steps.
 
 ## Decisions from the owner
-- 2026-11-19: Inspiration images: up to 50 (the earlier "10 to 80" line in `.kiro/steering/product.md` is older; see `design.md` open questions).
-- Everything else above is a proposal until approved.
+- 2026-11-19: Inspiration images: up to 50. `.kiro/steering/product.md` now says "up to 50".
+- 2026-11-19: Decision 1 approved. Plain JavaScript, no framework, no installs, one page with the viewer as its last screen.
+- 2026-11-19: Decision 2 approved. Three small edits to existing code are allowed (browser-safe config loading, optional Project Brain fields `brief`, `styleProfile`, `imageCount`, the viewer's "show this run data" function). All existing tests must keep passing. None may be deleted or weakened. Each edit is its own small task, verified after it.
+- 2026-11-19: `package.json` may gain a script `export-engine` that copies files. No dependencies.
+- 2026-11-19: The Reviewer also checks the overall inspiration notes and the style profile tags against Locked items (R9.3). One small task with its own tests.
+- 2026-11-19: Items stay style-only in this version. Room width and depth stay optional, default 4 by 4 metres.
+- 2026-11-19: The result screen shows the visitor's images as a mood board next to the style profile (R8.7).
+- 2026-11-19: Later, after intake works: one real AI step for the Style agent, key kept on a server function, the rules-based Style agent kept as fallback. Not built now. The design stays ready for it (`design.md` section 8).

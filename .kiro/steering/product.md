@@ -4,7 +4,7 @@
 A browser web app for people with good taste who cannot use CAD software. Homeowners come first. Designers come second.
 
 ## How a user works with it
-1. Upload 10 to 80 inspiration images.
+1. Upload up to 50 inspiration images.
 2. Write a short brief.
 3. Mark each item as **Locked** (must stay as is) or **Unsure** (open to change).
 
