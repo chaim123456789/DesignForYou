@@ -31,8 +31,36 @@ function buildFloor(floorData, index) {
   };
 }
 
+// Optional project fields, kept with the project for the visitor's own view.
+// No agent reads them (a test checks this). They are only added when given,
+// so a project made without them is exactly as before.
+//   brief        : text
+//   styleProfile : list of sentences
+//   imageCount   : whole number, 0 or more
+function optionalFields(data) {
+  const extra = {};
+  if (data.brief !== undefined) {
+    if (typeof data.brief !== 'string') throw new Error('The brief must be text.');
+    extra.brief = data.brief;
+  }
+  if (data.styleProfile !== undefined) {
+    if (!Array.isArray(data.styleProfile) || data.styleProfile.some((s) => typeof s !== 'string')) {
+      throw new Error('The style profile must be a list of sentences.');
+    }
+    extra.styleProfile = [...data.styleProfile];
+  }
+  if (data.imageCount !== undefined) {
+    if (!Number.isInteger(data.imageCount) || data.imageCount < 0) {
+      throw new Error('The image count must be a whole number, 0 or more.');
+    }
+    extra.imageCount = data.imageCount;
+  }
+  return extra;
+}
+
 // Create a project from plain data: { name, floors: [{ name, rooms: [{ name }] }] }.
 // Order is the order given, so the same data always gives the same order.
+// Optional: brief, styleProfile, imageCount (see optionalFields).
 export function createProject(data) {
   const name = requireName(data && data.name, 'A project');
   if (!Array.isArray(data.floors) || data.floors.length === 0) {
@@ -48,6 +76,7 @@ export function createProject(data) {
     itemStarts: {},
     versions: [],
     runLog: [],
+    ...optionalFields(data),
   };
 }
 

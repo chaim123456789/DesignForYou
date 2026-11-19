@@ -24,3 +24,10 @@ export const LIMITS = Object.freeze({
 });
 
 export const ITEM_STATUSES = Object.freeze(['Locked', 'Unsure']);
+
+// The fixed list of opposite pairs the Reviewer compares. The same two pairs as the sample.
+// The result screen shows exactly this list, and the Reviewer gets exactly this list.
+export const STYLE_CONFLICTS = Object.freeze([
+  Object.freeze(['warm oak', 'cold steel']),
+  Object.freeze(['linen', 'glossy chrome']),
+]);
