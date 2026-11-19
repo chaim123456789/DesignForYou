@@ -241,3 +241,10 @@ test('Task 7b step 7: the page has margins, a 1400 px maximum width and readable
   assert.ok(!main.includes('label-bar') && !main.includes('<header') && !main.includes('<footer'));
   assert.ok(html.indexOf('</header>') < html.indexOf('<main') && html.indexOf('</main>') < html.indexOf('<footer'));
 });
+
+test('Task 7b step 8: the legend has the line about thin panels, solid furniture and flat patches', () => {
+  const html = read('index.html');
+  const legend = html.slice(html.indexOf('<section id="legend"'), html.indexOf('</section>', html.indexOf('<section id="legend"')));
+  assert.ok(legend.includes('<p id="legend-shapes">Doors and windows are thin panels; furniture is solid; style items are flat patches</p>'));
+  assert.equal((legend.match(/legend-shapes/g) || []).length, 1);
+});
