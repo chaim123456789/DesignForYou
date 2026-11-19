@@ -533,13 +533,27 @@ function setUpResetButton() {
   el('reset-view').addEventListener('click', guarded('Reset view button', resetView));
 }
 
+// The slider moved: update the text parts, then redraw the blocks as they were at that
+// version. The text step runs first so an open panel is refreshed or closed for the new version.
+// The camera is left where the visitor put it. Past views are read only.
+function changeVersion(version) {
+  hoveredItemId = null;
+  render(version);
+  if (!view.THREE || !view.group) return; // without 3D only the text parts change
+  attempt('Redrawing the blocks for this version', () => {
+    const boxes = drawScene(version);
+    if (openItemId !== null && !boxes.some((b) => b.itemId === openItemId)) closePanel();
+    drawFrame();
+  });
+}
+
 function setUpSlider(last) {
   const slider = el('version-slider');
   slider.min = '0';
   slider.max = String(last);
   slider.value = String(last);
   slider.disabled = false;
-  slider.addEventListener('input', guarded('Version slider', () => render(Number(slider.value))));
+  slider.addEventListener('input', guarded('Version slider', () => changeVersion(Number(slider.value))));
 }
 
 // The text parts of the page for one version. Each part is its own protected step.
