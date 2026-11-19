@@ -4,7 +4,7 @@
 // goes in with textContent, so a strange name can never become page code.
 // This is the only file that uses Three.js. It draws what buildScene returns
 // and nothing else.
-import { buildScene, describeItem, separateLabels } from './scene-data.js';
+import { buildScene, describeItem, separateLabels, floorLabels, filterByFloor } from './scene-data.js';
 
 // The colours, in one place. They match the legend swatches in styles.css.
 const COLOURS = {
@@ -26,6 +26,7 @@ const el = (id) => document.getElementById(id);
 let sampleRun = null;
 let currentVersion = 0;
 let openItemId = null;
+let shownFloor = 'all'; // 'all', or a floor's order number
 
 function showError(message) {
   const box = el('error-message');
@@ -196,6 +197,9 @@ function addLabels(boxes) {
   for (const b of boxes) {
     if (b.type === 'room') add(b, b.label, 'room-label', b.y + b.height);
   }
+  for (const f of filterByFloor(floorLabels(sampleRun), shownFloor)) {
+    add({ x: f.x, z: f.z, width: 0, depth: 0 }, f.text, 'floor-label', f.y);
+  }
 }
 
 function drawFrame() {
@@ -258,7 +262,7 @@ function resizeScene() {
 }
 
 function drawScene(version) {
-  const boxes = buildScene(sampleRun, version);
+  const boxes = filterByFloor(buildScene(sampleRun, version), shownFloor);
   if (view.group) { disposeGroup(view.group); view.scene.remove(view.group); }
   view.group = new view.THREE.Group();
   for (const b of boxes) addBox(view.THREE, view.group, b);
@@ -348,6 +352,26 @@ async function startScene() {
   }
 }
 
+// The three floor buttons: Both, Ground floor, Upper floor.
+function chooseFloor(which) {
+  shownFloor = which;
+  for (const button of document.querySelectorAll('.floor-button')) {
+    button.setAttribute('aria-pressed', String(button.dataset.floor === String(which)));
+  }
+  if (!view.THREE) return;
+  const boxes = drawScene(currentVersion);
+  if (openItemId !== null && !boxes.some((b) => b.itemId === openItemId)) closePanel();
+  frameHome(boxes);
+  drawFrame();
+}
+
+function setUpFloorButtons() {
+  for (const button of document.querySelectorAll('.floor-button')) {
+    const which = button.dataset.floor === 'all' ? 'all' : Number(button.dataset.floor);
+    button.addEventListener('click', () => chooseFloor(which));
+  }
+}
+
 function render(version) {
   currentVersion = version;
   const last = sampleRun.versions.length;
@@ -374,6 +398,7 @@ async function start() {
   slider.value = String(last);
   slider.disabled = false;
   slider.addEventListener('input', () => render(Number(slider.value)));
+  setUpFloorButtons();
   render(last);
   await startScene();
 }

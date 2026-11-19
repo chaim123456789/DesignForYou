@@ -106,3 +106,16 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.6rem; }
 .room-label { font-style: italic; color: #444; }
 .clash-label { border-color: #cc0000; border-width: 2px; }
 .scene-message { margin: 0; padding: 1rem; text-align: center; }
+
+/* Floor buttons */
+#view-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+#view-controls button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  background: #fff;
+  border: 2px solid #44505a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#view-controls button[aria-pressed="true"] { background: #44505a; color: #fff; }
+.floor-label { font-size: 1rem; background: #44505a; color: #fff; border-color: #44505a; }

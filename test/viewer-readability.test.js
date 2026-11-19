@@ -128,3 +128,38 @@ test('Task 7b step 4: the page draws walls as outlines only (no filled wall face
   assert.match(roomCode, /EdgesGeometry/);
   assert.doesNotMatch(roomCode, /new THREE\.Mesh\(/);
 });
+
+import { filterByFloor, floorLabels, floorLabelText } from '../docs/scene-data.js';
+
+const labelsOf = (list) => list.map((b) => b.label);
+
+test('Task 7b step 5: the floors are labelled "Ground floor" and "Upper floor"', () => {
+  assert.deepEqual(run.floors.map(floorLabelText), ['Ground floor', 'Upper floor']);
+  const labels = floorLabels(run);
+  assert.deepEqual(labels.map((l) => l.text), ['Ground floor', 'Upper floor']);
+  assert.ok(labels[1].y > labels[0].y, 'the upper label is higher');
+});
+
+test('Task 7b step 5: the page has the three floor buttons: Both, Ground floor, Upper floor', () => {
+  const html = read('index.html');
+  const buttons = [...html.matchAll(/<button type="button" id="(floor-[a-z]+)"[^>]*data-floor="([^"]+)"[^>]*>([^<]*)<\/button>/g)];
+  assert.deepEqual(buttons.map((m) => m[3]), ['Both', 'Ground floor', 'Upper floor']);
+  assert.deepEqual(buttons.map((m) => m[2]), ['all', '1', '2']);
+  assert.match(html.slice(html.indexOf('id="view-controls"'), html.indexOf('id="scene-area"')), /floor-all[\s\S]*floor-ground[\s\S]*floor-upper/);
+  assert.ok(html.indexOf('id="view-controls"') > html.indexOf('</header>') && html.indexOf('id="view-controls"') < html.indexOf('<footer'));
+});
+
+test('Task 7b step 5: the floor filter hides the right items', () => {
+  const both = filterByFloor(boxes, 'all');
+  assert.equal(both.length, boxes.length);
+  const ground = labelsOf(filterByFloor(boxes, 1).filter((b) => b.itemId !== undefined));
+  const upper = labelsOf(filterByFloor(boxes, 2).filter((b) => b.itemId !== undefined));
+  for (const name of ['Sofa', 'Garden door', 'Kitchen window', 'Oak floor (style)']) assert.ok(ground.includes(name), `${name} on ground`);
+  for (const name of ['Bedroom door', 'Oak bed frame (style)']) assert.ok(upper.includes(name), `${name} on upper`);
+  assert.ok(!ground.includes('Bedroom door') && !ground.includes('Oak bed frame (style)'), 'ground hides the upper items');
+  assert.ok(!upper.includes('Sofa') && !upper.includes('Garden door') && !upper.includes('Kitchen window'), 'upper hides the ground items');
+  assert.deepEqual(labelsOf(filterByFloor(boxes, 1).filter((b) => b.type === 'room')).sort(), ['Kitchen', 'Living Room']);
+  assert.deepEqual(labelsOf(filterByFloor(boxes, 2).filter((b) => b.type === 'room')).sort(), ['Bathroom', 'Bedroom']);
+  assert.equal(filterByFloor(boxes, 1).length + filterByFloor(boxes, 2).length, boxes.length, 'every box is on exactly one floor');
+  assert.deepEqual(filterByFloor(floorLabels(run), 2).map((l) => l.text), ['Upper floor']);
+});

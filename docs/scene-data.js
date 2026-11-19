@@ -110,6 +110,35 @@ export function wallPanel(p, room) {
   };
 }
 
+// "Ground Floor" is shown as "Ground floor", "Upper Floor" as "Upper floor".
+export function floorLabelText(floor) {
+  const name = String(floor.name).trim();
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+const FLOOR_LABEL_SPACE = 1.4; // metres left of the home where a floor's label is placed
+
+// One label per floor, placed to the left of the home at that floor's height.
+export function floorLabels(sampleRun) {
+  const rooms = sampleRun.floors.flatMap((f) => f.rooms);
+  const left = Math.min(...rooms.map((r) => r.x));
+  return sampleRun.floors.map((floor) => {
+    const front = Math.max(...floor.rooms.map((r) => r.z + r.depth));
+    const back = Math.min(...floor.rooms.map((r) => r.z));
+    return {
+      order: floor.order,
+      text: floorLabelText(floor),
+      x: left - FLOOR_LABEL_SPACE, y: floor.elevation + 0.8, z: (back + front) / 2,
+    };
+  });
+}
+
+// Keep only the boxes (or labels) of one floor. which is "all" or a floor's order number.
+export function filterByFloor(list, which) {
+  if (which === 'all') return list;
+  return list.filter((b) => b.floorOrder === which || b.order === which);
+}
+
 // The list of boxes to draw for one version.
 export function buildScene(sampleRun, version) {
   const snap = snapshotAt(sampleRun, version);
