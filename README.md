@@ -30,7 +30,7 @@ You need Node.js 22 or newer on your computer. Nothing else is needed, because t
 - Running the sample again gives the same result every time.
 
 ### What is not done yet
-- The 3D view, image uploads and live AI mode are separate, later pieces of work.
+- The 3D viewer is done. The intake screens (where you enter your own project and inspiration images) are in progress. Live AI mode is separate, later work.
 - Someone still needs to open the summary page in a browser and confirm it reads clearly. The checklist in `.kiro/specs/project-brain/acceptance-checklist.md` lists this and the other unverified points.
 
 ## 3D room viewer
