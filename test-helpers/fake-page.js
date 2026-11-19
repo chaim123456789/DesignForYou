@@ -29,6 +29,7 @@ export class FakeElement {
     this.max = attributes.max || '';
     this.value = attributes.value || '';
     this.type = attributes.type || '';
+    this.checked = 'checked' in attributes;
   }
 
   get textContent() { return this._text + this.children.map((c) => c.textContent).join(''); }

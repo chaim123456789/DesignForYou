@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'">
   <title>DesignForYou: 3D room viewer (sample)</title>
-  <link rel="stylesheet" href="styles.css?v=fix-viewer-1">
+  <link rel="stylesheet" href="styles.css?v=build-viewer-3">
 </head>
 <body>
   <header id="top-bar" class="label-bar">
@@ -26,6 +26,7 @@
       <button type="button" id="floor-ground" class="floor-button" data-floor="1" aria-pressed="false">Ground floor</button>
       <button type="button" id="floor-upper" class="floor-button" data-floor="2" aria-pressed="false">Upper floor</button>
       <button type="button" id="reset-view">Reset view</button>
+      <label id="show-all-labels-label" for="show-all-labels"><input type="checkbox" id="show-all-labels"> Show all labels</label>
     </div>
 
     <div id="scene-area" aria-label="3D view of the sample home">Loading the 3D view.</div>
@@ -40,6 +41,7 @@
         <li><span class="swatch swatch-unsure"></span> Unsure: open to change</li>
         <li><span class="swatch swatch-clash"></span> Clash: a problem the Reviewer found</li>
       </ul>
+      <p id="legend-labels">Block names show when you point at or select a block, and always for clashes; tick "Show all labels" to see every name.</p>
       <p id="legend-shapes">Doors and windows are thin panels; furniture is solid; style items are flat patches</p>
     </section>
 
@@ -74,6 +76,6 @@
   </footer>
 
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-  <script type="module" src="viewer.js?v=fix-viewer-1"></script>
+  <script type="module" src="viewer.js?v=build-viewer-3"></script>
 </body>
 </html>

@@ -115,6 +115,7 @@ test('fix-viewer-1: normal run: no problem message, no missing ids, labels, deta
     for (const l of labels) {
       assert.ok(l.textContent.length > 0);
       assert.match(l.className, /scene-label/);
+      if (l.style.display === 'none') continue; // hidden labels (not clash, hovered or selected) are not placed
       assert.match(String(l.style.left), /px$/);
       assert.match(String(l.style.top), /px$/);
     }
@@ -297,10 +298,10 @@ test('fix-viewer-1: when the sample file cannot be read, the red message says so
 test('fix-viewer-1: the page says which script version ran, so a stale cached copy can be spotted', async () => {
   assert.match(html, /id="script-status">Page script: not started yet/);
   await withPage(() => {}, async (page) => {
-    assert.match(page.el('script-status').textContent, /Page script fix-viewer-1: finished/);
+    assert.match(page.el('script-status').textContent, /Page script build-viewer-3: finished/);
   });
-  assert.match(html, /styles\.css\?v=fix-viewer-1/);
-  assert.match(html, /viewer\.js\?v=fix-viewer-1/);
+  assert.match(html, /styles\.css\?v=build-viewer-3/);
+  assert.match(html, /viewer\.js\?v=build-viewer-3/);
   assert.match(js, /scene-data\.js\?v=\$\{PAGE_VERSION\}/);
 });
 
