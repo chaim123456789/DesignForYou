@@ -17,7 +17,7 @@ export function setUpResultScreen(tools) {
   const refs = {};
   for (const id of ['heading-result', 'own-result', 'own-viewer-note', 'own-summary', 'own-brief', 'own-images-count',
     'own-profile-message', 'own-profile-sentences', 'own-profile-tags', 'own-mood-empty', 'own-mood-board',
-    'own-report', 'own-report-clash', 'result-fixed-rules', 'result-start-again',
+    'own-report', 'own-report-clash', 'result-fixed-rules', 'sample-fixed-rules', 'result-start-again',
     'how-to-use', 'view-controls', 'scene-area', 'col-side']) {
     refs[id] = el(id);
   }
@@ -53,6 +53,8 @@ export function setUpResultScreen(tools) {
       for (const label of document.querySelectorAll('.label-sample')) label.hidden = own;
       for (const label of document.querySelectorAll('.label-own')) label.hidden = !own;
     });
+    // The sample result has its own copy of the fixed sentence (plain page text). The own result has the one at its end.
+    attempt('Result: the fixed sentence of the sample', () => { refs['sample-fixed-rules'].hidden = own; });
     attempt('Result heading', () => {
       refs['heading-result'].textContent = own ? `YOUR PROJECT: ${name}` : sampleHeading;
       refs['own-result'].hidden = !own;
@@ -128,6 +130,9 @@ export function setUpResultScreen(tools) {
   function fillFixedSentence() {
     attempt('Result: the fixed sentence', () => { refs['result-fixed-rules'].textContent = report.FIXED_SENTENCE; });
   }
+  // The sample result shows the same sentence as one line under "Back to start", outside the viewer's own parts.
+  // It is filled in as soon as this screen's code has loaded, so the sample needs no run first.
+  attempt('Result: the fixed sentence of the sample', () => { refs['sample-fixed-rules'].textContent = report.FIXED_SENTENCE; });
 
   // ---- Showing the result -------------------------------------------------------------------------
 
