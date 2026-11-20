@@ -149,6 +149,8 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.75rem 1rem; }
 body:not([data-screen="result"]) .label-sample { display: none; }
 /* A visitor's own project is labelled YOUR PROJECT, never SAMPLE PROJECT. YOUR PROJECT shows only on the own result. */
 body[data-run="own"] .label-sample { display: none; }
+/* The sample's copy of the fixed "not AI" sentence is not shown on a visitor's own result (that has its own, at the end). */
+body[data-run="own"] #sample-fixed-rules { display: none; }
 .label-own { display: none; }
 body[data-screen="result"][data-run="own"] .label-own { display: block; }
 /* A clear keyboard focus ring (dark blue, 3 px, 2 px away from the control). */
@@ -191,7 +193,7 @@ body[data-screen="result"][data-run="own"] .label-own { display: block; }
 #intake-error-message p { margin: 0.2rem 0; }
 
 /* ---- Project setup screen (build-intake-1) ---- */
-.panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; padding: 0.75rem 1rem; background: #fff; border: 1px solid #8a9299; }
+.panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; padding: 0.75rem 1rem; background: #fff; border: 1px solid #7d858c; }
 .panel h2 { margin: 0; }
 .panel label { display: block; margin-top: 0.5rem; font-weight: 600; }
 .panel p { margin: 0; }
@@ -229,7 +231,7 @@ body[data-screen="result"][data-run="own"] .label-own { display: block; }
 
 .entry-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
 .room-list { margin: 0.5rem 0 0 1rem; }
-.entry { padding: 0.5rem; border: 1px solid #8a9299; background: #f7f7f5; }
+.entry { padding: 0.5rem; border: 1px solid #7d858c; background: #f7f7f5; }
 .entry-row, .rename-row, .confirm-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .entry-name { font-weight: 600; overflow-wrap: anywhere; }
 .entry-detail { color: #444; }
@@ -242,14 +244,14 @@ body[data-screen="result"][data-run="own"] .label-own { display: block; }
 /* ---- Inspiration screens (build-intake-2) ---- */
 .panel h3 { margin: 0.5rem 0 0; font-size: 1.125rem; }
 .image-entry { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
-.image-preview { display: block; max-width: 100%; max-height: 12rem; height: auto; justify-self: start; border: 1px solid #8a9299; }
+.image-preview { display: block; max-width: 100%; max-height: 12rem; height: auto; justify-self: start; border: 1px solid #7d858c; }
 .image-info { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: baseline; }
 .image-info .entry-name, .entry-name { overflow-wrap: anywhere; }
 
 /* ---- Brief and taste screens (build-intake-2) ---- */
 .brief-input { display: block; resize: vertical; min-height: 11rem; line-height: 1.5; }
 .taste-questions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
-.choice-group { min-width: 0; margin: 0; padding: 0.75rem 1rem; background: #fff; border: 1px solid #8a9299; }
+.choice-group { min-width: 0; margin: 0; padding: 0.75rem 1rem; background: #fff; border: 1px solid #7d858c; }
 .choice-group legend { padding: 0 0.25rem; font-weight: 600; }
 .choice-row { display: flex; }
 .choice-label { display: flex; flex: 1 1 auto; align-items: center; gap: 0.75rem; min-height: 2.75rem; padding: 0.25rem 0.5rem; cursor: pointer; }
@@ -276,7 +278,7 @@ body[data-screen="result"][data-run="own"] .label-own { display: block; }
 .summary-view h2, .summary-view h3, .summary-view p, .summary-view ul { margin: 0; }
 .summary-view ul { padding-left: 1.25rem; }
 .summary-view table { width: 100%; border-collapse: collapse; }
-.summary-view th, .summary-view td { padding: 0.4rem; border: 1px solid #8a9299; text-align: left; vertical-align: top; }
+.summary-view th, .summary-view td { padding: 0.4rem; border: 1px solid #7d858c; text-align: left; vertical-align: top; }
 .summary-view th { background: #e8eaec; }
 .summary-locked { font-weight: 700; }
 .summary-statement { padding: 0.5rem; border: 2px solid #44505a; }
@@ -284,14 +286,14 @@ body[data-screen="result"][data-run="own"] .label-own { display: block; }
 .tag { padding: 0.25rem 0.75rem; border: 2px solid #44505a; border-radius: 1rem; background: #fff; }
 .mood-board { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: 0.5rem; }
 .mood-item { display: grid; gap: 0.25rem; align-content: start; min-width: 0; }
-.mood-image { display: block; width: 100%; height: 8rem; object-fit: cover; border: 1px solid #8a9299; }
+.mood-image { display: block; width: 100%; height: 8rem; object-fit: cover; border: 1px solid #7d858c; }
 .mood-caption { overflow-wrap: anywhere; }
 .report-line { list-style: none; }
 /* On a narrow screen the summary tables stack: each cell shows its column heading in front of its value. */
 @media (max-width: 40rem) {
   .summary-view table, .summary-view tbody, .summary-view tr, .summary-view td { display: block; width: 100%; }
   .summary-view tr:has(th) { display: none; }
-  .summary-view tr { margin-bottom: 0.5rem; border: 1px solid #8a9299; }
+  .summary-view tr { margin-bottom: 0.5rem; border: 1px solid #7d858c; }
   .summary-view td { border: 0; border-bottom: 1px solid #d0d3d6; }
   .summary-view td::before { content: attr(data-label) ": "; font-weight: 700; }
 }
