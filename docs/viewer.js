@@ -22,6 +22,7 @@ let floorLabels;
 let filterByFloor;
 let viewBounds;
 let fitCamera;
+let floorLabelText;
 
 const COLOURS = {
   locked: 0x0072b2,   // blue
@@ -491,11 +492,15 @@ async function startScene() {
 }
 
 // The three floor buttons: Both, Ground floor, Upper floor.
-function chooseFloor(which) {
-  shownFloor = which;
+function markFloorButtons(which) {
   for (const button of document.querySelectorAll('.floor-button')) {
     button.setAttribute('aria-pressed', String(button.dataset.floor === String(which)));
   }
+}
+
+function chooseFloor(which) {
+  shownFloor = which;
+  markFloorButtons(which);
   if (!view.THREE || !view.group) return;
   const boxes = drawScene(currentVersion);
   if (openItemId !== null && !boxes.some((b) => b.itemId === openItemId)) closePanel();
@@ -547,12 +552,19 @@ function changeVersion(version) {
   });
 }
 
-function setUpSlider(last) {
+// The slider's range for the run data being shown. Called for every run.
+function configureSlider(last) {
   const slider = el('version-slider');
   slider.min = '0';
   slider.max = String(last);
   slider.value = String(last);
   slider.disabled = false;
+}
+
+// The slider's handler is attached once, the first time run data is shown.
+function setUpSlider(last) {
+  const slider = el('version-slider');
+  configureSlider(last);
   slider.addEventListener('input', guarded('Version slider', () => changeVersion(Number(slider.value))));
 }
 
@@ -568,37 +580,110 @@ function render(version) {
   attempt('Details panel', () => { if (openItemId !== null) showDetails(openItemId); });
 }
 
+// ---- Showing run data -----------------------------------------------------------------------
+
+// The floor buttons are named after the floors of the run data being shown. A button for a floor
+// that does not exist is hidden. For the sample the names are the ones already on the page.
+function nameFloorButtons(run) {
+  for (const button of document.querySelectorAll('.floor-button')) {
+    if (button.dataset.floor === 'all') continue;
+    const floor = run.floors.find((f) => f.order === Number(button.dataset.floor));
+    button.hidden = !floor;
+    if (floor) button.textContent = floorLabelText(floor);
+  }
+}
+
+// After a second set of run data arrives: draw its blocks, close any open details, frame the view again.
+function redrawForNewRun() {
+  if (!view.THREE || !view.group) return; // without 3D only the text parts change
+  const boxes = drawScene(currentVersion);
+  closePanel();
+  userMovedCamera = false;
+  frameHome(boxes);
+  drawFrame();
+}
+
+let controlsReady = false; // the slider, floor, reset and label handlers are attached once
+let sceneRequested = false; // the 3D scene is built once and reused for every run
+
 // Show one set of run data: the page's controls, the text parts and the 3D view. This is the one
-// function that "Try the sample" and the run of a visitor's own project both go through.
-async function showRunData(run) {
+// function that "Try the sample" and the run of a visitor's own project both go through. It can be
+// called again with other run data: it replaces what is shown and starts at the latest version.
+// kind is 'own' for a visitor's project; anything else is the sample. It only changes the text alternative of the 3D view.
+async function showRunData(run, { kind } = {}) {
   checkShape(run);
   sampleRun = run;
+  openItemId = null;
+  hoveredItemId = null;
+  shownFloor = 'all';
+  userMovedCamera = false;
   const last = sampleRun.versions.length;
-  // The page controls come first and do not depend on 3D, so they work even if 3D fails.
-  attempt('Version slider', () => setUpSlider(last));
-  attempt('Floor buttons', setUpFloorButtons);
-  attempt('Reset view button', setUpResetButton);
-  attempt('Show all labels checkbox', setUpLabelsCheckbox);
+  attempt('Text alternative of the 3D view', () => {
+    el('scene-area').setAttribute('aria-label', kind === 'own' ? '3D view of your project' : '3D view of the sample home');
+  });
+  attempt('Floor button names', () => nameFloorButtons(run));
+  if (!controlsReady) {
+    controlsReady = true;
+    // The page controls come first and do not depend on 3D, so they work even if 3D fails.
+    attempt('Version slider', () => setUpSlider(last));
+    attempt('Floor buttons', setUpFloorButtons);
+    attempt('Reset view button', setUpResetButton);
+    attempt('Show all labels checkbox', setUpLabelsCheckbox);
+  } else {
+    attempt('Version slider', () => configureSlider(last));
+    attempt('Floor buttons', () => markFloorButtons('all'));
+  }
   render(last);
-  await startScene();
+  if (!sceneRequested) {
+    sceneRequested = true;
+    await startScene();
+  } else {
+    attempt('Drawing the new project', redrawForNewRun);
+  }
 }
+
+// What the intake screens use (they are a separate script, so the two never share a failure).
+// Both return true when the data is shown, false when it could not be (the red message says why).
+let loadedSample = null; // the sample run file, read once at the start
+let ownRunShown = false;
+
+let helpersLoading = null; // the loading of scene-data.js, so a call that comes too early waits for it
+
+async function showRunDataSafely(run, options = {}) {
+  if (helpersLoading && (await helpersLoading) === FAILED) return false;
+  const kind = options.kind === 'own' ? 'own' : 'sample';
+  if (kind === 'own') ownRunShown = true;
+  const result = await attempt('Showing the project in the viewer', () => showRunData(run, { kind }));
+  return result !== FAILED;
+}
+
+async function showSample() {
+  if (!loadedSample) return false;
+  return showRunDataSafely(loadedSample, { kind: 'sample' });
+}
+
+globalThis.designForYouViewer = { showRunData: showRunDataSafely, showSample };
 
 async function start() {
   setScriptStatus('started.');
-  const helperLoaded = await attempt('Loading scene-data.js', async () => {
-    ({ buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera } = await import(SCENE_DATA_FILE));
+  helpersLoading = attempt('Loading scene-data.js', async () => {
+    ({ buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera, floorLabelText } = await import(SCENE_DATA_FILE));
   });
+  const helperLoaded = await helpersLoading;
   if (helperLoaded === FAILED) return;
+  let fetched;
   try {
     const response = await fetch(SAMPLE_RUN_FILE);
     if (!response.ok) throw new Error('The sample file could not be read.');
-    sampleRun = await response.json();
-    checkShape(sampleRun);
+    fetched = await response.json();
+    checkShape(fetched);
   } catch (error) {
     showError('The sample home could not be loaded, so nothing is shown. If you opened this page by double-clicking the file on your computer, use the web link instead (see the README).');
     return;
   }
-  await showRunData(sampleRun);
+  loadedSample = fetched;
+  // If a visitor's own project was already shown, the sample must not replace it.
+  if (!ownRunShown) await showRunData(fetched);
   setScriptStatus('finished setting up.');
 }
 
