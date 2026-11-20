@@ -7,7 +7,7 @@
 // run. Unexpected page errors are already shown by viewer.js, so this file does not add a second handler.
 //
 // Visitor text is only ever put on the page with textContent. Nothing here reads files, stores or sends anything.
-const PAGE_VERSION = 'build-intake-4';
+const PAGE_VERSION = 'build-intake-5';
 
 // The screens in the order Back and Next move through them. `step` is the number shown in the step text.
 // Start and Result are outside the numbered steps.

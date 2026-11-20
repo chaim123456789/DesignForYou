@@ -9,7 +9,7 @@
 // is set up in its own protected step (see attempt below). If one step fails, a
 // red message with the error text appears at the top of the page and the other
 // steps still run.
-const PAGE_VERSION = 'build-intake-4';
+const PAGE_VERSION = 'build-intake-5';
 // The files this page loads carry the version in their address, so a browser
 // cannot mix an old copy of one file with a new copy of another.
 const SCENE_DATA_FILE = `./scene-data.js?v=${PAGE_VERSION}`;
