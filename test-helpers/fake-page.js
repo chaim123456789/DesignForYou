@@ -101,13 +101,13 @@ export function createFakePage({ sampleRunText = readDoc('sample-run.json') } = 
     consoleErrors: [],
   };
 
-  for (const m of html.matchAll(/<(\w+)([^>]*\sid="[^"]+"[^>]*|[^>]*\sclass="[^"]*floor-button[^"]*"[^>]*)>/g)) {
+  for (const m of html.matchAll(/<(\w+)([^>]*\sid="[^"]+"[^>]*|[^>]*\sclass="[^"]*(?:floor-button|label-sample|label-own)[^"]*"[^>]*)>/g)) {
     const attributes = {};
     for (const a of m[2].matchAll(/([\w-]+)(?:="([^"]*)")?/g)) attributes[a[1]] = a[2] ?? '';
     const el = new FakeElement(page, m[1], attributes);
     // Text inside simple elements such as buttons and the how-to line.
     const inner = html.slice(m.index + m[0].length).match(/^([^<]*)</);
-    if (inner && m[1] === 'button') el._text = inner[1];
+    if (inner && (m[1] === 'button' || /label-(sample|own)/.test(el.className))) el._text = inner[1];
     const para = html.slice(m.index + m[0].length).match(/^<p>([^<]*)<\/p>/);
     if (para) el._text = para[1]; // e.g. the first line of the details panel
     page.elements.push(el);
@@ -143,6 +143,11 @@ export function createFakePage({ sampleRunText = readDoc('sample-run.json') } = 
       const found = page.elements.filter((e) => e.className.split(/\s+/).includes(cls));
       if (found.length === 0) page.missingIds.push(selector);
       return found;
+    },
+    createTextNode(text) {
+      const node = new FakeElement(page, '#text');
+      node._text = String(text);
+      return node;
     },
     createElement(tag) {
       if (page.failCreate.includes(tag)) throw new Error(`cannot create a <${tag}> element`);

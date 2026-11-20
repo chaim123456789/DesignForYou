@@ -10,6 +10,7 @@
 <body>
   <header id="top-bar" class="label-bar">
     <p class="label-sample">SAMPLE PROJECT</p>
+    <p class="label-own" hidden>YOUR PROJECT</p>
     <p class="label-draft">Plans are drafts for professional review. They are not verified engineering.</p>
   </header>
 
@@ -219,7 +220,24 @@
 
     <div id="screen-review" class="screen" hidden>
       <h1 id="heading-review" tabindex="-1">Review and run</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="review-intro">Check what you entered. When you are ready, press the button. Nothing is sent anywhere when you press it. Your images stay in this browser and are not uploaded.</p>
+
+      <div class="panel" role="group" aria-labelledby="review-heading">
+        <h2 id="review-heading">What you entered</h2>
+        <ul id="review-list" class="entry-list"></ul>
+      </div>
+
+      <div id="run-failure" class="run-failure" role="alert" tabindex="-1" hidden>
+        <h2 id="run-failure-heading">The design team could not finish</h2>
+        <p id="run-failure-text"></p>
+        <p id="run-failure-kept">Everything you entered is still here. Use Back to change it, then run the design team again.</p>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="run-heading">
+        <h2 id="run-heading">Run the design team</h2>
+        <p id="run-reason" class="setup-needs"></p>
+        <button type="button" id="run-design-team" class="action-button run-button" aria-describedby="run-reason" disabled>Run the design team</button>
+      </div>
     </div>
 
     <div id="screen-result" class="screen" hidden>
@@ -275,6 +293,40 @@
     </div>
 
    </div>
+
+    <div id="own-result" class="own-result" hidden>
+      <p id="own-viewer-note" class="setup-needs" hidden></p>
+      <p id="own-text-alternative" class="hint">The 3D view has a text alternative: the summary and the clash list on this page hold the same information.</p>
+
+      <div class="panel" role="group" aria-labelledby="own-summary-heading">
+        <h2 id="own-summary-heading">Summary</h2>
+        <div id="own-summary" class="summary-view"></div>
+        <h3 id="own-brief-heading">Your brief</h3>
+        <p id="own-brief" class="own-brief"></p>
+        <p id="own-brief-note" class="hint">Your brief is kept with your project and shown here. The design team does not read it.</p>
+        <p id="own-images-count"></p>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="own-profile-heading">
+        <h2 id="own-profile-heading">Your style profile</h2>
+        <p id="own-profile-message"></p>
+        <ul id="own-profile-sentences" class="entry-list"></ul>
+        <ul id="own-profile-tags" class="tag-list"></ul>
+        <h3 id="own-mood-heading">Your mood board</h3>
+        <p id="own-mood-note" class="hint">These are your own images. They stay in this page and are not uploaded. The design team does not look at them.</p>
+        <p id="own-mood-empty">You added no images.</p>
+        <ul id="own-mood-board" class="mood-board"></ul>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="own-report-heading">
+        <h2 id="own-report-heading">What the design team did with your input</h2>
+        <div id="own-report"></div>
+        <p id="own-report-clash" class="hint"></p>
+      </div>
+
+      <p id="result-fixed-rules" class="setup-needs"></p>
+      <button type="button" id="result-start-again" class="nav-button">Start again</button>
+    </div>
     </div>
 
     <div id="step-nav" class="step-nav" hidden>
@@ -289,6 +341,7 @@
 
   <footer id="bottom-bar" class="label-bar">
     <p class="label-sample">SAMPLE PROJECT</p>
+    <p class="label-own" hidden>YOUR PROJECT</p>
     <p class="label-draft">Plans are drafts for professional review. They are not verified engineering.</p>
   </footer>
 

@@ -48,6 +48,13 @@ const ITEMS_SCREEN_FILE = `./items-screen.js?v=${PAGE_VERSION}`;
 const BRIEF_SCREEN_FILE = `./brief-screen.js?v=${PAGE_VERSION}`;
 const TASTE_SCREEN_FILE = `./taste-screen.js?v=${PAGE_VERSION}`;
 const TASTE_FILE = `./taste.js?v=${PAGE_VERSION}`;
+const REVIEW_SCREEN_FILE = `./review-screen.js?v=${PAGE_VERSION}`;
+const RESULT_SCREEN_FILE = `./result-screen.js?v=${PAGE_VERSION}`;
+const BUILD_BRAIN_FILE = `./build-brain.js?v=${PAGE_VERSION}`;
+const REPORT_FILE = `./report.js?v=${PAGE_VERSION}`;
+const RUN_DATA_FILE = `./run-data.js?v=${PAGE_VERSION}`;
+const SUMMARY_VIEW_FILE = `./summary-view.js?v=${PAGE_VERSION}`;
+const MAKE_SUMMARY_FILE = `../engine/summary/make-summary.js?v=${PAGE_VERSION}`;
 
 // ---- Problems and protected steps (same pattern as viewer.js, own red box) -------------------
 
@@ -155,9 +162,16 @@ function goNext() {
   if (index >= 0 && index < STEPS.length - 1) show(STEPS[index + 1].id);
 }
 
+// The result screen code (result-screen.js), once it has loaded. Until then, and if it cannot load,
+// "Try the sample" works exactly as it always did.
+let resultApi = null;
+
 // "Try the sample" shows the existing viewer. viewer.js has already loaded sample-run.json by itself.
 function setUpSampleButton() {
-  el('choose-sample').addEventListener('click', guarded('Try the sample button', () => show('result')));
+  el('choose-sample').addEventListener('click', guarded('Try the sample button', () => {
+    if (resultApi) resultApi.showSampleResult();
+    else show('result');
+  }));
 }
 function setUpOwnProjectButton() {
   el('choose-own').addEventListener('click', guarded('Start my own project button', () => show('setup')));
@@ -259,6 +273,34 @@ async function loadItemsScreen(data) {
   setUpItemsScreen({ el, attempt, guarded, announce, getState: () => appState, onShow, onReset, ...data });
 }
 
+async function loadResultScreen(data) {
+  const { setUpResultScreen } = await import(RESULT_SCREEN_FILE);
+  const report = await import(REPORT_FILE);
+  const runData = await import(RUN_DATA_FILE);
+  const summaryView = await import(SUMMARY_VIEW_FILE);
+  const { makeSummaryHtml } = await import(MAKE_SUMMARY_FILE);
+  const taste = await import(TASTE_FILE);
+  resultApi = setUpResultScreen({
+    el, attempt, guarded, announce, getState: () => appState, onReset, show: (id) => show(id),
+    getViewer: () => globalThis.designForYouViewer, askStartAgain,
+    api: data.api, taste, report, runData, summaryView, makeSummaryHtml,
+  });
+}
+
+async function loadReviewScreen(data) {
+  const { setUpReviewScreen } = await import(REVIEW_SCREEN_FILE);
+  const { runDesignTeam } = await import(BUILD_BRAIN_FILE);
+  const taste = await import(TASTE_FILE);
+  setUpReviewScreen({
+    el, attempt, guarded, announce, getState: () => appState, onShow, onReset, taste, runDesignTeam,
+    showResult: (run) => {
+      if (!resultApi) throw new Error('The result screen could not be loaded. See the red message at the top of the page.');
+      return resultApi.showOwnResult(run);
+    },
+    ...data,
+  });
+}
+
 // The order matters little, but each step is protected on its own.
 async function start() {
   setScriptStatus('started.');
@@ -275,6 +317,8 @@ async function start() {
   if (data !== FAILED) await attempt('Brief screen', () => loadBriefScreen(data));
   if (data !== FAILED) await attempt('Taste screen', () => loadTasteScreen(data));
   if (data !== FAILED) await attempt('Items screen', () => loadItemsScreen(data));
+  if (data !== FAILED) await attempt('Result screen', () => loadResultScreen(data));
+  if (data !== FAILED) await attempt('Review and run screen', () => loadReviewScreen(data));
   setScriptStatus('finished setting up.');
 }
 
