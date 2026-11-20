@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'; img-src 'self' blob:">
   <title>Start - DesignForYou</title>
-  <link rel="stylesheet" href="styles.css?v=build-intake-1">
+  <link rel="stylesheet" href="styles.css?v=build-intake-2">
 </head>
 <body>
   <header id="top-bar" class="label-bar">
@@ -87,22 +87,90 @@
 
     <div id="screen-inspiration" class="screen" hidden>
       <h1 id="heading-inspiration" tabindex="-1">Overall inspiration</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="inspiration-intro">Add pictures and short notes that fit your whole project. In the next step you can give single rooms their own notes. Nothing is saved: if you close or reload this page, what you entered is lost.</p>
+      <p id="inspiration-less" class="setup-needs">You can go on without images or notes. The design team will then have less to work with.</p>
+
+      <div class="panel" role="group" aria-labelledby="images-heading">
+        <h2 id="images-heading">Images</h2>
+        <p id="image-privacy" class="hint">Your images stay in this browser. They are not uploaded, not sent anywhere and not saved. If you close or reload this page, they are gone.</p>
+        <p id="image-hint" class="hint">JPEG, PNG or WebP. Up to 10 MB each. Up to 50 images in total, for the whole project and all rooms together.</p>
+        <label for="image-target">Add the images to</label>
+        <select id="image-target" class="text-input"></select>
+        <label for="image-file">Choose images from your device</label>
+        <input type="file" id="image-file" class="text-input" accept="image/jpeg,image/png,image/webp" multiple aria-describedby="image-privacy image-hint">
+        <p id="image-error" class="field-error" hidden></p>
+        <h3 id="image-list-heading" tabindex="-1">Your images</h3>
+        <p id="image-empty">No images yet.</p>
+        <ul id="image-list" class="entry-list"></ul>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="notes-heading">
+        <h2 id="notes-heading">Notes for the whole project</h2>
+        <label for="note-text">Note</label>
+        <p id="note-hint" class="hint">Colours, materials or keywords, one at a time. For example "warm oak" or "linen". Up to 30 notes, 40 characters each.</p>
+        <div class="field-row">
+          <input type="text" id="note-text" class="text-input" autocomplete="off" aria-describedby="note-hint">
+          <button type="button" id="add-note" class="action-button">Add note</button>
+        </div>
+        <p id="note-error" class="field-error" hidden></p>
+        <h3 id="note-list-heading" tabindex="-1">Your notes</h3>
+        <p id="note-empty">No notes yet.</p>
+        <ul id="note-list" class="entry-list"></ul>
+      </div>
     </div>
 
     <div id="screen-overrides" class="screen" hidden>
       <h1 id="heading-overrides" tabindex="-1">Room overrides (optional)</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="override-intro">You can give one room its own notes. A room with its own notes uses only those notes. All other rooms keep the overall notes.</p>
+      <p id="override-images-note">To add images for a room, go back to the previous step and choose that room in "Add the images to".</p>
+      <p id="override-no-rooms" class="setup-needs">There are no rooms yet. Add rooms in the project setup step first.</p>
+
+      <div class="panel" role="group" aria-labelledby="override-heading">
+        <h2 id="override-heading">Notes for one room</h2>
+        <label for="override-room">Room</label>
+        <select id="override-room" class="text-input"></select>
+        <p id="override-state" class="setup-needs"></p>
+        <label for="override-note-text">Note for this room</label>
+        <p id="override-note-hint" class="hint">For example "cold steel". Up to 30 notes, 40 characters each.</p>
+        <div class="field-row">
+          <input type="text" id="override-note-text" class="text-input" autocomplete="off" aria-describedby="override-note-hint">
+          <button type="button" id="add-override-note" class="action-button">Add note to this room</button>
+        </div>
+        <p id="override-note-error" class="field-error" hidden></p>
+        <h3 id="override-list-heading" tabindex="-1">Notes for this room</h3>
+        <p id="override-note-empty">No notes for this room.</p>
+        <ul id="override-note-list" class="entry-list"></ul>
+        <button type="button" id="remove-override" class="action-button">Remove this room's override</button>
+      </div>
     </div>
 
     <div id="screen-brief" class="screen" hidden>
       <h1 id="heading-brief" tabindex="-1">Your brief</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="brief-intro">Write in your own words what you want from this project. This step is optional.</p>
+      <p id="brief-what" class="setup-needs">Your brief is kept with your project and shown in the summary. The design team does not read it.</p>
+
+      <div class="panel" role="group" aria-labelledby="brief-heading">
+        <h2 id="brief-heading">Write your brief</h2>
+        <label for="brief-text">Your brief</label>
+        <textarea id="brief-text" class="text-input brief-input" rows="8" autocomplete="off" aria-describedby="brief-what brief-count"></textarea>
+        <p id="brief-count" class="hint"></p>
+        <p id="brief-notice" class="field-error" hidden></p>
+      </div>
     </div>
 
     <div id="screen-taste" class="screen" hidden>
       <h1 id="heading-taste" tabindex="-1">Taste questions</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="taste-intro">Answer as many of these six questions as you like. You can skip any of them. Your answers build a short style profile below.</p>
+      <div id="taste-questions" class="taste-questions"></div>
+
+      <div class="panel" role="group" aria-labelledby="profile-heading">
+        <h2 id="profile-heading" tabindex="-1">Your style profile</h2>
+        <p id="profile-note" class="hint">When you run the design team, these tags are added to your overall inspiration. Remove a tag to leave it out.</p>
+        <p id="profile-message"></p>
+        <ul id="profile-sentences" class="entry-list"></ul>
+        <ul id="profile-tags" class="entry-list"></ul>
+        <button type="button" id="restore-tags" class="action-button" hidden>Put back removed tags</button>
+      </div>
     </div>
 
     <div id="screen-items" class="screen" hidden>
@@ -172,6 +240,7 @@
 
     <div id="step-nav" class="step-nav" hidden>
       <button type="button" id="back-button" class="nav-button">Back</button>
+      <button type="button" id="start-again" class="nav-button">Start again</button>
       <button type="button" id="next-button" class="nav-button nav-primary">Next</button>
     </div>
 
@@ -185,7 +254,7 @@
   </footer>
 
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-  <script type="module" src="viewer.js?v=build-intake-1"></script>
-  <script type="module" src="intake/screens.js?v=build-intake-1"></script>
+  <script type="module" src="viewer.js?v=build-intake-2"></script>
+  <script type="module" src="intake/screens.js?v=build-intake-2"></script>
 </body>
 </html>

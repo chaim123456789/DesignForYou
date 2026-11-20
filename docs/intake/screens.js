@@ -7,7 +7,7 @@
 // run. Unexpected page errors are already shown by viewer.js, so this file does not add a second handler.
 //
 // Visitor text is only ever put on the page with textContent. Nothing here reads files, stores or sends anything.
-const PAGE_VERSION = 'build-intake-1';
+const PAGE_VERSION = 'build-intake-2';
 
 // The screens in the order Back and Next move through them. `step` is the number shown in the step text.
 // Start and Result are outside the numbered steps.
@@ -27,14 +27,26 @@ const STEPS = SCREENS.filter((s) => s.step !== null);
 const el = (id) => document.getElementById(id);
 let currentScreen = 'start';
 
+// Screens ask to be redrawn each time they are shown (so they match the rooms entered in setup),
+// and the setup screen asks to be cleared on "Start again".
+const showHandlers = {};
+const resetHandlers = [];
+function onShow(id, handler) { (showHandlers[id] ||= []).push(handler); }
+function onReset(handler) { resetHandlers.push(handler); }
+
 // The visitor's project, in the page's memory only. It is created when the state code has loaded.
 let appState = null;
+let appStateCode = null; // the loaded state.js
 
 // The code of each screen is loaded on its own, with the cache tag in its address, in a protected
 // step. A screen whose file cannot be loaded shows the red message and the others still work.
 const STATE_FILE = `./state.js?v=${PAGE_VERSION}`;
 const LIMITS_FILE = `./limits.js?v=${PAGE_VERSION}`;
 const SETUP_SCREEN_FILE = `./setup-screen.js?v=${PAGE_VERSION}`;
+const INSPIRATION_SCREEN_FILE = `./inspiration-screen.js?v=${PAGE_VERSION}`;
+const BRIEF_SCREEN_FILE = `./brief-screen.js?v=${PAGE_VERSION}`;
+const TASTE_SCREEN_FILE = `./taste-screen.js?v=${PAGE_VERSION}`;
+const TASTE_FILE = `./taste.js?v=${PAGE_VERSION}`;
 
 // ---- Problems and protected steps (same pattern as viewer.js, own red box) -------------------
 
@@ -109,6 +121,8 @@ function show(id, { moveFocus = true } = {}) {
   attempt('Page title', () => { document.title = `${screen.name} - DesignForYou`; });
   attempt('Step text, Back and Next', () => updateNavigation(screen));
   attempt('Clearing the status line', () => { el('action-status').textContent = ''; });
+  attempt('Drawing the screen', () => { for (const redraw of showHandlers[id] || []) attempt('Drawing the screen', redraw); });
+  attempt('Warning before leaving the page', updateLeaveWarning);
   // Focus moves to the new heading only when the visitor changes screen, not when the page first loads.
   if (moveFocus) {
     attempt('Moving the keyboard focus', () => {
@@ -158,22 +172,85 @@ function setUpNextButton() {
 function setUpResultBackButton() {
   el('result-back').addEventListener('click', guarded('Back to start button', () => show('start')));
 }
+function setUpStartAgainButton() {
+  el('start-again').addEventListener('click', guarded('Start again button', askStartAgain));
+}
+
+// ---- Image previews, the warning before leaving, and starting again -------------------------
+
+// Release the temporary preview addresses of these image records. The addresses live in the browser's
+// memory until released. A failure for one image never stops the others.
+function releaseImages(images) {
+  for (const image of images || []) {
+    if (!image || !image.previewUrl) continue;
+    attempt('Releasing an image preview', () => URL.revokeObjectURL(image.previewUrl));
+    image.previewUrl = null;
+  }
+}
+
+// The browser asks "leave this page?" only when the visitor has entered something. The handler is
+// added the first time something has been entered, never before.
+let leaveWarningOn = false;
+function updateLeaveWarning() {
+  if (leaveWarningOn || !appState || !appStateCode || !appStateCode.hasEntries(appState)) return;
+  leaveWarningOn = true;
+  window.addEventListener('beforeunload', guarded('Warning before leaving the page', (event) => {
+    if (!appStateCode.hasEntries(appState)) return; // after "Start again" there is nothing to lose
+    event.preventDefault();
+    event.returnValue = ''; // the browser shows its own wording
+  }));
+}
+
+// The browser's own question box asks first, because this throws away everything entered.
+function askStartAgain() {
+  if (typeof globalThis.confirm !== 'function') return; // no way to ask, so nothing is thrown away
+  if (!globalThis.confirm('Start again? Everything you entered, including your images, will be cleared. This cannot be undone.')) return;
+  startAgain();
+}
+
+// Clears everything the visitor entered, including the image previews, and goes to the start screen.
+function startAgain() {
+  if (appState && appStateCode) {
+    releaseImages(appStateCode.allImages(appState));
+    appState = appStateCode.createState();
+    for (const reset of resetHandlers) attempt('Clearing a screen on Start again', reset);
+  }
+  show('start');
+}
 
 // What the screens share: the status line that announces additions and removals (role="status").
 function announce(text) {
   attempt('Status line', () => { el('action-status').textContent = text; });
+  attempt('Warning before leaving the page', updateLeaveWarning);
 }
 
 async function loadProjectData() {
   const stateCode = await import(STATE_FILE);
   const limitsCode = await import(LIMITS_FILE);
+  appStateCode = stateCode;
   appState = stateCode.createState();
   return { api: stateCode, limits: limitsCode.LIMITS };
 }
 
 async function loadSetupScreen(data) {
   const { setUpSetupScreen } = await import(SETUP_SCREEN_FILE);
-  setUpSetupScreen({ el, attempt, guarded, announce, getState: () => appState, ...data });
+  setUpSetupScreen({ el, attempt, guarded, announce, getState: () => appState, releaseImages, onReset, ...data });
+}
+
+async function loadInspirationScreens(data) {
+  const { setUpInspirationScreens } = await import(INSPIRATION_SCREEN_FILE);
+  setUpInspirationScreens({ el, attempt, guarded, announce, getState: () => appState, releaseImages, onShow, ...data });
+}
+
+async function loadBriefScreen(data) {
+  const { setUpBriefScreen } = await import(BRIEF_SCREEN_FILE);
+  setUpBriefScreen({ el, attempt, guarded, announce, getState: () => appState, entriesChanged: updateLeaveWarning, onShow, ...data });
+}
+
+async function loadTasteScreen(data) {
+  const { setUpTasteScreen } = await import(TASTE_SCREEN_FILE);
+  const taste = await import(TASTE_FILE);
+  setUpTasteScreen({ el, attempt, guarded, announce, getState: () => appState, onShow, taste, ...data });
 }
 
 // The order matters little, but each step is protected on its own.
@@ -183,10 +260,14 @@ async function start() {
   attempt('Start my own project button', setUpOwnProjectButton);
   attempt('Back button', setUpBackButton);
   attempt('Next button', setUpNextButton);
+  attempt('Start again button', setUpStartAgainButton);
   attempt('Back to start button', setUpResultBackButton);
   attempt('Start screen', () => show('start', { moveFocus: false }));
   const data = await attempt('Loading the project data code', loadProjectData);
   if (data !== FAILED) await attempt('Setup screen', () => loadSetupScreen(data));
+  if (data !== FAILED) await attempt('Inspiration screens', () => loadInspirationScreens(data));
+  if (data !== FAILED) await attempt('Brief screen', () => loadBriefScreen(data));
+  if (data !== FAILED) await attempt('Taste screen', () => loadTasteScreen(data));
   setScriptStatus('finished setting up.');
 }
 

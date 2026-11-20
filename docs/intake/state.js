@@ -38,6 +38,19 @@ export function allImages(state) {
   return [...state.overall.images, ...Object.values(state.overrides).flatMap((o) => o.images)];
 }
 
+// True once the visitor has entered anything. The page warns before leaving only then.
+export function hasEntries(state) {
+  return state.name !== ''
+    || state.floors.length > 0
+    || state.overall.notes.length > 0
+    || state.overall.images.length > 0
+    || Object.keys(state.overrides).length > 0
+    || state.brief !== ''
+    || Object.keys(state.tasteAnswers).length > 0
+    || state.removedTags.length > 0
+    || state.items.length > 0;
+}
+
 // A layer is 'overall' or a room id. Returns the layer object, or undefined.
 function readLayer(state, layer) {
   if (layer === 'overall') return state.overall;
@@ -193,6 +206,16 @@ export function addImage(state, layer, file, previewUrl) {
   const image = { id: newId(state, 'image-'), name, caption, type: file.type, size: file.size, previewUrl: previewUrl || null };
   writeLayer(state, layer).images.push(image);
   return { ok: true, id: image.id };
+}
+
+// Change the caption of an image. An empty caption is allowed (the image then gets "Inspiration image N").
+export function setImageCaption(state, imageId, caption) {
+  const image = allImages(state).find((i) => i.id === imageId);
+  if (!image) return bad('That image is not in the list.');
+  const text = clean(caption);
+  if (text.length > LIMITS.captionMax) return bad(`Keep the caption to ${LIMITS.captionMax} characters or fewer.`);
+  image.caption = text;
+  return { ok: true, caption: text };
 }
 
 // Returns the removed record, so the page can release its preview address.

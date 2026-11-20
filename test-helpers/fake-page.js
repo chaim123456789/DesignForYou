@@ -116,7 +116,7 @@ export function createFakePage({ sampleRunText = readDoc('sample-run.json') } = 
 
   const windowListeners = {};
   page.window = {
-    addEventListener(type, fn) { (windowListeners[type] ||= []).push(fn); },
+    addEventListener(type, fn) { page.log.push(`window-listener:${type}`); (windowListeners[type] ||= []).push(fn); },
     dispatch(type, event) { for (const fn of windowListeners[type] || []) fn(event); },
   };
 

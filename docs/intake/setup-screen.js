@@ -9,7 +9,7 @@
 // A failing part shows the red message at the top of the page and never stops the others.
 
 export function setUpSetupScreen(tools) {
-  const { el, attempt, guarded, announce, getState, api, limits } = tools;
+  const { el, attempt, guarded, announce, getState, api, limits, releaseImages, onReset } = tools;
 
   // What the screen itself remembers (not the visitor's project, which is in the state).
   const ui = {
@@ -185,6 +185,7 @@ export function setUpSetupScreen(tools) {
     if (!floor) return;
     const roomCount = floor.rooms.length;
     const result = api.removeFloor(state, floorId);
+    if (result.ok && releaseImages) releaseImages(result.removedImages); // free the previews of the floor's rooms
     ui.confirming = null;
     ui.focusKey = 'list-heading';
     render();
@@ -198,6 +199,7 @@ export function setUpSetupScreen(tools) {
     const room = state.floors.flatMap((f) => f.rooms).find((r) => r.id === roomId);
     if (!room) return;
     const result = api.removeRoom(state, roomId);
+    if (result.ok && releaseImages) releaseImages(result.removedImages); // free the previews of the room's override
     ui.focusKey = 'list-heading';
     render();
     announce(result.ok ? `Room removed: ${room.name}.` : result.message);
@@ -338,4 +340,24 @@ export function setUpSetupScreen(tools) {
     refs['room-floor'].addEventListener('change', guarded('Floor choice for the room', () => { ui.floorChoice = refs['room-floor'].value; }));
   });
   attempt('List of floors and rooms', render);
+
+  // "Start again" gives the screen a new, empty project: the boxes and messages are cleared too.
+  attempt('Clearing the setup screen on Start again', () => {
+    if (!onReset) return;
+    onReset(() => {
+      ui.renaming = null;
+      ui.confirming = null;
+      ui.floorChoice = '';
+      ui.focusKey = null;
+      refs['project-name'].value = '';
+      refs['floor-name'].value = '';
+      refs['room-name'].value = '';
+      refs['room-width'].value = String(limits.roomSizeDefault);
+      refs['room-depth'].value = String(limits.roomSizeDefault);
+      clearFieldError(refs['project-name'], refs['project-name-error']);
+      clearFieldError(refs['floor-name'], refs['floor-name-error']);
+      for (const [input, error] of ROOM_FIELDS) clearFieldError(refs[input], refs[error]);
+      render();
+    });
+  });
 }
