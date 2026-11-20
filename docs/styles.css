@@ -96,7 +96,7 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.75rem 1rem; }
   border: 1px solid #222;
 }
 .swatch-locked { background: #0072b2; }
-.swatch-unsure { background: #e69f00; }
+.swatch-unsure { background: #c55a00; }
 .swatch-clash { background: #fff; border: 3px solid #cc0000; }
 
 #version-slider { width: 100%; margin: 0.4rem 0; }

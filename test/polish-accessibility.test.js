@@ -1,0 +1,60 @@
+// Polish batch 1: four approved changes to how the sample looks, each with its own test.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const read = (name) => readFileSync(new URL(`../docs/${name}`, import.meta.url), 'utf8');
+const css = read('styles.css');
+const viewer = read('viewer.js');
+const html = read('index.html');
+
+const channel = (v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+const luminance = (hex) => {
+  const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a, b) => {
+  const [x, y] = [luminance(a), luminance(b)];
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+};
+const hue = (hex) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  if (d === 0) return 0;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+};
+const viewerColour = (src, name) => `#${new RegExp(`${name}:\\s*0x([0-9a-f]{6})`).exec(src)[1]}`;
+const swatchColour = (text, cls) => new RegExp(`\\.${cls}\\s*\\{\\s*background:\\s*(#[0-9a-fA-F]{6})`).exec(text)[1].toLowerCase();
+
+function checkUnsure(viewerSrc, cssText) {
+  const unsure = viewerColour(viewerSrc, 'unsure');
+  const locked = viewerColour(viewerSrc, 'locked');
+  const slab = viewerColour(viewerSrc, 'slab');
+  const problems = [];
+  if (ratio(unsure, '#ffffff') < 3) problems.push(`Unsure on white is ${ratio(unsure, '#ffffff').toFixed(2)} to 1`);
+  if (ratio(unsure, slab) < 3) problems.push(`Unsure on the floor slab is ${ratio(unsure, slab).toFixed(2)} to 1`);
+  const gap = Math.abs(hue(unsure) - hue(locked));
+  if (Math.min(gap, 360 - gap) < 90) problems.push('Unsure is too close to the Locked blue in hue');
+  if (swatchColour(cssText, 'swatch-unsure') !== unsure) problems.push('the legend swatch is not the viewer colour');
+  if (swatchColour(cssText, 'swatch-locked') !== locked) problems.push('the Locked swatch is not the viewer colour');
+  return problems;
+}
+
+test('Polish 1: the Unsure orange has at least 3 to 1 against white and the 3D floor slab, differs from the Locked blue, and the legend swatch matches', () => {
+  const unsure = viewerColour(viewer, 'unsure');
+  console.log(`Unsure ${unsure}: ${ratio(unsure, '#ffffff').toFixed(2)} to 1 on white, ${ratio(unsure, viewerColour(viewer, 'slab')).toFixed(2)} to 1 on the floor slab; hue ${hue(unsure).toFixed(0)} against Locked hue ${hue(viewerColour(viewer, 'locked')).toFixed(0)}`);
+  assert.deepEqual(checkUnsure(viewer, css), []);
+  assert.ok(hue(unsure) > 15 && hue(unsure) < 40, 'it is still an orange');
+  assert.match(html, /<span class="swatch swatch-locked"[^>]*><\/span>\s*Locked/);
+  assert.match(html, /<span class="swatch swatch-unsure"[^>]*><\/span>\s*Unsure/);
+});
+
+test('Polish 1: the colour check fails on the old light orange, on a swatch that does not match, and on a blue-looking Unsure (planted changes in copies)', () => {
+  const old = viewer.replace(/unsure:\s*0x[0-9a-f]{6}/, 'unsure: 0xe69f00');
+  assert.ok(checkUnsure(old, css).length >= 2);
+  const mismatch = css.replace(/(\.swatch-unsure\s*\{\s*background:\s*)#[0-9a-fA-F]{6}/, '$1#e69f00');
+  assert.ok(checkUnsure(viewer, mismatch).some((p) => /swatch/.test(p)));
+  const blueish = viewer.replace(/unsure:\s*0x[0-9a-f]{6}/, 'unsure: 0x0060a0');
+  assert.ok(checkUnsure(blueish, css).some((p) => /Locked blue/.test(p)));
+});

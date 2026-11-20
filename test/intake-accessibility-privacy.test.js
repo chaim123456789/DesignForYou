@@ -292,7 +292,7 @@ function statusRows(text) {
   }
   return rows;
 }
-const KNOWN_STATUS_SHORTFALLS = ['Unsure orange on the legend background', 'Unsure orange on the pale floor slab in 3D'];
+const KNOWN_STATUS_SHORTFALLS = []; // the Unsure orange now reaches 3 to 1 (polish step 1), so no shortfall is left
 
 function checkContrast(text) {
   const rows = [...pairsFor(text), ...statusRows(text)].map((p) => { assert.ok(p.fg && p.bg, `missing colour for: ${p.name}`); return { ...p, ratio: ratio(p.fg, p.bg) }; });
@@ -305,7 +305,7 @@ test('Task 12 accessibility: every text colour pair reaches 4.5 to 1 and every b
   for (const r of rows) console.log(`  ${r.ratio.toFixed(2).padStart(5)} to 1  (needs ${r.min})  ${r.fg} on ${r.bg}  ${r.name}${r.ratio < r.min ? '   <-- BELOW' : ''}`);
   assert.ok(rows.length >= 55, 'the table is not empty');
   assert.deepEqual(failures.map((f) => f.name), KNOWN_STATUS_SHORTFALLS,
-    'only the known Unsure-orange shortfalls are below the limit (see the checklist); anything else is a new problem');
+    'no pair is below its limit; anything below is a new problem');
 });
 
 test('Task 12 accessibility: every colour written in the stylesheet is in the contrast table, or is listed as a plain decoration', () => {
