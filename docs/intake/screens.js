@@ -7,7 +7,7 @@
 // run. Unexpected page errors are already shown by viewer.js, so this file does not add a second handler.
 //
 // Visitor text is only ever put on the page with textContent. Nothing here reads files, stores or sends anything.
-const PAGE_VERSION = 'build-intake-2';
+const PAGE_VERSION = 'build-intake-3';
 
 // The screens in the order Back and Next move through them. `step` is the number shown in the step text.
 // Start and Result are outside the numbered steps.
@@ -44,6 +44,7 @@ const STATE_FILE = `./state.js?v=${PAGE_VERSION}`;
 const LIMITS_FILE = `./limits.js?v=${PAGE_VERSION}`;
 const SETUP_SCREEN_FILE = `./setup-screen.js?v=${PAGE_VERSION}`;
 const INSPIRATION_SCREEN_FILE = `./inspiration-screen.js?v=${PAGE_VERSION}`;
+const ITEMS_SCREEN_FILE = `./items-screen.js?v=${PAGE_VERSION}`;
 const BRIEF_SCREEN_FILE = `./brief-screen.js?v=${PAGE_VERSION}`;
 const TASTE_SCREEN_FILE = `./taste-screen.js?v=${PAGE_VERSION}`;
 const TASTE_FILE = `./taste.js?v=${PAGE_VERSION}`;
@@ -253,6 +254,11 @@ async function loadTasteScreen(data) {
   setUpTasteScreen({ el, attempt, guarded, announce, getState: () => appState, onShow, taste, ...data });
 }
 
+async function loadItemsScreen(data) {
+  const { setUpItemsScreen } = await import(ITEMS_SCREEN_FILE);
+  setUpItemsScreen({ el, attempt, guarded, announce, getState: () => appState, onShow, onReset, ...data });
+}
+
 // The order matters little, but each step is protected on its own.
 async function start() {
   setScriptStatus('started.');
@@ -268,6 +274,7 @@ async function start() {
   if (data !== FAILED) await attempt('Inspiration screens', () => loadInspirationScreens(data));
   if (data !== FAILED) await attempt('Brief screen', () => loadBriefScreen(data));
   if (data !== FAILED) await attempt('Taste screen', () => loadTasteScreen(data));
+  if (data !== FAILED) await attempt('Items screen', () => loadItemsScreen(data));
   setScriptStatus('finished setting up.');
 }
 
