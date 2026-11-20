@@ -568,6 +568,21 @@ function render(version) {
   attempt('Details panel', () => { if (openItemId !== null) showDetails(openItemId); });
 }
 
+// Show one set of run data: the page's controls, the text parts and the 3D view. This is the one
+// function that "Try the sample" and the run of a visitor's own project both go through.
+async function showRunData(run) {
+  checkShape(run);
+  sampleRun = run;
+  const last = sampleRun.versions.length;
+  // The page controls come first and do not depend on 3D, so they work even if 3D fails.
+  attempt('Version slider', () => setUpSlider(last));
+  attempt('Floor buttons', setUpFloorButtons);
+  attempt('Reset view button', setUpResetButton);
+  attempt('Show all labels checkbox', setUpLabelsCheckbox);
+  render(last);
+  await startScene();
+}
+
 async function start() {
   setScriptStatus('started.');
   const helperLoaded = await attempt('Loading scene-data.js', async () => {
@@ -583,14 +598,7 @@ async function start() {
     showError('The sample home could not be loaded, so nothing is shown. If you opened this page by double-clicking the file on your computer, use the web link instead (see the README).');
     return;
   }
-  const last = sampleRun.versions.length;
-  // The page controls come first and do not depend on 3D, so they work even if 3D fails.
-  attempt('Version slider', () => setUpSlider(last));
-  attempt('Floor buttons', setUpFloorButtons);
-  attempt('Reset view button', setUpResetButton);
-  attempt('Show all labels checkbox', setUpLabelsCheckbox);
-  render(last);
-  await startScene();
+  await showRunData(sampleRun);
   setScriptStatus('finished setting up.');
 }
 
