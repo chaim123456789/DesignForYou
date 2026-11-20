@@ -98,3 +98,51 @@ test('Polish 2: the label size check fails on the old 0.9rem size (planted chang
   assert.notEqual(planted, css);
   assert.ok(labelSizes(planted, viewer).some((p) => /\.scene-label is 14\.4 px/.test(p)));
 });
+
+// ---- Step 3: the viewer's own buttons ---------------------------------------------------------
+
+function tapProblems(cssText) {
+  const stripped = cssText.replace(/\/\*[\s\S]*?\*\//g, '');
+  const problems = [];
+  const need = (selector, props) => {
+    const body = ruleBody(stripped, selector);
+    if (body === null) { problems.push(`${selector}: no rule`); return; }
+    for (const prop of props) {
+      const m = new RegExp(`(?:^|[;\\s])${prop}:\\s*([^;]+);`).exec(body);
+      if (!m) problems.push(`${selector}: no ${prop}`);
+      else if (sizeInPx(m[1]) < 44) problems.push(`${selector}: ${prop} is ${sizeInPx(m[1])} px`);
+    }
+  };
+  need('#view-controls button', ['min-height', 'min-width']); // the three floor buttons and "Reset view"
+  need('#show-all-labels-label', ['min-height', 'min-width']); // the "Show all labels" tap area
+  need('#clash-list button', ['min-height']); // full width, so wide enough already
+  const clash = ruleBody(stripped, '#clash-list button') || '';
+  if (!/width:\s*100%/.test(clash)) problems.push('#clash-list button is not full width');
+  return problems;
+}
+
+test('Polish 3: the floor buttons, "Reset view", the "Show all labels" box and the clash list buttons are at least 44 px high and wide', () => {
+  assert.deepEqual(tapProblems(css), []);
+  // The buttons the rules apply to are really in the page, inside #view-controls.
+  const controls = html.slice(html.indexOf('<div id="view-controls"'), html.indexOf('<div id="scene-area"'));
+  for (const id of ['floor-all', 'floor-ground', 'floor-upper', 'reset-view']) assert.match(controls, new RegExp(`<button[^>]*id="${id}"`));
+  assert.match(controls, /<label id="show-all-labels-label"[^>]*>\s*<input type="checkbox" id="show-all-labels">/);
+  // The clash list buttons are made by viewer.js as buttons inside #clash-list.
+  assert.match(html, /<ul id="clash-list"/);
+  assert.match(viewer, /createElement\('button'\)/);
+  // The checkbox itself is bigger than the browser default.
+  assert.ok(sizeInPx(/width:\s*([^;]+);/.exec(ruleBody(css, '#show-all-labels'))[1]) >= 24);
+  // No later rule shrinks them again.
+  assert.doesNotMatch(css, /@media[^{]*\{[^@]*(?:#view-controls button|#clash-list button)[^{]*\{[^}]*(?:min-height|height)\s*:\s*[0-3]/);
+});
+
+test('Polish 3: the tap-size check fails when a minimum is removed or too small (planted changes in copies)', () => {
+  const noMin = css.replace(/(#view-controls button\s*\{[^}]*?)\s*min-height:\s*2\.75rem;/, '$1');
+  assert.notEqual(noMin, css);
+  assert.ok(tapProblems(noMin).some((p) => /#view-controls button: no min-height/.test(p)));
+  const small = css.replace(/(#clash-list button\s*\{[^}]*min-height:\s*)2\.75rem/, '$12.5rem');
+  assert.notEqual(small, css);
+  assert.ok(tapProblems(small).some((p) => /#clash-list button: min-height is 40 px/.test(p)));
+  const label = css.replace(/(#show-all-labels-label\s*\{[^}]*?)min-width:\s*2\.75rem;/, '$1');
+  assert.ok(tapProblems(label).some((p) => /show-all-labels-label: no min-width/.test(p)));
+});
