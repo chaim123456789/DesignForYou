@@ -668,3 +668,49 @@ test('Task 12 privacy: the plain sentences are on the page: nothing leaves the b
   }
   assert.ok(html.indexOf('<header') < html.indexOf('<main') && html.indexOf('</main>') < html.indexOf('<footer'));
 });
+
+// ==== Polish step 4: the text alternative sentence on the sample result ==========================
+
+const TEXT_ALTERNATIVE = 'The 3D view has a text alternative: the summary and the clash list on this page hold the same information.';
+function sampleTextAlternativeProblems(pageHtml) {
+  const problems = [];
+  const m = /<p id="sample-text-alternative"[^>]*>([^<]*)<\/p>/.exec(pageHtml);
+  if (!m) return ['the sample result has no text alternative sentence'];
+  if (m[1] !== TEXT_ALTERNATIVE) problems.push('the sentence is different');
+  const at = pageHtml.indexOf('id="sample-text-alternative"');
+  if (!(pageHtml.indexOf('<div id="screen-result"') < at && at < pageHtml.indexOf('<div id="own-result"'))) problems.push('the sentence is not in the sample part of the result screen');
+  if (pageHtml.indexOf('id="scene-area"') > at) problems.push('the sentence does not follow the 3D view');
+  return problems;
+}
+
+test('Polish 4: the sample result shows the 3D view text alternative sentence once, and a visitor\'s own result shows only its own copy', async () => {
+  assert.deepEqual(sampleTextAlternativeProblems(html), []);
+  assert.equal(html.split(TEXT_ALTERNATIVE).length - 1, 2, 'one copy for the sample and one for a visitor\'s own result');
+  await withAll(() => {}, async (page) => {
+    page.el('choose-sample').click();
+    assert.equal(page.el('screen-result').hidden, false);
+    assert.equal(page.el('sample-text-alternative').hidden, false);
+    assert.equal(page.el('own-result').hidden, true, 'the own copy sits in the hidden own part');
+    assert.equal(page.el('scene-area').getAttribute('aria-label'), '3D view of the sample home');
+    assert.deepEqual(page.problemLines(), []);
+    // The clash list and summary the sentence points to are on the sample result.
+    assert.ok(page.el('clash-list').children.length > 0, 'the clash list has entries');
+    // A visitor's own result shows its own copy and hides the sample one; Start again brings the sample one back.
+    page.el('result-back').click();
+    fillEverything(page);
+    await runIt(page);
+    assert.equal(page.el('sample-text-alternative').hidden, true);
+    assert.equal(page.el('own-result').hidden, false);
+    page.el('result-start-again').click();
+    page.el('choose-sample').click();
+    assert.equal(page.el('sample-text-alternative').hidden, false);
+  });
+});
+
+test('Polish 4: the sample sentence check fails when the sentence is missing, changed or in the wrong place (planted changes in copies)', () => {
+  const removed = html.replace(/<p id="sample-text-alternative"[^>]*>[^<]*<\/p>\n?/, '');
+  assert.notEqual(removed, html);
+  assert.deepEqual(sampleTextAlternativeProblems(removed), ['the sample result has no text alternative sentence']);
+  const changed = html.replace(/(<p id="sample-text-alternative"[^>]*>)[^<]*/, '$1The 3D view is fine.');
+  assert.ok(sampleTextAlternativeProblems(changed).includes('the sentence is different'));
+});

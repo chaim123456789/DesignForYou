@@ -17,7 +17,7 @@ export function setUpResultScreen(tools) {
   const refs = {};
   for (const id of ['heading-result', 'own-result', 'own-viewer-note', 'own-summary', 'own-brief', 'own-images-count',
     'own-profile-message', 'own-profile-sentences', 'own-profile-tags', 'own-mood-empty', 'own-mood-board',
-    'own-report', 'own-report-clash', 'result-fixed-rules', 'sample-fixed-rules', 'result-start-again',
+    'own-report', 'own-report-clash', 'result-fixed-rules', 'sample-fixed-rules', 'sample-text-alternative', 'result-start-again',
     'how-to-use', 'view-controls', 'scene-area', 'col-side']) {
     refs[id] = el(id);
   }
@@ -55,6 +55,7 @@ export function setUpResultScreen(tools) {
     });
     // The sample result has its own copy of the fixed sentence (plain page text). The own result has the one at its end.
     attempt('Result: the fixed sentence of the sample', () => { refs['sample-fixed-rules'].hidden = own; });
+    attempt('Result: the text alternative of the sample', () => { refs['sample-text-alternative'].hidden = own; });
     attempt('Result heading', () => {
       refs['heading-result'].textContent = own ? `YOUR PROJECT: ${name}` : sampleHeading;
       refs['own-result'].hidden = !own;
