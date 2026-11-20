@@ -62,6 +62,8 @@ noscript p { margin: 0; }
 #view-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 #view-controls button {
   font: inherit;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   padding: 0.4rem 0.9rem;
   background: #fff;
   border: 2px solid #44505a;
@@ -96,7 +98,7 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.75rem 1rem; }
   border: 1px solid #222;
 }
 .swatch-locked { background: #0072b2; }
-.swatch-unsure { background: #e69f00; }
+.swatch-unsure { background: #c55a00; }
 .swatch-clash { background: #fff; border: 3px solid #cc0000; }
 
 #version-slider { width: 100%; margin: 0.4rem 0; }
@@ -105,6 +107,7 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.75rem 1rem; }
   font: inherit;
   text-align: left;
   width: 100%;
+  min-height: 2.75rem;
   padding: 0.5rem;
   background: #fff;
   border: 1px solid #cc0000;
@@ -129,7 +132,7 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.75rem 1rem; }
   padding: 0.1rem 0.4rem;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid #8a9299;
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.3;
   font-weight: 600;
   pointer-events: none;
@@ -140,7 +143,8 @@ section { background: #fff; border: 1px solid #d5d5d0; padding: 0.75rem 1rem; }
 .floor-label { font-size: 1rem; background: #44505a; color: #fff; border-color: #44505a; }
 .scene-message { margin: 0; padding: 1rem; text-align: center; }
 
-#show-all-labels-label { display: inline-flex; align-items: center; gap: 0.4rem; margin-left: 0.5rem; font-size: 1rem; }
+#show-all-labels-label { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.75rem; min-width: 2.75rem; margin-left: 0.5rem; font-size: 1rem; }
+#show-all-labels { width: 1.5rem; height: 1.5rem; margin: 0; }
 
 /* ---- Intake screens (build-intake-1) ---- */
 /* The hidden attribute always wins, so a hidden screen is never shown by a display rule. */

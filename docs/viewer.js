@@ -9,7 +9,7 @@
 // is set up in its own protected step (see attempt below). If one step fails, a
 // red message with the error text appears at the top of the page and the other
 // steps still run.
-const PAGE_VERSION = 'build-intake-4';
+const PAGE_VERSION = 'build-intake-5';
 // The files this page loads carry the version in their address, so a browser
 // cannot mix an old copy of one file with a new copy of another.
 const SCENE_DATA_FILE = `./scene-data.js?v=${PAGE_VERSION}`;
@@ -26,7 +26,7 @@ let floorLabelText;
 
 const COLOURS = {
   locked: 0x0072b2,   // blue
-  unsure: 0xe69f00,   // orange
+  unsure: 0xc55a00,   // darker orange (at least 3 to 1 on white and on the floor slab)
   clash: 0xcc0000,    // red outline
   room: 0x7d8790,     // neutral grey for the wall outlines
   slab: 0xf4f1e8,     // pale floor slab
