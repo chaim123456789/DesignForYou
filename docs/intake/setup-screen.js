@@ -15,6 +15,7 @@ export function setUpSetupScreen(tools) {
   const ui = {
     renaming: null,    // { kind: 'floor' | 'room', id } while a name is being changed
     confirming: null,  // a floor id while the page asks "remove this floor?"
+    confirmingRoom: null, // a room id while the page asks "remove this room and its items?"
     floorChoice: '',   // the floor chosen for the next room
     focusKey: null,    // the control to give the keyboard focus after the list is redrawn
   };
@@ -141,6 +142,7 @@ export function setUpSetupScreen(tools) {
   function startRename(kind, id) {
     ui.renaming = { kind, id };
     ui.confirming = null;
+    ui.confirmingRoom = null;
     ui.focusKey = `rename-input-${entryKey(kind, id)}`;
     render();
   }
@@ -165,8 +167,13 @@ export function setUpSetupScreen(tools) {
     announce(`${kind === 'floor' ? 'Floor' : 'Room'} renamed to ${input.value.trim()}.`);
   }
 
+  // How many of the visitor's items sit in these rooms. They are removed together with the rooms.
+  const itemsInRooms = (rooms) => getState().items.filter((i) => rooms.some((r) => r.id === i.room)).length;
+  const itemWords = (n) => `${n} ${n === 1 ? 'item' : 'items'}`;
+
   function askRemoveFloor(floorId) {
     ui.confirming = floorId;
+    ui.confirmingRoom = null;
     ui.renaming = null;
     ui.focusKey = `keep-${entryKey('floor', floorId)}`;
     render();
@@ -184,25 +191,44 @@ export function setUpSetupScreen(tools) {
     const floor = state.floors.find((f) => f.id === floorId);
     if (!floor) return;
     const roomCount = floor.rooms.length;
+    const itemCount = itemsInRooms(floor.rooms);
     const result = api.removeFloor(state, floorId);
     if (result.ok && releaseImages) releaseImages(result.removedImages); // free the previews of the floor's rooms
     ui.confirming = null;
     ui.focusKey = 'list-heading';
     render();
     announce(result.ok
-      ? `Floor removed: ${floor.name}, with ${roomCount} ${roomCount === 1 ? 'room' : 'rooms'}.`
+      ? `Floor removed: ${floor.name}, with ${roomCount} ${roomCount === 1 ? 'room' : 'rooms'}${itemCount > 0 ? ` and ${itemWords(itemCount)}` : ''}.`
       : result.message);
   }
 
+  // A room with items asks first, and says how many items go with it. A room without items is removed at once.
   function removeRoom(roomId) {
     const state = getState();
     const room = state.floors.flatMap((f) => f.rooms).find((r) => r.id === roomId);
     if (!room) return;
+    const itemCount = itemsInRooms([room]);
+    if (itemCount > 0 && ui.confirmingRoom !== roomId) {
+      ui.confirmingRoom = roomId;
+      ui.confirming = null;
+      ui.renaming = null;
+      ui.focusKey = `keep-${entryKey('room', roomId)}`;
+      render();
+      return;
+    }
     const result = api.removeRoom(state, roomId);
     if (result.ok && releaseImages) releaseImages(result.removedImages); // free the previews of the room's override
+    ui.confirmingRoom = null;
     ui.focusKey = 'list-heading';
     render();
-    announce(result.ok ? `Room removed: ${room.name}.` : result.message);
+    announce(result.ok ? `Room removed: ${room.name}${itemCount > 0 ? `, with ${itemWords(itemCount)}` : ''}.` : result.message);
+  }
+
+  function cancelRemoveRoom(roomId) {
+    ui.confirmingRoom = null;
+    ui.focusKey = `remove-${entryKey('room', roomId)}`;
+    render();
+    announce('The room was kept.');
   }
 
   // ---- Drawing the lists -------------------------------------------------------------------
@@ -243,11 +269,24 @@ export function setUpSetupScreen(tools) {
   function floorConfirmRow(floor) {
     const row = make('div', 'confirm-row');
     const count = floor.rooms.length;
-    const question = make('p', '', `Remove the floor ${floor.name} and its ${count} ${count === 1 ? 'room' : 'rooms'}? This cannot be undone.`);
+    const itemCount = itemsInRooms(floor.rooms);
+    const itemPart = itemCount > 0 ? ` and ${itemWords(itemCount)}` : '';
+    const question = make('p', '', `Remove the floor ${floor.name} and its ${count} ${count === 1 ? 'room' : 'rooms'}${itemPart}? This cannot be undone.`);
     question.id = `confirm-text-${floor.id}`;
     const keep = button('No, keep the floor', `keep-${entryKey('floor', floor.id)}`, () => cancelRemoveFloor(floor.id));
     keep.setAttribute('aria-describedby', question.id);
     row.append(question, button(`Yes, remove floor ${floor.name}`, null, () => removeFloor(floor.id)), keep);
+    return row;
+  }
+
+  function roomConfirmRow(room) {
+    const row = make('div', 'confirm-row');
+    const count = itemsInRooms([room]);
+    const question = make('p', '', `Remove the room ${room.name}? Its ${itemWords(count)} will be removed too. This cannot be undone.`);
+    question.id = `confirm-text-${room.id}`;
+    const keep = button('No, keep the room', `keep-${entryKey('room', room.id)}`, () => cancelRemoveRoom(room.id));
+    keep.setAttribute('aria-describedby', question.id);
+    row.append(question, button(`Yes, remove room ${room.name}`, null, () => removeRoom(room.id)), keep);
     return row;
   }
 
@@ -265,7 +304,9 @@ export function setUpSetupScreen(tools) {
 
   function roomItem(room) {
     const li = make('li', 'entry room-entry');
-    if (ui.renaming && ui.renaming.kind === 'room' && ui.renaming.id === room.id) {
+    if (ui.confirmingRoom === room.id) {
+      li.append(roomConfirmRow(room));
+    } else if (ui.renaming && ui.renaming.kind === 'room' && ui.renaming.id === room.id) {
       li.append(renameRow('room', room.id, room.name));
     } else {
       li.append(entryRow('room', room, `${room.width} m wide, ${room.depth} m deep`, () => removeRoom(room.id)));
@@ -347,6 +388,7 @@ export function setUpSetupScreen(tools) {
     onReset(() => {
       ui.renaming = null;
       ui.confirming = null;
+      ui.confirmingRoom = null;
       ui.floorChoice = '';
       ui.focusKey = null;
       refs['project-name'].value = '';

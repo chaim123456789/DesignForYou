@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'; img-src 'self' blob:">
   <title>Start - DesignForYou</title>
-  <link rel="stylesheet" href="styles.css?v=build-intake-2">
+  <link rel="stylesheet" href="styles.css?v=build-intake-3">
 </head>
 <body>
   <header id="top-bar" class="label-bar">
     <p class="label-sample">SAMPLE PROJECT</p>
+    <p class="label-own" hidden>YOUR PROJECT</p>
     <p class="label-draft">Plans are drafts for professional review. They are not verified engineering.</p>
   </header>
 
@@ -175,12 +176,68 @@
 
     <div id="screen-items" class="screen" hidden>
       <h1 id="heading-items" tabindex="-1">Your items</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="items-intro">List the things you care about in your home, for example "Oak floor in the kitchen". For each one, say whether it is Locked or Unsure. This step is optional.</p>
+      <p id="items-explain-locked" class="setup-needs">Locked: must stay exactly as it is.</p>
+      <p id="items-explain-unsure" class="setup-needs">Unsure: open to change.</p>
+      <p id="items-no-rooms" class="setup-needs" hidden>There are no rooms yet. Add rooms in the project setup step first, then come back to add items.</p>
+      <p id="items-none" class="setup-needs">You can go on without items. The design team will then have nothing to work on except the clash check.</p>
+
+      <div class="panel" role="group" aria-labelledby="add-item-heading">
+        <h2 id="add-item-heading">Add an item</h2>
+        <label for="item-text">Item description</label>
+        <p id="item-text-hint" class="hint">For example "Oak floor in the kitchen". Up to 80 characters.</p>
+        <input type="text" id="item-text" class="text-input" autocomplete="off" aria-describedby="item-text-hint">
+        <p id="item-text-error" class="field-error" hidden></p>
+
+        <label for="item-room">Room</label>
+        <p id="item-room-hint" class="hint">The rooms come from your project setup.</p>
+        <select id="item-room" class="text-input" aria-describedby="item-room-hint"></select>
+        <p id="item-room-error" class="field-error" hidden></p>
+
+        <fieldset id="item-status-group" class="choice-group" aria-describedby="item-status-hint">
+          <legend>Locked or Unsure</legend>
+          <p id="item-status-hint" class="hint">Choose one. Locked: must stay exactly as it is. Unsure: open to change.</p>
+          <div class="choice-row"><label class="choice-label" for="item-status-locked"><input type="radio" id="item-status-locked" name="item-status" value="Locked"><span>Locked</span></label></div>
+          <div class="choice-row"><label class="choice-label" for="item-status-unsure"><input type="radio" id="item-status-unsure" name="item-status" value="Unsure"><span>Unsure</span></label></div>
+        </fieldset>
+        <p id="item-status-error" class="field-error" hidden></p>
+
+        <label for="item-tag">Material, colour or style (optional)</label>
+        <p id="item-tag-hint" class="hint">For example "warm oak". The clash check compares this with your notes. Up to 40 characters.</p>
+        <input type="text" id="item-tag" class="text-input" autocomplete="off" aria-describedby="item-tag-hint">
+        <p id="item-tag-error" class="field-error" hidden></p>
+
+        <button type="button" id="add-item" class="action-button">Add item</button>
+        <p id="add-item-error" class="field-error" hidden></p>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="item-list-heading">
+        <h2 id="item-list-heading" tabindex="-1">Your list of items</h2>
+        <p id="items-empty">No items yet.</p>
+        <ul id="item-list" class="entry-list"></ul>
+      </div>
     </div>
 
     <div id="screen-review" class="screen" hidden>
       <h1 id="heading-review" tabindex="-1">Review and run</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="review-intro">Check what you entered. When you are ready, press the button. Nothing is sent anywhere when you press it. Your images stay in this browser and are not uploaded.</p>
+
+      <div class="panel" role="group" aria-labelledby="review-heading">
+        <h2 id="review-heading">What you entered</h2>
+        <ul id="review-list" class="entry-list"></ul>
+      </div>
+
+      <div id="run-failure" class="run-failure" role="alert" tabindex="-1" hidden>
+        <h2 id="run-failure-heading">The design team could not finish</h2>
+        <p id="run-failure-text"></p>
+        <p id="run-failure-kept">Everything you entered is still here. Use Back to change it, then run the design team again.</p>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="run-heading">
+        <h2 id="run-heading">Run the design team</h2>
+        <p id="run-reason" class="setup-needs"></p>
+        <button type="button" id="run-design-team" class="action-button run-button" aria-describedby="run-reason" disabled>Run the design team</button>
+      </div>
     </div>
 
     <div id="screen-result" class="screen" hidden>
@@ -236,6 +293,40 @@
     </div>
 
    </div>
+
+    <div id="own-result" class="own-result" hidden>
+      <p id="own-viewer-note" class="setup-needs" hidden></p>
+      <p id="own-text-alternative" class="hint">The 3D view has a text alternative: the summary and the clash list on this page hold the same information.</p>
+
+      <div class="panel" role="group" aria-labelledby="own-summary-heading">
+        <h2 id="own-summary-heading">Summary</h2>
+        <div id="own-summary" class="summary-view"></div>
+        <h3 id="own-brief-heading">Your brief</h3>
+        <p id="own-brief" class="own-brief"></p>
+        <p id="own-brief-note" class="hint">Your brief is kept with your project and shown here. The design team does not read it.</p>
+        <p id="own-images-count"></p>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="own-profile-heading">
+        <h2 id="own-profile-heading">Your style profile</h2>
+        <p id="own-profile-message"></p>
+        <ul id="own-profile-sentences" class="entry-list"></ul>
+        <ul id="own-profile-tags" class="tag-list"></ul>
+        <h3 id="own-mood-heading">Your mood board</h3>
+        <p id="own-mood-note" class="hint">These are your own images. They stay in this page and are not uploaded. The design team does not look at them.</p>
+        <p id="own-mood-empty">You added no images.</p>
+        <ul id="own-mood-board" class="mood-board"></ul>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="own-report-heading">
+        <h2 id="own-report-heading">What the design team did with your input</h2>
+        <div id="own-report"></div>
+        <p id="own-report-clash" class="hint"></p>
+      </div>
+
+      <p id="result-fixed-rules" class="setup-needs"></p>
+      <button type="button" id="result-start-again" class="nav-button">Start again</button>
+    </div>
     </div>
 
     <div id="step-nav" class="step-nav" hidden>
@@ -250,11 +341,12 @@
 
   <footer id="bottom-bar" class="label-bar">
     <p class="label-sample">SAMPLE PROJECT</p>
+    <p class="label-own" hidden>YOUR PROJECT</p>
     <p class="label-draft">Plans are drafts for professional review. They are not verified engineering.</p>
   </footer>
 
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-  <script type="module" src="viewer.js?v=build-intake-2"></script>
-  <script type="module" src="intake/screens.js?v=build-intake-2"></script>
+  <script type="module" src="viewer.js?v=build-intake-3"></script>
+  <script type="module" src="intake/screens.js?v=build-intake-3"></script>
 </body>
 </html>
