@@ -146,12 +146,31 @@
 
     <div id="screen-brief" class="screen" hidden>
       <h1 id="heading-brief" tabindex="-1">Your brief</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="brief-intro">Write in your own words what you want from this project. This step is optional.</p>
+      <p id="brief-what" class="setup-needs">Your brief is kept with your project and shown in the summary. The design team does not read it.</p>
+
+      <div class="panel" role="group" aria-labelledby="brief-heading">
+        <h2 id="brief-heading">Write your brief</h2>
+        <label for="brief-text">Your brief</label>
+        <textarea id="brief-text" class="text-input brief-input" rows="8" autocomplete="off" aria-describedby="brief-what brief-count"></textarea>
+        <p id="brief-count" class="hint"></p>
+        <p id="brief-notice" class="field-error" hidden></p>
+      </div>
     </div>
 
     <div id="screen-taste" class="screen" hidden>
       <h1 id="heading-taste" tabindex="-1">Taste questions</h1>
-      <p>This step is not built yet. It comes in a later update. Use Back and Next to move around.</p>
+      <p id="taste-intro">Answer as many of these six questions as you like. You can skip any of them. Your answers build a short style profile below.</p>
+      <div id="taste-questions" class="taste-questions"></div>
+
+      <div class="panel" role="group" aria-labelledby="profile-heading">
+        <h2 id="profile-heading" tabindex="-1">Your style profile</h2>
+        <p id="profile-note" class="hint">When you run the design team, these tags are added to your overall inspiration. Remove a tag to leave it out.</p>
+        <p id="profile-message"></p>
+        <ul id="profile-sentences" class="entry-list"></ul>
+        <ul id="profile-tags" class="entry-list"></ul>
+        <button type="button" id="restore-tags" class="action-button" hidden>Put back removed tags</button>
+      </div>
     </div>
 
     <div id="screen-items" class="screen" hidden>

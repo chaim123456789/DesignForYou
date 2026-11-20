@@ -44,6 +44,9 @@ const STATE_FILE = `./state.js?v=${PAGE_VERSION}`;
 const LIMITS_FILE = `./limits.js?v=${PAGE_VERSION}`;
 const SETUP_SCREEN_FILE = `./setup-screen.js?v=${PAGE_VERSION}`;
 const INSPIRATION_SCREEN_FILE = `./inspiration-screen.js?v=${PAGE_VERSION}`;
+const BRIEF_SCREEN_FILE = `./brief-screen.js?v=${PAGE_VERSION}`;
+const TASTE_SCREEN_FILE = `./taste-screen.js?v=${PAGE_VERSION}`;
+const TASTE_FILE = `./taste.js?v=${PAGE_VERSION}`;
 
 // ---- Problems and protected steps (same pattern as viewer.js, own red box) -------------------
 
@@ -239,6 +242,17 @@ async function loadInspirationScreens(data) {
   setUpInspirationScreens({ el, attempt, guarded, announce, getState: () => appState, releaseImages, onShow, ...data });
 }
 
+async function loadBriefScreen(data) {
+  const { setUpBriefScreen } = await import(BRIEF_SCREEN_FILE);
+  setUpBriefScreen({ el, attempt, guarded, announce, getState: () => appState, entriesChanged: updateLeaveWarning, onShow, ...data });
+}
+
+async function loadTasteScreen(data) {
+  const { setUpTasteScreen } = await import(TASTE_SCREEN_FILE);
+  const taste = await import(TASTE_FILE);
+  setUpTasteScreen({ el, attempt, guarded, announce, getState: () => appState, onShow, taste, ...data });
+}
+
 // The order matters little, but each step is protected on its own.
 async function start() {
   setScriptStatus('started.');
@@ -252,6 +266,8 @@ async function start() {
   const data = await attempt('Loading the project data code', loadProjectData);
   if (data !== FAILED) await attempt('Setup screen', () => loadSetupScreen(data));
   if (data !== FAILED) await attempt('Inspiration screens', () => loadInspirationScreens(data));
+  if (data !== FAILED) await attempt('Brief screen', () => loadBriefScreen(data));
+  if (data !== FAILED) await attempt('Taste screen', () => loadTasteScreen(data));
   setScriptStatus('finished setting up.');
 }
 
