@@ -58,3 +58,43 @@ test('Polish 1: the colour check fails on the old light orange, on a swatch that
   const blueish = viewer.replace(/unsure:\s*0x[0-9a-f]{6}/, 'unsure: 0x0060a0');
   assert.ok(checkUnsure(blueish, css).some((p) => /Locked blue/.test(p)));
 });
+
+// ---- Step 2: block names in the 3D view -------------------------------------------------------
+
+const rootPx = 16; // the browser default; the page sets no smaller root size (checked below)
+function sizeInPx(value) {
+  const m = /^([\d.]+)(rem|px|em)$/.exec(value.trim());
+  assert.ok(m, `a size in rem, em or px, not "${value}"`);
+  return m[2] === 'px' ? Number(m[1]) : Number(m[1]) * rootPx;
+}
+function ruleBody(text, selector) {
+  const stripped = text.replace(/\/\*[\s\S]*?\*\//g, '');
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = new RegExp(`(?:^|\\})\\s*${esc}\\s*\\{([^}]*)\\}`).exec(stripped);
+  return m ? m[1] : null;
+}
+function labelSizes(cssText, viewerSrc) {
+  const sizes = {};
+  for (const sel of ['.scene-label', '.room-label', '.clash-label', '.floor-label']) {
+    const body = ruleBody(cssText, sel);
+    const m = body && /font-size:\s*([^;]+);/.exec(body);
+    if (m) sizes[sel] = sizeInPx(m[1]);
+    else if (sel === '.scene-label') sizes[sel] = 0; // the base rule must say its size
+  }
+  const problems = Object.entries(sizes).filter(([, px]) => px < 16).map(([sel, px]) => `${sel} is ${px} px`);
+  if (/style\.fontSize|font-size/.test(viewerSrc)) problems.push('viewer.js sets a font size of its own');
+  return problems;
+}
+
+test('Polish 2: every block name in the 3D view (item, room, clash and floor labels) is at least 16 px', () => {
+  assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /html\s*\{[^}]*font-size/, 'the page root size is the browser default');
+  assert.match(css, /body\s*\{[^}]*font-size:\s*1rem/);
+  assert.deepEqual(labelSizes(css, viewer), []);
+  assert.equal(sizeInPx(/font-size:\s*([^;]+);/.exec(ruleBody(css, '.scene-label'))[1]), 16);
+});
+
+test('Polish 2: the label size check fails on the old 0.9rem size (planted change in a copy)', () => {
+  const planted = css.replace(/(\.scene-label\s*\{[^}]*font-size:\s*)1rem/, '$10.9rem');
+  assert.notEqual(planted, css);
+  assert.ok(labelSizes(planted, viewer).some((p) => /\.scene-label is 14\.4 px/.test(p)));
+});
