@@ -298,10 +298,10 @@ test('fix-viewer-1: when the sample file cannot be read, the red message says so
 test('fix-viewer-1: the page says which script version ran, so a stale cached copy can be spotted', async () => {
   assert.match(html, /id="script-status">Page script: not started yet/);
   await withPage(() => {}, async (page) => {
-    assert.match(page.el('script-status').textContent, /Page script build-intake-1: finished/);
+    assert.match(page.el('script-status').textContent, /Page script build-intake-2: finished/);
   });
-  assert.match(html, /styles\.css\?v=build-intake-1/);
-  assert.match(html, /viewer\.js\?v=build-intake-1/);
+  assert.match(html, /styles\.css\?v=build-intake-2/);
+  assert.match(html, /viewer\.js\?v=build-intake-2/);
   assert.match(js, /scene-data\.js\?v=\$\{PAGE_VERSION\}/);
 });
 

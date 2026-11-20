@@ -47,8 +47,17 @@ test('Task 4: the content security rule is present', () => {
 test('Task 4: no outside addresses, storage, form, file upload, eval or innerHTML in the page files', () => {
   for (const name of ['index.html', 'viewer.js', 'scene-data.js']) {
     const text = read(name);
-    for (const banned of ['http://', 'https://', 'localStorage', '<form', 'type="file"', 'eval(', 'innerHTML']) {
+    for (const banned of ['http://', 'https://', 'localStorage', '<form', 'eval(', 'innerHTML']) {
       assert.ok(!text.includes(banned), `${name} contains ${banned}`);
+    }
+    // Approved change (intake Task 8): exactly ONE file input is allowed, only in index.html, and it needs a visible label.
+    const fileInputs = text.match(/type="file"/g) || [];
+    assert.equal(fileInputs.length, name === 'index.html' ? 1 : 0, `${name} has ${fileInputs.length} file inputs`);
+    if (name === 'index.html') {
+      const id = text.match(/<input type="file" id="([^"]+)"/);
+      assert.ok(id, 'the file input has an id');
+      assert.match(text, new RegExp(`<label for="${id[1]}">[^<]+</label>`), 'the file input has a visible label');
+      assert.ok(text.indexOf('id="screen-inspiration"') < text.indexOf('type="file"') && text.indexOf('type="file"') < text.indexOf('id="screen-overrides"'), 'the file input is on the Inspiration screen');
     }
   }
 });
