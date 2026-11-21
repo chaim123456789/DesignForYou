@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "keep engine in sync",
+      "description": "After a Kiro write tool changes a file under src/, run npm run export-engine and then test/engine-export.test.js, so docs/engine/ stays byte-identical to src/. Files outside src/ are ignored.",
+      "trigger": "PostToolUse",
+      "matcher": "^(fs_write|fs_append|str_replace|delete_file)$",
+      "action": {
+        "type": "command",
+        "command": "node .kiro/hooks/keep-engine-in-sync.mjs"
+      },
+      "timeout": 60
+    }
+  ]
+}
