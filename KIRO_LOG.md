@@ -183,3 +183,16 @@ One entry per session.
 - **Could not be verified:** that either hook fires on its own in Kiro Web; that the write tool names in the hook 1 matcher are the ones Kiro Web reports, and which field carries the file path (the script accepts `path`, `targetFile` or `file_path`); how Kiro Web shows a passing Stop hook; that Kiro Web loads the two agents and enforces their `tools`, `excludedTools` and `permissions` (submission-checker can run commands, so its read-only promise depends on that command list being enforced).
 - **Credits used:** ___
 - **Next step:** Owner merges the pull request. Then, in a new session, ask Kiro to call lock-guard and then submission-checker as sub-agents and report their output; and change a file under `src/` through Kiro to see whether hook 1 fires.
+
+## 2026-11-21, Session 23
+- **Kiro app used:** Web
+- **Kiro feature used:** Custom agents (calling `lock-guard` and `submission-checker` as sub-agents) and Hooks (watching whether the two hooks fire), plus Steering (`working-rules.md`: small steps, stop if something fails twice, one pull request). Why: Session 22 built these four files but could not run the agents. This session tried again.
+- **Result:** Both agents could NOT be run. No agent reviewed anything, so there are no findings from either one.
+  1. This session's sub-agent tool lists five agents: context-gatherer, custom-agent-creator, general-task-execution, introspect and semantic_reviewer. `lock-guard` and `submission-checker` are not in that list.
+  2. The workspace root is `/projects/sandbox`. The repo is the subfolder `/projects/sandbox/DesignForYou`. The agent files are in `/projects/sandbox/DesignForYou/.kiro/agents/`. The root `/projects/sandbox/.kiro/` holds only `settings`.
+  3. Each agent was called twice. Every call returned "Agent '...' not found in registry". Work on the agents stopped there. No copies of the agent files were made anywhere.
+  4. Hooks: no output from either hook was visible in any tool result in this session. That means the hooks did not visibly fire. It does not prove they did not run silently. The Stop hook is meant to print nothing on a pass, so silence is the expected result and cannot tell us it ran. For the PostToolUse hook, the only file edited was `KIRO_LOG.md` (outside `src/`), where doing nothing is the correct result. A `src/` edit was not tried, because this task forbids changing `src/`.
+  5. Likely cause of "not found" (not proven): Kiro Web looks for agents in the workspace root's `.kiro/`, not in the repo subfolder. Moving the repo files was not tried, because that would copy the agent files.
+- **How it was verified:** Read the sub-agent tool's list of agents; listed `.kiro/` in both folders; made the four calls and recorded the exact error text; ran `npm test` (473 tests, 473 passed, 0 failed) before this entry was added. Nothing under `src/`, `docs/` or `test/` was changed. Hook behaviour comes only from what appeared in tool results.
+- **Credits used:** ___
+- **Next step:** Owner decides how to get the agents loaded (for example opening a session whose workspace root is the repo itself), then asks Kiro to call both agents again.
