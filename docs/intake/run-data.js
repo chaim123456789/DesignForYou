@@ -28,5 +28,7 @@ export function buildRunLayout(state) {
 }
 
 export function buildOwnRunData(project, state) {
-  return makeRunData(project, buildRunLayout(state));
+  // own: true marks a visitor's project, so its doors and windows are drawn with frames.
+  // The sample's run file has no such flag, so the sample stays as it is.
+  return { ...makeRunData(project, buildRunLayout(state)), own: true };
 }
