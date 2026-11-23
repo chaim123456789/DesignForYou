@@ -8,11 +8,23 @@ function requireName(value, what) {
   return value.trim();
 }
 
+// A room's size is optional. Width and depth (metres, numbers above 0) are kept only when given,
+// so a room made with a name only is exactly as before.
+function optionalRoomSize(roomData) {
+  if (roomData.width === undefined && roomData.depth === undefined) return {};
+  const ok = (n) => typeof n === 'number' && Number.isFinite(n) && n > 0;
+  if (!ok(roomData.width) || !ok(roomData.depth)) {
+    throw new Error(`The size of room "${roomData.name}" needs a width and a depth, both numbers above 0.`);
+  }
+  return { width: roomData.width, depth: roomData.depth };
+}
+
 function buildRoom(floorId, roomData, index) {
   return {
     id: `${floorId}-room-${index + 1}`,
     name: requireName(roomData && roomData.name, 'A room'),
     order: index + 1,
+    ...optionalRoomSize(roomData),
   };
 }
 
