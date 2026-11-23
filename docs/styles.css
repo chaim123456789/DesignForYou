@@ -306,3 +306,4 @@ body[data-screen="result"][data-run="own"] .label-own { display: block; }
 .button-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .placed-entry { display: grid; gap: 0.5rem; }
 .placed-text { overflow-wrap: anywhere; }
+.plan { display: block; width: 100%; max-width: 100%; height: auto; background: #fff; border: 1px solid #7d858c; }

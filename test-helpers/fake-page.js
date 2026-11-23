@@ -153,6 +153,13 @@ export function createFakePage({ sampleRunText = readDoc('sample-run.json') } = 
       if (page.failCreate.includes(tag)) throw new Error(`cannot create a <${tag}> element`);
       return new FakeElement(page, tag);
     },
+    // Drawing elements (the plan's inline SVG). The stand-in keeps the name given, nothing more.
+    createElementNS(namespace, tag) {
+      if (page.failCreate.includes(tag)) throw new Error(`cannot create a <${tag}> element`);
+      const node = new FakeElement(page, tag);
+      node.namespace = namespace;
+      return node;
+    },
   };
 
   page.makeCanvas = () => {

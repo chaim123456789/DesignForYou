@@ -9,7 +9,7 @@
 // (attempt and guarded come from screens.js), so a broken part never stops the other screens.
 
 export function setUpPlaceScreen(tools) {
-  const { el, attempt, guarded, announce, getState, api, onShow, onReset, geometry, placeTypes, placeWalls } = tools;
+  const { el, attempt, guarded, announce, getState, api, onShow, onReset, geometry, plan, placeTypes, placeWalls } = tools;
 
   const ui = {
     room: '',       // the chosen room id
@@ -37,6 +37,7 @@ export function setUpPlaceScreen(tools) {
     'sel-width', 'sel-width-error', 'sel-depth', 'sel-depth-error', 'sel-save', 'sel-status', 'sel-save-error',
     'nudge-left', 'nudge-right', 'nudge-up', 'nudge-down', 'sel-turn', 'sel-move-error',
     'sel-wall-group', 'sel-wall', 'sel-wall-error',
+    'place-plan-panel', 'place-plan', 'place-plan-message',
     'place-list-panel', 'place-list-heading', 'place-empty', 'place-list',
     'place-others-panel', 'place-others']) {
     refs[id] = el(id);
@@ -345,6 +346,49 @@ export function setUpPlaceScreen(tools) {
     refs['sel-wall-group'].hidden = !(object.kind === 'door' || object.kind === 'window');
   }
 
+  // ---- The plan ---------------------------------------------------------------------------------
+
+  // Said next to the plan and announced. The plan itself is not a tab stop, so the message is linked
+  // to the drawing with aria-describedby for screen readers that read it.
+  function planMessage(svg, text) {
+    refs['place-plan-message'].textContent = text;
+    refs['place-plan-message'].hidden = false;
+    if (svg) svg.setAttribute('aria-describedby', 'place-plan-message');
+    announce(text);
+  }
+
+  // A click or tap on the plan puts the selected object's top-left corner there (rounded to 10 cm).
+  // It uses the same "move to" function as the number boxes.
+  function pickOnPlan(svg, event) {
+    const object = selectedObject();
+    if (!object) {
+      planMessage(svg, 'Select an object first.');
+      return;
+    }
+    const position = geometry.clickToPosition(
+      { clientX: event.clientX, clientY: event.clientY }, svg.getBoundingClientRect(), geometry.planViewBox(currentRoom()),
+    );
+    if (!position) return;
+    const result = api.movePlacedTo(getState(), object.id, position.x, position.y);
+    if (!result.ok) {
+      planMessage(svg, result.message);
+      return;
+    }
+    render();
+    announce(`${object.name} moved to ${position.x} cm from the left and ${position.y} cm from the top.${stickOut(object)}`);
+  }
+
+  // The plan is built again from the state every time. It keeps nothing of its own.
+  function renderPlan(room, inRoom) {
+    refs['place-plan-panel'].hidden = !room;
+    refs['place-plan-message'].textContent = '';
+    refs['place-plan-message'].hidden = true;
+    if (!room) { refs['place-plan'].replaceChildren(); return; }
+    const svg = plan.drawPlan(geometry, { room, objects: inRoom, selectedId: ui.selected });
+    svg.addEventListener('click', guarded('Click on the plan', (event) => pickOnPlan(svg, event)));
+    refs['place-plan'].replaceChildren(svg);
+  }
+
   function render({ keepBoxes = false } = {}) {
     const state = getState();
     keyed.clear();
@@ -362,6 +406,7 @@ export function setUpPlaceScreen(tools) {
     refs['place-list'].replaceChildren(...inRoom.map(objectEntry));
     refs['place-empty'].hidden = inRoom.length > 0;
     renderSelectedPanel(keepBoxes);
+    attempt('Drawing the plan', () => renderPlan(room, inRoom));
     const others = rooms.filter((r) => r.id !== ui.room);
     refs['place-others-panel'].hidden = !room || others.length === 0;
     refs['place-others'].replaceChildren(...others.map((r) => make('li', 'entry', `${r.name}: ${countText(api.placedInRoom(state, r.id).length)} placed`)));
