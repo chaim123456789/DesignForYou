@@ -499,7 +499,7 @@ test('Task 12 accessibility: the tab order follows the order on screen (controls
     brief: ['brief-text'],
     taste: ['restore-tags'],
     items: ['item-text', 'item-room', 'item-status-locked', 'item-status-unsure', 'item-tag', 'add-item'],
-    place: [],
+    place: ['place-room', 'place-type', 'place-name', 'place-status-locked', 'place-status-unsure', 'place-x', 'place-y', 'place-width', 'place-depth', 'add-placed', 'sel-name', 'sel-x', 'sel-y', 'sel-width', 'sel-depth', 'sel-save', 'sel-status', 'nudge-left', 'nudge-right', 'nudge-up', 'nudge-down', 'sel-turn', 'sel-wall'],
     review: ['run-design-team'],
     result: ['result-back', 'floor-all', 'floor-ground', 'floor-upper', 'reset-view', 'show-all-labels', 'version-slider', 'result-start-again'],
   };

@@ -301,3 +301,8 @@ body[data-screen="result"][data-run="own"] .label-own { display: block; }
   .summary-view td { border: 0; border-bottom: 1px solid #d0d3d6; }
   .summary-view td::before { content: attr(data-label) ": "; font-weight: 700; }
 }
+
+/* ---- Place furniture, doors and windows (build-place-3) ---- */
+.button-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.placed-entry { display: grid; gap: 0.5rem; }
+.placed-text { overflow-wrap: anywhere; }

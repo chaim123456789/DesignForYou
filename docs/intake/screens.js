@@ -7,7 +7,7 @@
 // run. Unexpected page errors are already shown by viewer.js, so this file does not add a second handler.
 //
 // Visitor text is only ever put on the page with textContent. Nothing here reads files, stores or sends anything.
-const PAGE_VERSION = 'build-place-2';
+const PAGE_VERSION = 'build-place-3';
 
 // The screens in the order Back and Next move through them. `step` is the number shown in the step text.
 // Start and Result are outside the numbered steps.
@@ -46,6 +46,8 @@ const LIMITS_FILE = `./limits.js?v=${PAGE_VERSION}`;
 const SETUP_SCREEN_FILE = `./setup-screen.js?v=${PAGE_VERSION}`;
 const INSPIRATION_SCREEN_FILE = `./inspiration-screen.js?v=${PAGE_VERSION}`;
 const ITEMS_SCREEN_FILE = `./items-screen.js?v=${PAGE_VERSION}`;
+const PLACE_SCREEN_FILE = `./place-screen.js?v=${PAGE_VERSION}`;
+const PLACE_GEOMETRY_FILE = `./place-geometry.js?v=${PAGE_VERSION}`;
 const BRIEF_SCREEN_FILE = `./brief-screen.js?v=${PAGE_VERSION}`;
 const TASTE_SCREEN_FILE = `./taste-screen.js?v=${PAGE_VERSION}`;
 const TASTE_FILE = `./taste.js?v=${PAGE_VERSION}`;
@@ -274,6 +276,16 @@ async function loadItemsScreen(data) {
   setUpItemsScreen({ el, attempt, guarded, announce, getState: () => appState, onShow, onReset, ...data });
 }
 
+async function loadPlaceScreen(data) {
+  const { setUpPlaceScreen } = await import(PLACE_SCREEN_FILE);
+  const geometry = await import(PLACE_GEOMETRY_FILE);
+  const { PLACE_TYPES, PLACE_WALLS } = await import(LIMITS_FILE);
+  setUpPlaceScreen({
+    el, attempt, guarded, announce, getState: () => appState, onShow, onReset, geometry,
+    placeTypes: PLACE_TYPES, placeWalls: PLACE_WALLS, ...data,
+  });
+}
+
 async function loadResultScreen(data) {
   const { setUpResultScreen } = await import(RESULT_SCREEN_FILE);
   const report = await import(REPORT_FILE);
@@ -318,6 +330,7 @@ async function start() {
   if (data !== FAILED) await attempt('Brief screen', () => loadBriefScreen(data));
   if (data !== FAILED) await attempt('Taste screen', () => loadTasteScreen(data));
   if (data !== FAILED) await attempt('Items screen', () => loadItemsScreen(data));
+  if (data !== FAILED) await attempt('Place furniture screen', () => loadPlaceScreen(data));
   if (data !== FAILED) await attempt('Result screen', () => loadResultScreen(data));
   if (data !== FAILED) await attempt('Review and run screen', () => loadReviewScreen(data));
   setScriptStatus('finished setting up.');
