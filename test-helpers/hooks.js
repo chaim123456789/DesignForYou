@@ -1,5 +1,5 @@
 // Tells Node where the page's imports go, the way the page's import map does in a browser.
-import { registerHooks } from 'node:module';
+import { registerHooks } from './register-hooks.js';
 
 const here = (name) => new URL(name, import.meta.url).href;
 

@@ -6,7 +6,7 @@
 // Those are "pending owner check".
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { registerHooks } from 'node:module';
+import { registerHooks } from '../test-helpers/register-hooks.js';
 import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
 import { LIMITS } from '../docs/intake/limits.js';
 

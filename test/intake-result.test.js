@@ -9,7 +9,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { registerHooks } from 'node:module';
+import { registerHooks } from '../test-helpers/register-hooks.js';
 import { installImportHooks } from '../test-helpers/hooks.js';
 import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
 import { buildScene } from '../docs/scene-data.js';

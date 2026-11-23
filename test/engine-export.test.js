@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import '../test-helpers/register-hooks.js'; // the Task 1c child script uses registerHooks; stop early with a clear message on an older Node
 import { listEngineFiles, copyEngine } from '../src/viewer/engine-files.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
