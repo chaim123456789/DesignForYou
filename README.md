@@ -23,6 +23,12 @@ Open the published page (the link is under "Publish the page" below). Nothing is
 
 **Result.** You see your home in 3D (turn, zoom, click a block, and use the slider for the history), a summary, your style profile with a mood board of your own pictures, and a section called "What the design team did with your input". The result is labelled YOUR PROJECT and is a draft for professional review. The design team is a set of fixed rules, not AI. It does not look at your images or read your brief. Press "Start again" to clear everything and go back to the start.
 
+## Requirements
+
+- **The website needs no Node.** The published page runs in an ordinary browser.
+- **Running the tests, the sample and the export scripts on your own computer needs Node 22.15.0 or newer** (on the 22 line, or 23.5.0 and newer). Some tests use a Node feature (`registerHooks`) that older versions do not have. On an older Node those tests stop with the message "These tests need Node X or newer. You have Y." Check your version with `node --version`.
+- Nothing needs to be installed with npm. The project has no dependencies.
+
 ## How to run the sample
 
 The sample is a made-up two-storey home with a kitchen, living room, bedroom and bathroom. It goes through all four agents, in order, and produces a readable summary page.
