@@ -62,7 +62,7 @@ Edit 6 (`viewer.js`): draw each part with the existing material code.
 - **Verify:** Tests with the existing stand-in renderer: a typed sofa makes the expected number of meshes, all with the same item id; clicking a part gives that object's panel; the clash outline is drawn once; the sample draws the same number of meshes as before. How it looks: **Unverified: pending owner check** on a real screen.
 
 ### Task 9. Screen list, step numbers, cache tag, README
-Edit 10 (`screens.js` entry, `index.html` section skeleton, cache tag to `build-place-1`) and edit 11 (README sentence). Update the expected values in the three test files of `design.md` section 10, and nothing else in them.
+Edit 10 (`screens.js` entry, `index.html` section skeleton; the cache tag was already changed to `build-place-1` in the first build batch, together with its test expected values, because Tasks 2, 4 and 5 changed files the page loads) and edit 11 (README sentence). Update the expected values in the three test files of `design.md` section 10, and nothing else in them.
 - **Req:** R1.1, R10.1
 - **Verify:** `git diff` of the three test files shows only the listed expected-value lines. All tests pass. The step text reads "Step N of 8" on every step. The screens test shows the new screen between Items and Review.
 
@@ -78,7 +78,8 @@ Edit 10 (`screens.js` entry, `index.html` section skeleton, cache tag to `build-
 
 ### Task 12. The result report
 Edit 9 (`report.js`) and the matching display in the result screen.
-- **Req:** R8.1 to R8.6, R5.2
+- **Req:** R8.1 to R8.6, R5.2, R4.7
+- **Note (from Task 5):** R4.7 (the report says plainly that the overlap and fit checks use only the rectangles the visitor entered) is met here, in the result report, and not in the Reviewer's clash report, as `design.md` section 6 says. Task 12's tests must check that sentence.
 - **Verify:** Tests: the exact lines for 0 objects, for only Unsure, for a mix with Locked, and for a skipped room; the "did not" line is present whenever objects were placed and absent when none were; the old lines and the fixed sentence are unchanged; no line contains "AI" claims beyond the fixed sentence.
 
 ### Task 13. Accessibility and privacy checks
