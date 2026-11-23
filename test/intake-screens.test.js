@@ -21,6 +21,7 @@ const STEPS = [
   ['brief', 'Your brief'],
   ['taste', 'Taste questions'],
   ['items', 'Your items'],
+  ['place', 'Place furniture, doors and windows'],
   ['review', 'Review and run'],
 ];
 const ALL_SCREEN_IDS = ['start', ...STEPS.map(([id]) => id), 'result'];
@@ -120,9 +121,9 @@ test('Task 6: moving to another screen moves the keyboard focus to its heading, 
       assert.equal(page.document.activeElement, page.el(`heading-${id}`), `Next moved the focus to the ${id} heading`);
     }
     page.el('back-button').click();
-    assert.equal(page.document.activeElement, page.el('heading-items'));
+    assert.equal(page.document.activeElement, page.el('heading-place'));
     // Back to the first step, then to the start, then the sample result
-    for (let i = 0; i < 5; i += 1) page.el('back-button').click();
+    for (let i = 0; i < 6; i += 1) page.el('back-button').click();
     assert.equal(shown(page)[0], 'setup');
     page.el('back-button').click();
     assert.equal(page.document.activeElement, page.el('heading-start'));
@@ -141,7 +142,7 @@ test('Task 6: every screen has its own page title, and the titles differ', async
       page.el('next-button').click();
       titles.set(id, page.document.title);
     }
-    for (let i = 0; i < 7; i += 1) page.el('back-button').click(); // back to the start
+    for (let i = 0; i < 8; i += 1) page.el('back-button').click(); // back to the start
     page.el('choose-sample').click();
     titles.set('result', page.document.title);
     assert.equal(titles.size, ALL_SCREEN_IDS.length);
@@ -159,14 +160,14 @@ test('Task 6: the step text, Back and Next follow the screens, and Next is gone 
     for (const [index, [id, name]] of STEPS.entries()) {
       if (index > 0) page.el('next-button').click();
       assert.deepEqual(shown(page), [id]);
-      assert.equal(page.el('step-text').textContent, `Step ${index + 1} of 7: ${name}`);
+      assert.equal(page.el('step-text').textContent, `Step ${index + 1} of 8: ${name}`);
       assert.equal(page.el('step-nav').hidden, false);
       assert.equal(page.el('next-button').hidden, index === STEPS.length - 1, `Next on ${id}`);
     }
     page.el('next-button').click(); // does nothing on the last step
     assert.deepEqual(shown(page), ['review']);
     // Back all the way to the start
-    for (let i = 0; i < 6; i += 1) page.el('back-button').click();
+    for (let i = 0; i < 7; i += 1) page.el('back-button').click();
     assert.deepEqual(shown(page), ['setup']);
     page.el('back-button').click();
     assert.deepEqual(shown(page), ['start']);
@@ -190,7 +191,7 @@ test('Task 6: the draft statement is on every screen (the two bars sit outside t
     visit();
     page.el('choose-own').click(); visit();
     for (let i = 1; i < STEPS.length; i += 1) { page.el('next-button').click(); visit(); }
-    for (let i = 0; i < 7; i += 1) page.el('back-button').click();
+    for (let i = 0; i < 8; i += 1) page.el('back-button').click();
     page.el('choose-sample').click(); visit();
     assert.equal(page.document.body.dataset.screen, 'result');
   });
@@ -263,16 +264,16 @@ test('Task 6: an unusable red box is not fatal (the error goes to the browser co
 // ---- The cache tag and the status line -----------------------------------------------------
 
 test('Task 6: the page files carry the cache tag build-intake-1, and the grey status lines name it', async () => {
-  assert.match(html, /styles\.css\?v=build-place-1/);
-  assert.match(html, /viewer\.js\?v=build-place-1/);
-  assert.match(html, /intake\/screens\.js\?v=build-place-1/);
+  assert.match(html, /styles\.css\?v=build-place-2/);
+  assert.match(html, /viewer\.js\?v=build-place-2/);
+  assert.match(html, /intake\/screens\.js\?v=build-place-2/);
   assert.match(html, /id="script-status">Page script: not started yet/);
   assert.match(html, /id="intake-script-status" class="status-line">Screens script: not started yet/);
   for (const text of [html, readDoc('viewer.js'), readDoc('intake/screens.js')]) assert.doesNotMatch(text, /build-viewer-3/);
-  assert.match(readDoc('viewer.js'), /const PAGE_VERSION = 'build-place-1'/);
-  assert.match(readDoc('intake/screens.js'), /const PAGE_VERSION = 'build-place-1'/);
+  assert.match(readDoc('viewer.js'), /const PAGE_VERSION = 'build-place-2'/);
+  assert.match(readDoc('intake/screens.js'), /const PAGE_VERSION = 'build-place-2'/);
   await withScreens(() => {}, async (page) => {
-    assert.equal(page.el('intake-script-status').textContent, 'Page script build-place-1 (screens): finished setting up.');
+    assert.equal(page.el('intake-script-status').textContent, 'Page script build-place-2 (screens): finished setting up.');
   });
 });
 

@@ -25,6 +25,9 @@ function snapshotItem(item) {
   };
   if (item.room !== undefined) out.room = item.room;
   if (v.position) out.position = structuredClone(v.position);
+  // Placed furniture carries a type and a turn. Items without them (the sample) are unchanged.
+  if (v.type !== undefined) out.type = v.type;
+  if (v.turn !== undefined) out.turn = v.turn;
   if (item.kind === 'clash') {
     out.summary = v.summary;
     out.clashes = structuredClone(v.clashes || []);

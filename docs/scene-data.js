@@ -110,6 +110,187 @@ export function wallPanel(p, room) {
   };
 }
 
+// ---- The 3D shapes (place-items Task 7). Pure: boxes only, no Three.js. ----
+
+const MIN_PART = 0.04; // metres. No part is thinner than 4 cm, so a small object still shows its parts.
+const FRAME = 0.06; // metres. Door and window frames are this thick.
+const round = (n) => Math.round(n * 1e6) / 1e6;
+
+// Viewer-only heights in metres, one fixed table. The run data does not change.
+export const SHAPE_HEIGHTS = Object.freeze({
+  sofa: { seat: 0.45, back: 0.85, arm: 0.6 },
+  bed: { mattress: 0.5, headboard: 1.0 },
+  table: { top: 0.75, topThickness: 0.05 },
+  wardrobe: { body: 2.0 },
+  desk: { top: 0.75, topThickness: 0.04 },
+  bath: { outer: 0.55, inner: 0.3 },
+  'kitchen unit': { base: 0.86, worktop: 0.9 },
+});
+
+// The full height of a typed piece of furniture (used for its overall box and clash outline).
+export function shapeHeight(type) {
+  const h = typeof type === 'string' && Object.hasOwn(SHAPE_HEIGHTS, type) ? SHAPE_HEIGHTS[type] : undefined;
+  return h ? Math.max(...Object.values(h).filter((v) => v > 0.1)) : undefined;
+}
+
+// Turn a rectangle made for "turn 0" (back at the low-z edge) into the box's real
+// turn. Turns are clockwise as seen on the plan. Width and depth of the box are
+// already swapped by the turn button, so the rectangle is turned inside that footprint.
+function turnRect(turn, box, r) {
+  const wb = box.width;
+  const db = box.depth;
+  if (turn === 90) return { x: wb - r.z - r.d, z: r.x, w: r.d, d: r.w };
+  if (turn === 180) return { x: wb - r.x - r.w, z: db - r.z - r.d, w: r.w, d: r.d };
+  if (turn === 270) return { x: r.z, z: db - r.x - r.w, w: r.d, d: r.w };
+  return { x: r.x, z: r.z, w: r.w, d: r.d };
+}
+
+function furnitureLocalParts(type, W, D) {
+  const H = SHAPE_HEIGHTS[type];
+  const small = Math.min(W, D);
+  // [role, left, back, width, depth, bottom, top, extra]
+  switch (type) {
+    case 'sofa': {
+      const arm = Math.max(MIN_PART, 0.1 * W);
+      const back = Math.max(MIN_PART, 0.2 * D);
+      return [
+        ['seat', arm, back, W - 2 * arm, D - back, 0, H.seat],
+        ['back', 0, 0, W, back, 0, H.back],
+        ['arm', 0, back, arm, D - back, 0, H.arm],
+        ['arm', W - arm, back, arm, D - back, 0, H.arm],
+      ];
+    }
+    case 'bed': {
+      const head = Math.max(MIN_PART, 0.06 * D);
+      return [
+        ['mattress', 0, head, W, D - head, 0, H.mattress],
+        ['headboard', 0, 0, W, head, 0, H.headboard],
+      ];
+    }
+    case 'table': {
+      const leg = Math.max(MIN_PART, 0.06 * small);
+      const under = H.top - H.topThickness;
+      return [
+        ['top', 0, 0, W, D, under, H.top],
+        ['leg', 0, 0, leg, leg, 0, under],
+        ['leg', W - leg, 0, leg, leg, 0, under],
+        ['leg', 0, D - leg, leg, leg, 0, under],
+        ['leg', W - leg, D - leg, leg, leg, 0, under],
+      ];
+    }
+    case 'wardrobe':
+      // The thin line sticks out 2 cm from the front face to show where the doors meet.
+      return [
+        ['body', 0, 0, W, D - 0.02, 0, H.body],
+        ['doorline', W / 2 - 0.02, D - 0.04, MIN_PART, MIN_PART, 0, H.body],
+      ];
+    case 'desk': {
+      const under = H.top - H.topThickness;
+      const side = Math.max(MIN_PART, 0.05 * W);
+      return [
+        ['top', 0, 0, W, D, under, H.top],
+        ['leg', 0, 0, side, D, 0, under],
+        ['leg', W - side, 0, side, D, 0, under],
+      ];
+    }
+    case 'bath': {
+      // Four walls (the outer box, open on top) and a lower, lighter floor inside, so it looks hollow.
+      const t = Math.max(MIN_PART, 0.1 * small);
+      return [
+        ['outer', 0, 0, W, t, 0, H.outer],
+        ['outer', 0, D - t, W, t, 0, H.outer],
+        ['outer', 0, t, t, D - 2 * t, 0, H.outer],
+        ['outer', W - t, t, t, D - 2 * t, 0, H.outer],
+        ['inner', t, t, W - 2 * t, D - 2 * t, 0, H.inner],
+      ];
+    }
+    case 'kitchen unit':
+      return [
+        ['base', 0, 0, W, D, 0, H.base],
+        ['worktop', 0, 0, W, D, H.base, H.worktop],
+      ];
+    default:
+      return [];
+  }
+}
+
+// A door or window: a frame around the panel the wall code already works out.
+// Built along the wall (a) and across it (c), then put back into x and z.
+function openingParts(box) {
+  const alongX = box.wall === 'front' || box.wall === 'back';
+  const L = alongX ? box.width : box.depth;
+  const T = alongX ? box.depth : box.width;
+  const H = box.height;
+  const f = Math.min(FRAME, L / 3, H / 3);
+  const inner = Math.max(L - 2 * f, 0);
+  const isDoor = box.type === 'door';
+  // [role, along, across, length, thickness, bottom, top]
+  const leaf = Math.max(MIN_PART, T * 0.6);
+  const mid = (T - leaf) / 2;
+  const list = isDoor
+    ? [
+      ['frame', 0, 0, f, T, 0, H],
+      ['frame', L - f, 0, f, T, 0, H],
+      ['frame', f, 0, inner, T, H - f, H],
+      ['leaf', f, mid, inner, leaf, 0, H - f],
+    ]
+    : [
+      ['frame', 0, 0, f, T, 0, H],
+      ['frame', L - f, 0, f, T, 0, H],
+      ['frame', f, 0, inner, T, H - f, H],
+      ['frame', f, 0, inner, T, 0, f],
+      ['glass', f, (T - Math.max(MIN_PART, T * 0.3)) / 2, inner, Math.max(MIN_PART, T * 0.3), f, H - f],
+    ];
+  return list.map(([role, a, c, len, thick, y0, y1]) => (alongX
+    ? { role, x: a, z: c, w: len, d: thick, y0, y1 }
+    : { role, x: c, z: a, w: thick, d: len, y0, y1 }));
+}
+
+// The sub-boxes that make up one furniture, door or window box. [] means "draw the plain block".
+// Each part is { key, role, x, y, z, width, height, depth, itemId, colour, clash, status },
+// in the same metres as the box, and always inside the box's footprint.
+export function shapeParts(box) {
+  let rects;
+  if (box.type === 'door' || box.type === 'window') {
+    if (box.furnitureType !== box.type) return [];
+    rects = openingParts(box);
+  } else if (box.type === 'furniture' && SHAPE_HEIGHTS[box.furnitureType]
+    && Object.hasOwn(SHAPE_HEIGHTS, box.furnitureType)) {
+    const turn = [90, 180, 270].includes(box.turn) ? box.turn : 0;
+    const swapped = turn === 90 || turn === 270;
+    const W = swapped ? box.depth : box.width;
+    const D = swapped ? box.width : box.depth;
+    rects = furnitureLocalParts(box.furnitureType, W, D).map(([role, lx, lz, w, d, y0, y1]) => {
+      const pw = Math.min(Math.max(w, MIN_PART), W);
+      const pd = Math.min(Math.max(d, MIN_PART), D);
+      const local = {
+        x: Math.min(Math.max(lx, 0), W - pw), z: Math.min(Math.max(lz, 0), D - pd), w: pw, d: pd,
+      };
+      const t = turnRect(turn, box, local);
+      return { role, x: t.x, z: t.z, w: t.w, d: t.d, y0, y1 };
+    });
+  } else {
+    return [];
+  }
+  const counts = {};
+  return rects.map((r) => {
+    counts[r.role] = (counts[r.role] || 0) + 1;
+    const part = {
+      key: `${box.key}:${r.role}${counts[r.role]}`,
+      role: r.role,
+      x: round(box.x + r.x), y: round(box.y + r.y0), z: round(box.z + r.z),
+      width: round(r.w), height: round(r.y1 - r.y0), depth: round(r.d),
+      colour: box.colour,
+      clash: box.clash,
+    };
+    if (box.itemId !== undefined) part.itemId = box.itemId;
+    if (box.status !== undefined) part.status = box.status;
+    if (r.role === 'glass') part.seeThrough = true;
+    if (r.role === 'inner') part.lighter = true;
+    return part;
+  });
+}
+
 // "Ground Floor" is shown as "Ground floor", "Upper Floor" as "Upper floor".
 export function floorLabelText(floor) {
   const name = String(floor.name).trim();
@@ -260,17 +441,29 @@ export function buildScene(sampleRun, version) {
       if (item.kind === 'door' || item.kind === 'window') {
         const panel = wallPanel(p, room);
         const isDoor = item.kind === 'door';
-        boxes.push({
+        const box = {
           ...base, type: item.kind, wall: panel.wall,
           x: room.x + panel.x, y: floor.elevation + (isDoor ? 0 : L.windowBottom), z: room.z + panel.z,
           width: panel.width, height: isDoor ? L.doorHeight : L.windowHeight, depth: panel.depth,
-        });
+        };
+        // A visitor's own project (own: true) or an item with a type gets the frame shape.
+        // The sample has neither, so its doors and windows stay plain panels.
+        if (item.type === item.kind || sampleRun.own === true) box.furnitureType = item.kind;
+        boxes.push(box);
       } else {
-        boxes.push({
+        const box = {
           ...base, type: 'furniture',
           x: room.x + p.x, y: floor.elevation, z: room.z + p.y,
           width: p.width, height: L.furnitureHeight, depth: p.depth,
-        });
+        };
+        // Only a piece with a known type gets a shape. Its overall box is as tall as the shape.
+        if (item.type !== undefined) {
+          box.furnitureType = item.type;
+          const tall = shapeHeight(item.type);
+          if (tall) box.height = tall;
+        }
+        if (item.turn !== undefined) box.turn = item.turn;
+        boxes.push(box);
       }
     }
   }

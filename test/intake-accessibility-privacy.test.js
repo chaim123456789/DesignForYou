@@ -352,7 +352,7 @@ test('Task 12 accessibility: the page has a language, a zoomable viewport tag, a
   assert.doesNotMatch(viewport[1], /user-scalable|maximum-scale|minimum-scale/, 'zooming is not blocked');
   assert.match(html, /<title>[^<]+<\/title>/);
   assert.equal((html.match(/<main\b/g) || []).length, 1);
-  assert.deepEqual(screenIds, ['start', 'setup', 'inspiration', 'overrides', 'brief', 'taste', 'items', 'review', 'result']);
+  assert.deepEqual(screenIds, ['start', 'setup', 'inspiration', 'overrides', 'brief', 'taste', 'items', 'place', 'review', 'result']);
   for (const id of screenIds) {
     const open = new RegExp(`<div id="screen-${id}" class="screen"( hidden)?>`).exec(html);
     assert.ok(open, `screen ${id} is a plain block`);
@@ -499,6 +499,7 @@ test('Task 12 accessibility: the tab order follows the order on screen (controls
     brief: ['brief-text'],
     taste: ['restore-tags'],
     items: ['item-text', 'item-room', 'item-status-locked', 'item-status-unsure', 'item-tag', 'add-item'],
+    place: [],
     review: ['run-design-team'],
     result: ['result-back', 'floor-all', 'floor-ground', 'floor-upper', 'reset-view', 'show-all-labels', 'version-slider', 'result-start-again'],
   };

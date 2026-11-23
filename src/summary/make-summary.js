@@ -51,6 +51,11 @@ function valueWords(value) {
   if (typeof value.detail === 'string') return value.detail;
   if (typeof value.name === 'string') {
     const extra = [];
+    // Placed furniture: say the type and the turn in plain words. Inside the
+    // brackets, so the name before " (" stays the item's name.
+    if (typeof value.type === 'string') {
+      extra.push(typeof value.turn === 'number' ? `${value.type}, turned ${value.turn} degrees` : value.type);
+    }
     if (value.position) extra.push(positionWords(value.position));
     if (value.note) extra.push(value.note);
     return extra.length ? `${value.name} (${extra.join('; ')})` : value.name;

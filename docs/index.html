@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'; img-src 'self' blob:">
   <title>Start - DesignForYou</title>
-  <link rel="stylesheet" href="styles.css?v=build-place-1">
+  <link rel="stylesheet" href="styles.css?v=build-place-2">
 </head>
 <body>
   <header id="top-bar" class="label-bar">
@@ -218,6 +218,11 @@
       </div>
     </div>
 
+    <div id="screen-place" class="screen" hidden>
+      <h1 id="heading-place" tabindex="-1">Place furniture, doors and windows</h1>
+      <p id="place-intro">In a later update, this step will let you place furniture, doors and windows in your rooms and see them in the 3D view. For now there is nothing to fill in here. This step is optional, so use Next to go on.</p>
+    </div>
+
     <div id="screen-review" class="screen" hidden>
       <h1 id="heading-review" tabindex="-1">Review and run</h1>
       <p id="review-intro">Check what you entered. When you are ready, press the button. Nothing is sent anywhere when you press it. Your images stay in this browser and are not uploaded.</p>
@@ -348,7 +353,7 @@
   </footer>
 
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-  <script type="module" src="viewer.js?v=build-place-1"></script>
-  <script type="module" src="intake/screens.js?v=build-place-1"></script>
+  <script type="module" src="viewer.js?v=build-place-2"></script>
+  <script type="module" src="intake/screens.js?v=build-place-2"></script>
 </body>
 </html>

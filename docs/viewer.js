@@ -9,7 +9,7 @@
 // is set up in its own protected step (see attempt below). If one step fails, a
 // red message with the error text appears at the top of the page and the other
 // steps still run.
-const PAGE_VERSION = 'build-place-1';
+const PAGE_VERSION = 'build-place-2';
 // The files this page loads carry the version in their address, so a browser
 // cannot mix an old copy of one file with a new copy of another.
 const SCENE_DATA_FILE = `./scene-data.js?v=${PAGE_VERSION}`;
@@ -23,6 +23,7 @@ let filterByFloor;
 let viewBounds;
 let fitCamera;
 let floorLabelText;
+let shapeParts;
 
 const COLOURS = {
   locked: 0x0072b2,   // blue
@@ -233,6 +234,15 @@ function addBox(THREE, group, b) {
     return;
   }
 
+  // A piece with a known type is drawn as a few boxes (its parts). If that fails, or there are no
+  // parts (the sample's furniture, doors and windows), the plain block below is drawn as before.
+  const parts = attempt(`3D shape of ${b.label || 'an object'}`, () => shapeParts(b));
+  if (Array.isArray(parts) && parts.length > 0) {
+    addShapeParts(THREE, group, b, parts);
+    addClashOutline(THREE, group, b, centre);
+    return;
+  }
+
   const isWindow = b.type === 'window';
   const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
     color: COLOURS[b.colour],
@@ -251,15 +261,45 @@ function addBox(THREE, group, b) {
     group.add(edges);
   }
 
-  if (b.clash) {
-    // A slightly larger red box seen from the inside: a thick outline over the status colour.
-    const g = CLASH_OUTLINE * 2;
-    const outline = new THREE.Mesh(
-      new THREE.BoxGeometry(b.width + g, b.height + g, b.depth + g),
-      new THREE.MeshBasicMaterial({ color: COLOURS.clash, side: THREE.BackSide }),
-    );
-    outline.position.set(...centre);
-    group.add(outline);
+  addClashOutline(THREE, group, b, centre);
+}
+
+// A slightly larger red box seen from the inside: a thick outline over the status colour.
+// Drawn once per object, around its overall box, whether it is a plain block or a shape.
+function addClashOutline(THREE, group, b, centre) {
+  if (!b.clash) return;
+  const g = CLASH_OUTLINE * 2;
+  const outline = new THREE.Mesh(
+    new THREE.BoxGeometry(b.width + g, b.height + g, b.depth + g),
+    new THREE.MeshBasicMaterial({ color: COLOURS.clash, side: THREE.BackSide }),
+  );
+  outline.position.set(...centre);
+  group.add(outline);
+}
+
+// One mesh per part, all with the object's colour (Locked blue, Unsure orange), its key and its item id,
+// so clicking any part opens that object's panel. The bath's inner part is a lighter shade of the same
+// colour, and a window's glass is see-through. Doors and windows keep their dark and white edges.
+function addShapeParts(THREE, group, b, parts) {
+  for (const part of parts) {
+    const geometry = new THREE.BoxGeometry(part.width, part.height, part.depth);
+    const colour = new THREE.Color(COLOURS[part.colour]);
+    if (part.lighter) colour.lerp(new THREE.Color(0xffffff), 0.55);
+    const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+      color: colour,
+      transparent: Boolean(part.seeThrough),
+      opacity: part.seeThrough ? 0.4 : 1,
+    }));
+    const partCentre = [part.x + part.width / 2, part.y + part.height / 2, part.z + part.depth / 2];
+    mesh.position.set(...partCentre);
+    mesh.userData = { boxKey: b.key, type: b.type, itemId: b.itemId, part: part.role };
+    group.add(mesh);
+    if ((b.type === 'door' || b.type === 'window') && !part.seeThrough) {
+      const edgeColour = b.type === 'window' ? COLOURS.windowEdge : COLOURS.doorEdge;
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: edgeColour }));
+      edges.position.set(...partCentre);
+      group.add(edges);
+    }
   }
 }
 
@@ -667,7 +707,7 @@ globalThis.designForYouViewer = { showRunData: showRunDataSafely, showSample };
 async function start() {
   setScriptStatus('started.');
   helpersLoading = attempt('Loading scene-data.js', async () => {
-    ({ buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera, floorLabelText } = await import(SCENE_DATA_FILE));
+    ({ buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera, floorLabelText, shapeParts } = await import(SCENE_DATA_FILE));
   });
   const helperLoaded = await helpersLoading;
   if (helperLoaded === FAILED) return;

@@ -29,8 +29,8 @@ test('Intake 13.3: the README has a "How to use the app" section with the start 
   assert.ok(section.length > 800, 'the section has real content');
   assert.match(section, /"Try the sample"/);
   assert.match(section, /"Start my own project"/);
-  for (const n of [1, 2, 3, 4, 5, 6, 7]) assert.match(section, new RegExp(`^${n}\\. `, 'm'), `step ${n} is listed`);
-  for (const word of ['Project setup', 'Overall inspiration', 'Room overrides', 'Your brief', 'Taste questions', 'Your items', 'Review and run']) {
+  for (const n of [1, 2, 3, 4, 5, 6, 7, 8]) assert.match(section, new RegExp(`^${n}\\. `, 'm'), `step ${n} is listed`);
+  for (const word of ['Project setup', 'Overall inspiration', 'Room overrides', 'Your brief', 'Taste questions', 'Your items', 'Place furniture, doors and windows', 'Review and run']) {
     assert.ok(section.includes(word), `the step "${word}" is named`);
   }
   assert.match(section, /"Run the design team"/);
