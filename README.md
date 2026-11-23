@@ -19,10 +19,10 @@ Open the published page (the link is under "Publish the page" below). Nothing is
 4. Your brief (optional): write in your own words what you want.
 5. Taste questions (optional): answer up to six simple questions to see a short style profile. You can remove a tag from it.
 6. Your items (optional): list the things you care about, and say for each one whether it is Locked (must stay as it is) or Unsure (open to change).
-7. Place furniture, doors and windows (optional): this step is a placeholder for now. A later update will let you place furniture, doors and windows here.
+7. Place furniture, doors and windows (optional): pick a room, then add a sofa, bed, table, wardrobe, desk, bath, kitchen unit, door or window. Each has a name, a Locked or Unsure status, a position and a size in centimetres. You can type the numbers, nudge an object by 10 cm, turn it by 90 degrees, put a door or window against a wall, or click the top-down plan to move the selected object. The list under the plan says the same thing in words. You can still change a Locked object here before you run the design team.
 8. Review and run: check what you entered, then press "Run the design team". The button stays off, with a reason, until the project has a name, a floor and a room.
 
-**Result.** You see your home in 3D (turn, zoom, click a block, and use the slider for the history), a summary, your style profile with a mood board of your own pictures, and a section called "What the design team did with your input". The result is labelled YOUR PROJECT and is a draft for professional review. The design team is a set of fixed rules, not AI. It does not look at your images or read your brief. Press "Start again" to clear everything and go back to the start.
+**Result.** You see your home in 3D (turn, zoom, click a block, and use the slider for the history), a summary, your style profile with a mood board of your own pictures, and a section called "What the design team did with your input". It says how many objects you placed, which were Locked, and what Layout and Builder did not do (they only check and mark; they do not choose, move or fix anything). Besides the old clash types, the Reviewer now also reports furniture that overlaps furniture and objects that stick out of their room. It uses only the rectangles you entered. The result is labelled YOUR PROJECT and is a draft for professional review. The design team is a set of fixed rules, not AI. It does not look at your images or read your brief. Press "Start again" to clear everything and go back to the start.
 
 ## Requirements
 
@@ -61,7 +61,7 @@ You need Node.js 22 or newer on your computer. Nothing else is needed, because t
 
 ## 3D room viewer
 
-The viewer is a web page in the `docs/` folder. It shows the finished sample home in 3D, with two floors you can turn and zoom. Blocks are coloured by status (blue for Locked, orange for Unsure) and blocks in a clash have a red outline. Click a block to see its details. Block names show when you point at or select a block, and always for clashes; tick "Show all labels" to see every name. A slider steps back through the version history, from "Before any change" (version 0, no clashes) to the latest version (both clashes). The page only displays what a run produced (the sample run, or the run of your own project). It never changes anything.
+The viewer is a web page in the `docs/` folder. It shows the finished sample home in 3D, with two floors you can turn and zoom. Blocks are coloured by status (blue for Locked, orange for Unsure) and blocks in a clash have a red outline. Click a block to see its details. Block names show when you point at or select a block, and always for clashes; tick "Show all labels" to see every name. A slider steps back through the version history, from "Before any change" (version 0, no clashes) to the latest version (both clashes). Objects you placed are drawn as simple shapes (a sofa has a seat, back and arms; a door and a window have frames). The page only displays what a run produced (the sample run, or the run of your own project). It never changes anything.
 
 ### Rebuild the viewer's data
 You need Node.js 22 or newer. Type `npm run export-viewer` and press Enter. This runs the sample and rewrites `docs/sample-run.json`, the one file the page reads. Running it again gives the same file.
