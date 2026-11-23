@@ -1,6 +1,8 @@
 # Acceptance checklist: Place furniture, doors and windows
 
-Written on 2026-11-23 (Task 15), branch `build-place-4`. TALLY_PLACEHOLDER
+Written on 2026-11-23 (Task 15), branch `build-place-4`. `node --test` result at that point: 648 tests, 648 passed, 0 failed (633 at the start of this build; 15 new: 10 in `test/place-accessibility-privacy.test.js` for Task 13, 5 in `test/place-end-to-end.test.js` for Task 14).
+
+Tally of the 60 criteria: 42 Passed by named tests only; 1 Passed for the part a test proves (3.2); 12 Passed by test with a part that is also "Unverified: pending owner check" (2.4, 2.5, 2.7, 2.8, 5.1, 7.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.8); 4 checked by command with no named test, so not counted as Passed (6.6, 10.1, 10.2, 10.3); 1 not applicable (6.5, because Task 16 was skipped); 0 Not passed; 0 only unverified. Task 16 (the sample's four objects get a type) was skipped after the go / no-go trial, so R6.1 to R6.4 apply as written.
 
 Key (strict, the same as the other checklists):
 - **Passed**: a named automated test proves it. The test names are written in backticks and are the exact names in `test/`. `node test-helpers/check-checklist.js .kiro/specs/place-items/acceptance-checklist.md` matches every quoted name against the test files. (In this build the checker was extended, additively, to also read names that start with `place-items Task` and `Place Task`.)
@@ -44,7 +46,7 @@ What the tests cannot see: they run the real page scripts on a stand-in page (`t
 | 3.2 | Passed (status and room only) | `place-items Task 4: positions are in metres, furniture keeps its type and turn, and status and room are the visitor's`. That the existing item-creation function is the one used is a fact of the code (`docs/intake/build-brain.js`), not shown by a named test. |
 | 3.3 | Passed | `place-items Task 4: a Locked placed object is identical after the run, and an Unsure one gets the Layout or Builder note`; `place-items Task 4: the Locked sofa really is protected by the gatekeeper, not by the agent skipping it`; `place-items Task 14: the Locked sofa is identical after the run and has no version; the Unsure objects only gain a note` |
 | 3.4 | Passed | `place-items Task 4: positions are in metres, furniture keeps its type and turn, and status and room are the visitor's` |
-| 3.5 | SAMPLE_PLACEHOLDER | SAMPLE_PLACEHOLDER |
+| 3.5 | Passed | `place-items Task 1: the sample clash report is exactly the saved one`; `place-items Task 1: the sample run log is exactly the saved one`; `place-items Task 1: the sample versions and final items are exactly the saved ones`; `place-items Task 1: the sample labels are exactly the saved ones`; `place-items Task 1: docs/sample-run.json equals a fresh export` |
 
 ## R4. The Reviewer reports two more clashes
 | # | Status | Proof |
@@ -67,12 +69,12 @@ What the tests cannot see: they run the real page scripts on a stand-in page (`t
 ## R6. The sample stays exactly as it is
 | # | Status | Proof |
 |---|---|---|
-| 6.1 | SAMPLE_PLACEHOLDER | SAMPLE_PLACEHOLDER |
-| 6.2 | SAMPLE_PLACEHOLDER | SAMPLE_PLACEHOLDER |
-| 6.3 | SAMPLE_PLACEHOLDER | SAMPLE_PLACEHOLDER |
-| 6.4 | SAMPLE_PLACEHOLDER | SAMPLE_PLACEHOLDER |
-| 6.5 | SAMPLE_PLACEHOLDER | SAMPLE_PLACEHOLDER |
-| 6.6 | SAMPLE_PLACEHOLDER | SAMPLE_PLACEHOLDER |
+| 6.1 | Passed | `Task 2: sample-project.json is unchanged (git diff is empty)`; `place-items Task 1: the sample versions and final items are exactly the saved ones` |
+| 6.2 | Passed | `place-items Task 6: npm run export-viewer leaves docs/sample-run.json identical`; `place-items Task 1: docs/sample-run.json equals a fresh export` |
+| 6.3 | Passed | `place-items Task 1: the sample clash report is exactly the saved one`; `place-items Task 1: the sample run log is exactly the saved one`; `place-items Task 1: the sample labels are exactly the saved ones` |
+| 6.4 | Passed | `place-items Task 6: no sample snapshot item has a type or a turn`; `place-items Task 7: the sample's boxes are identical to before (same fingerprint of all 8 versions)`; `place-items Task 8: the sample draws exactly the same meshes as before (plain blocks, same count)` |
+| 6.5 | Not applicable: Task 16 was skipped | R6.5 only applies after Task 16. Task 16 did not run (see R6.6), so the sample has no `type` fields and R6.1 to R6.4 still apply. |
+| 6.6 | Checked by command, no named test (not counted as Passed) | Task 16 was skipped on purpose, and the owner was told. The go / no-go trial (a type added to the four objects in `src/sample/sample-project.json`, `npm run export-viewer`, then `npm test`) made 12 existing tests fail, so the trial was undone with `git checkout` and `git diff main` over `docs/sample-run.json` and `src/` is empty. The failing tests are listed in `KIRO_LOG.md` (Session 30). |
 
 ## R7. The 3D shapes
 | # | Status | Proof |
@@ -100,7 +102,7 @@ What the tests cannot see: they run the real page scripts on a stand-in page (`t
 | 9.3 | Passed by test (stylesheet and markup); how it measures on a real device: Unverified: pending owner check | `Place Task 13: every control on the place screen uses a shared style that is at least 44 px high, and every label and text size is at least 16 px`; `Place Task 13: the plan text is at least 16 px at 320 px wide, for small and large rooms (computed from the stylesheet)`. This test found a real fault (the plan label was 15.9 px at 320 px wide) and the code was fixed. |
 | 9.4 | Passed by test; how the colours look: Unverified: pending owner check | `Place Task 13: the plan colours reach the contrast limits, and Locked and Unsure differ by line style and words, not colour alone`; `Place Task 13: the plan colour check fails when a plan colour is made too light (planted change in a copy)`; `Task 12 accessibility: every text colour pair reaches 4.5 to 1 and every border and focus colour reaches 3 to 1 (numbers printed)`; `Task 12 accessibility: every colour written in the stylesheet is in the contrast table, or is listed as a plain decoration`; `Place Task 11: Locked and Unsure differ by outline style and words, not by colour alone` |
 | 9.5 | Passed by test (no fixed width above 320 px, the plan scales, one shrinkable column); a real 320 px phone and 200% zoom: Unverified: pending owner check | `Place Task 13: no fixed width above 320 px and no sideways scrolling rule in the place styles, and the plan scales to its panel` |
-| 9.6 | Passed | `Place Task 10: a refused add shows its sentence next to the box, linked with aria-describedby, and adds nothing`; `Place Task 10: a refused nudge keeps the old values and shows its sentence next to the button`; `Place Task 10: a refused Save changes keeps the old values, keeps what was typed, and shows its sentence next to the box`. What a screen reader says: Unverified: pending owner check. |
+| 9.6 | Passed by test; what a screen reader says: Unverified: pending owner check | `Place Task 10: a refused add shows its sentence next to the box, linked with aria-describedby, and adds nothing`; `Place Task 10: a refused nudge keeps the old values and shows its sentence next to the button`; `Place Task 10: a refused Save changes keeps the old values, keeps what was typed, and shows its sentence next to the box`. |
 | 9.7 | Passed | `Place Task 10: visitor text is shown as plain text only`; `Place Task 11: a name with page code in it is shown as plain text only`; `Place Task 13: the three new page files store nothing, send nothing, hold no web address and insert no visitor text as page code`; `Place Task 13: the content security rule is exactly the one set in Task 6 (no outside address, no inline script, no unsafe-eval), and the page loads no new script or style file`; `Place Task 13: using the place screen (add, select, nudge, turn, remove) touches no storage, cookie or network`; `Task 12 privacy: no page file stores anything, sends anything, holds a web address, reads image contents or inserts visitor text as page code, and the only web request is sample-run.json`; `Intake 11.7: no file in the project holds an API key, token, password or secret` |
 | 9.8 | Passed (draft statement); that the plan and 3D view are not claimed as accurate: Unverified: pending owner check (the wording must be read on the page) | `Task 6: the draft statement is on every screen (the two bars sit outside the screens and are never hidden)` |
 
