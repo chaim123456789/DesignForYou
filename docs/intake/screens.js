@@ -7,7 +7,7 @@
 // run. Unexpected page errors are already shown by viewer.js, so this file does not add a second handler.
 //
 // Visitor text is only ever put on the page with textContent. Nothing here reads files, stores or sends anything.
-const PAGE_VERSION = 'build-place-1';
+const PAGE_VERSION = 'build-place-2';
 
 // The screens in the order Back and Next move through them. `step` is the number shown in the step text.
 // Start and Result are outside the numbered steps.
@@ -19,7 +19,8 @@ const SCREENS = [
   { id: 'brief', name: 'Your brief', step: 4 },
   { id: 'taste', name: 'Taste questions', step: 5 },
   { id: 'items', name: 'Your items', step: 6 },
-  { id: 'review', name: 'Review and run', step: 7 },
+  { id: 'place', name: 'Place furniture, doors and windows', step: 7 },
+  { id: 'review', name: 'Review and run', step: 8 },
   { id: 'result', name: 'Result', step: null },
 ];
 const STEPS = SCREENS.filter((s) => s.step !== null);

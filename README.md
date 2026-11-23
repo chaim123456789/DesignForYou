@@ -12,14 +12,15 @@ Open the published page (the link is under "Publish the page" below). Nothing is
 - "Try the sample" shows a made-up two-storey home in 3D, already run through the four helpers. It is labelled SAMPLE PROJECT.
 - "Start my own project" takes you to your own project.
 
-**Your own project.** You go through seven steps. "Back" and "Next" are at the bottom of each step, and "Start again" clears everything.
+**Your own project.** You go through eight steps. "Back" and "Next" are at the bottom of each step, and "Start again" clears everything.
 1. Project setup: name the project, add floors and rooms. Width and depth are optional and only draw the 3D view.
 2. Overall inspiration: add pictures from your device and short notes (for example "warm oak") that fit the whole project.
 3. Room overrides (optional): give one room its own notes. That room then uses only its own notes.
 4. Your brief (optional): write in your own words what you want.
 5. Taste questions (optional): answer up to six simple questions to see a short style profile. You can remove a tag from it.
 6. Your items (optional): list the things you care about, and say for each one whether it is Locked (must stay as it is) or Unsure (open to change).
-7. Review and run: check what you entered, then press "Run the design team". The button stays off, with a reason, until the project has a name, a floor and a room.
+7. Place furniture, doors and windows (optional): this step is a placeholder for now. A later update will let you place furniture, doors and windows here.
+8. Review and run: check what you entered, then press "Run the design team". The button stays off, with a reason, until the project has a name, a floor and a room.
 
 **Result.** You see your home in 3D (turn, zoom, click a block, and use the slider for the history), a summary, your style profile with a mood board of your own pictures, and a section called "What the design team did with your input". The result is labelled YOUR PROJECT and is a draft for professional review. The design team is a set of fixed rules, not AI. It does not look at your images or read your brief. Press "Start again" to clear everything and go back to the start.
 

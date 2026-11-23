@@ -426,6 +426,8 @@ test('Task 12: if an agent fails, the screen names it, keeps the inputs and offe
     assert.equal(back.hidden, false);
     assert.equal(back.textContent, 'Back');
     back.click();
+    assert.equal(page.el('screen-place').hidden, false, 'Back from the review goes to the new step first');
+    back.click();
     assert.equal(page.el('screen-items').hidden, false);
     assert.equal(page.el('item-list').children.length, 2, 'the items are still there');
     // Fix (the broken agent is gone) and run again.
