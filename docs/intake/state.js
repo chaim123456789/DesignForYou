@@ -3,7 +3,7 @@
 //  - checks the input first,
 //  - returns { ok: true, ... } and changes the state, or
 //  - returns { ok: false, message } with a plain sentence and changes nothing.
-import { LIMITS, ITEM_STATUSES } from './limits.js';
+import { LIMITS, ITEM_STATUSES, PLACE_TYPES, PLACE_WALLS } from './limits.js';
 
 export function createState() {
   return {
@@ -15,6 +15,7 @@ export function createState() {
     tasteAnswers: {},
     removedTags: [],
     items: [], // { id, text, room (room id), status, tag }
+    placed: [], // { id, kind, type, name, room (room id), status, x, y, width, depth, turn } in whole centimetres
     nextId: 1,
   };
 }
@@ -48,7 +49,8 @@ export function hasEntries(state) {
     || state.brief !== ''
     || Object.keys(state.tasteAnswers).length > 0
     || state.removedTags.length > 0
-    || state.items.length > 0;
+    || state.items.length > 0
+    || state.placed.length > 0;
 }
 
 // A layer is 'overall' or a room id. Returns the layer object, or undefined.
@@ -166,11 +168,12 @@ export function renameRoom(state, roomId, name) {
   return { ok: true };
 }
 
-// Removes the room's override and the items in the room. Returns the removed image records.
+// Removes the room's override, the items and the placed objects in the room. Returns the removed image records.
 function dropRoomData(state, roomId) {
   const removedImages = state.overrides[roomId] ? [...state.overrides[roomId].images] : [];
   delete state.overrides[roomId];
   state.items = state.items.filter((i) => i.room !== roomId);
+  state.placed = state.placed.filter((o) => o.room !== roomId);
   return removedImages;
 }
 
@@ -309,5 +312,172 @@ export function removeItem(state, itemId) {
   const index = state.items.findIndex((i) => i.id === itemId);
   if (index === -1) return bad('That item is not in the list.');
   state.items.splice(index, 1);
+  return { ok: true };
+}
+
+// ---- Placed furniture, doors and windows (whole centimetres, kept in memory only) ----
+
+export function placedInRoom(state, roomId) {
+  return state.placed.filter((o) => o.room === roomId);
+}
+
+const WHOLE_NUMBER = /^-?\d+$/;
+
+// Returns { value } or { error }. Only whole numbers are accepted, as a number or as text.
+function wholeCm(raw, label, min, max) {
+  const error = { error: `${label} must be a whole number of centimetres from ${min} to ${max}.` };
+  let n;
+  if (typeof raw === 'number') n = raw;
+  else if (typeof raw === 'string' && WHOLE_NUMBER.test(raw.trim())) n = Number(raw.trim());
+  else return error;
+  if (!Number.isInteger(n) || n < min || n > max) return error;
+  return { value: n };
+}
+
+const sizeCm = (raw, label) => wholeCm(raw, label, LIMITS.placedSizeMin, LIMITS.placedSizeMax);
+const posCm = (raw, label) => wholeCm(raw, label, LIMITS.placedPosMin, LIMITS.placedPosMax);
+
+// Checks a complete set of fields. Returns { value } or { error }. Never changes the state.
+// exceptId: the object being edited, so it is not counted twice against the limits.
+function checkPlacedFields(state, fields, exceptId) {
+  const name = clean(fields.name);
+  if (name.length === 0) return { error: 'Give this object a name.' };
+  if (name.length > LIMITS.placedNameMax) return { error: `Keep the object name to ${LIMITS.placedNameMax} characters or fewer.` };
+  if (!ITEM_STATUSES.includes(fields.status)) return { error: 'Choose Locked or Unsure for this object.' };
+  if (!findRoom(state, fields.room)) return { error: 'Choose a room for this object.' };
+  const width = sizeCm(fields.width, 'Width');
+  if (width.error) return width;
+  const depth = sizeCm(fields.depth, 'Depth');
+  if (depth.error) return depth;
+  const x = posCm(fields.x, 'Left');
+  if (x.error) return x;
+  const y = posCm(fields.y, 'Top');
+  if (y.error) return y;
+  const others = state.placed.filter((o) => o.id !== exceptId);
+  if (others.length >= LIMITS.placedMax) return { error: `You can place at most ${LIMITS.placedMax} objects in total.` };
+  if (others.filter((o) => o.room === fields.room).length >= LIMITS.placedPerRoomMax) {
+    return { error: `You can place at most ${LIMITS.placedPerRoomMax} objects in one room.` };
+  }
+  return { value: { name, status: fields.status, room: fields.room, x: x.value, y: y.value, width: width.value, depth: depth.value } };
+}
+
+const findPlaced = (state, id) => state.placed.find((o) => o.id === id);
+const MISSING_PLACED = 'That object is not in the list.';
+
+// fields: type, name, room, status (required, no default) and optionally x, y, width, depth.
+// A field that is left out (undefined) takes the type's start value; a field that is given must be valid.
+export function addPlaced(state, fields) {
+  const f = fields || {};
+  const type = PLACE_TYPES[f.type] && Object.hasOwn(PLACE_TYPES, f.type) ? PLACE_TYPES[f.type] : null;
+  if (!type) return bad('Choose a type from the list.');
+  const withStart = {
+    name: f.name === undefined ? type.name : f.name,
+    status: f.status,
+    room: f.room,
+    x: f.x === undefined ? 0 : f.x,
+    y: f.y === undefined ? 0 : f.y,
+    width: f.width === undefined ? type.width : f.width,
+    depth: f.depth === undefined ? type.depth : f.depth,
+  };
+  const checked = checkPlacedFields(state, withStart);
+  if (checked.error) return bad(checked.error);
+  const object = { id: newId(state, 'placed-'), kind: type.kind, type: f.type, turn: 0, ...checked.value };
+  state.placed.push(object);
+  return { ok: true, id: object.id };
+}
+
+// changes: any of name, room, status, x, y, width, depth. Missing fields keep their old value.
+// The type cannot be changed (remove the object and add a new one).
+export function editPlaced(state, id, changes) {
+  const object = findPlaced(state, id);
+  if (!object) return bad(MISSING_PLACED);
+  const c = changes || {};
+  if (c.type !== undefined && c.type !== object.type) return bad('The type cannot be changed. Remove the object and add a new one.');
+  const checked = checkPlacedFields(state, { ...object, ...c }, id);
+  if (checked.error) return bad(checked.error);
+  Object.assign(object, checked.value);
+  return { ok: true };
+}
+
+export function movePlacedTo(state, id, x, y) {
+  const object = findPlaced(state, id);
+  if (!object) return bad(MISSING_PLACED);
+  const left = posCm(x, 'Left');
+  if (left.error) return bad(left.error);
+  const top = posCm(y, 'Top');
+  if (top.error) return bad(top.error);
+  object.x = left.value;
+  object.y = top.value;
+  return { ok: true };
+}
+
+const NUDGES = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
+
+// direction: 'left', 'right', 'up' or 'down'. Moves exactly one step (10 cm). It may leave the room; the list says so.
+export function nudgePlaced(state, id, direction) {
+  const object = findPlaced(state, id);
+  if (!object) return bad(MISSING_PLACED);
+  if (!Object.hasOwn(NUDGES, direction)) return bad('Choose left, right, up or down.');
+  const [dx, dy] = NUDGES[direction];
+  const left = posCm(object.x + dx * LIMITS.nudgeStep, 'Left');
+  if (left.error) return bad(left.error);
+  const top = posCm(object.y + dy * LIMITS.nudgeStep, 'Top');
+  if (top.error) return bad(top.error);
+  object.x = left.value;
+  object.y = top.value;
+  return { ok: true };
+}
+
+// A quarter turn clockwise. Width and depth swap and the top-left corner stays where it is.
+export function turnPlaced(state, id) {
+  const object = findPlaced(state, id);
+  if (!object) return bad(MISSING_PLACED);
+  [object.width, object.depth] = [object.depth, object.width];
+  object.turn = (object.turn + 90) % 360;
+  return { ok: true };
+}
+
+// Puts a door or window flush against a wall of its room, keeping its distance along the wall.
+// The long side lies along the wall: if it does not, the object is turned a quarter first.
+export function setPlacedWall(state, id, wall) {
+  const object = findPlaced(state, id);
+  if (!object) return bad(MISSING_PLACED);
+  if (object.kind !== 'door' && object.kind !== 'window') return bad('Only a door or a window can be put against a wall.');
+  if (!PLACE_WALLS.includes(wall)) return bad('Choose Top, Bottom, Left or Right.');
+  const room = findRoom(state, object.room);
+  if (!room) return bad('Choose a room for this object.');
+  const roomWidth = Math.round(room.width * 100);
+  const roomDepth = Math.round(room.depth * 100);
+  const horizontalWall = wall === 'Top' || wall === 'Bottom';
+  let { width, depth, turn } = object;
+  if (horizontalWall ? depth > width : width > depth) {
+    [width, depth] = [depth, width];
+    turn = (turn + 90) % 360;
+  }
+  let { x, y } = object;
+  if (wall === 'Top') y = 0;
+  else if (wall === 'Bottom') y = roomDepth - depth;
+  else if (wall === 'Left') x = 0;
+  else x = roomWidth - width;
+  const left = posCm(x, 'Left');
+  if (left.error) return bad(left.error);
+  const top = posCm(y, 'Top');
+  if (top.error) return bad(top.error);
+  Object.assign(object, { x, y, width, depth, turn });
+  return { ok: true };
+}
+
+export function setPlacedStatus(state, id, status) {
+  const object = findPlaced(state, id);
+  if (!object) return bad(MISSING_PLACED);
+  if (!ITEM_STATUSES.includes(status)) return bad('Choose Locked or Unsure for this object.');
+  object.status = status;
+  return { ok: true };
+}
+
+export function removePlaced(state, id) {
+  const index = state.placed.findIndex((o) => o.id === id);
+  if (index === -1) return bad(MISSING_PLACED);
+  state.placed.splice(index, 1);
   return { ok: true };
 }
