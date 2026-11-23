@@ -8,12 +8,21 @@ import { buildProfile } from './taste.js';
 // The one fixed sentence (R10.1). The start screen and the result screen must use this exact text.
 export const FIXED_SENTENCE = 'The design team is a set of fixed rules, not AI. It does not look at your images or read your brief.';
 
+// The two fixed sentences about placed objects. Tests and the page use these exact words.
+// R4.7: the overlap and fit checks look only at the rectangles the visitor entered.
+export const RECTANGLES_SENTENCE = 'The overlap and fit checks use only the rectangles you entered.';
+// R8.3: what Layout and Builder did not do. Shown whenever objects were placed.
+export const DID_NOT_SENTENCE = 'Layout and Builder did not choose where anything goes. They did not move, resize or turn anything, and they did not fix any clash. They checked each Unsure object and marked it.';
+
 export const REPORT_HEADING = 'What the design team did with your input';
 export const LIST_HEADINGS = Object.freeze({
   used: 'Used',
   keptNotRead: 'Kept but not read',
   nothingToDo: 'Nothing to do this time',
 });
+// A fourth list, shown only when objects were placed. Kept apart from LIST_HEADINGS (the three
+// lists every report has).
+export const DID_NOT_HEADING = 'What Layout and Builder did not do';
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
@@ -27,6 +36,59 @@ function countNotes(state) {
 
 function countImages(state) {
   return state.overall.images.length + Object.values(state.overrides).reduce((sum, layer) => sum + layer.images.length, 0);
+}
+
+const LAYOUT_NOTE = 'Placement checked by Layout';
+const BUILDER_NOTE = 'Opening checked by Builder';
+const PLACED_KINDS = ['layout', 'door', 'window'];
+
+// "3 pieces of furniture, 1 door and 2 windows" (only the kinds that were placed).
+function describePlacedCounts(placed) {
+  const count = (kind) => placed.filter((o) => o.kind === kind).length;
+  const parts = [];
+  const furniture = count('layout');
+  if (furniture > 0) parts.push(`${furniture} ${furniture === 1 ? 'piece' : 'pieces'} of furniture`);
+  if (count('door') > 0) parts.push(plural(count('door'), 'door', 'doors'));
+  if (count('window') > 0) parts.push(plural(count('window'), 'window', 'windows'));
+  if (parts.length <= 1) return parts.join('');
+  return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+}
+
+// The lines about placed furniture, doors and windows. Every number comes from the visitor's objects
+// or from the finished run's Brain, so the lines say only what really happened.
+function placedLines(placed, project) {
+  const used = [];
+  const items = project.items.filter((i) => PLACED_KINDS.includes(i.kind));
+  const unsure = placed.filter((o) => o.status === 'Unsure');
+  const noted = items.filter((i) => i.status === 'Unsure' && i.value && (i.value.note === LAYOUT_NOTE || i.value.note === BUILDER_NOTE));
+  let first = `You placed ${describePlacedCounts(placed)}. `;
+  if (unsure.length === 0) {
+    first += 'None of them was Unsure, so Layout and Builder had nothing to check or mark.';
+  } else if (noted.length === unsure.length) {
+    first += 'Layout checked each Unsure piece of furniture and Builder checked each Unsure door and window, and each wrote a note on it.';
+  } else {
+    first += `Layout and Builder wrote a note on ${noted.length} of the ${plural(unsure.length, 'Unsure object', 'Unsure objects')}.`;
+  }
+  used.push(first);
+  if (placed.some((o) => o.status === 'Locked')) {
+    const changed = items.some((i) => i.status === 'Locked' && i.value && i.value.note);
+    used.push(changed
+      ? 'A Locked object was changed by an agent. This should never happen. See the run log.'
+      : 'Locked objects were respected: no agent changed them.');
+  }
+  const reviewerRan = project.runLog.some((e) => e.agent === 'Reviewer' && e.event === 'finished');
+  if (reviewerRan) {
+    used.push('The Reviewer checked doors and windows against furniture, furniture against furniture, and each object against the size of its room.');
+    // Rooms that hold placed objects but have no size in the Brain are skipped by the fit check.
+    const roomsWithObjects = new Set(items.map((i) => i.room));
+    const skipped = project.floors.flatMap((f) => f.rooms)
+      .filter((room) => roomsWithObjects.has(room.id) && !(room.width > 0 && room.depth > 0))
+      .map((room) => room.name);
+    if (skipped.length === 1) used.push(`${skipped[0]} has no size, so the fit check was skipped there.`);
+    else if (skipped.length > 1) used.push(`These rooms have no size, so the fit check was skipped there: ${skipped.join(', ')}.`);
+    used.push(RECTANGLES_SENTENCE);
+  }
+  return used;
 }
 
 // state : the visitor's inputs (see state.js).
@@ -58,6 +120,8 @@ export function buildReport(state, run, options = {}) {
   if (reviewerRan) {
     used.push(`The clash check compared your notes and style profile tags with the tag of each Locked item, using this short list of opposite pairs: ${pairs.map(describePair).join('; ')}.`);
   }
+  const placed = state.placed || [];
+  if (placed.length > 0) used.push(...placedLines(placed, project));
   const refused = project.runLog.filter((e) => e.event === 'refused');
   if (refused.length > 0) {
     used.push(`${plural(refused.length, 'change to a Locked item was', 'changes to Locked items were')} refused. See the run log.`);
@@ -87,14 +151,18 @@ export function buildReport(state, run, options = {}) {
     ? 'The Reviewer found nothing in this small list. This does not mean there are no problems.'
     : null;
 
+  const lists = [
+    { key: 'used', heading: LIST_HEADINGS.used, lines: used },
+    { key: 'keptNotRead', heading: LIST_HEADINGS.keptNotRead, lines: keptNotRead },
+    { key: 'nothingToDo', heading: LIST_HEADINGS.nothingToDo, lines: nothingToDo },
+  ];
+  // Shown whenever objects were placed, and only then (R8.3).
+  if (placed.length > 0) lists.push({ key: 'didNot', heading: DID_NOT_HEADING, lines: [DID_NOT_SENTENCE] });
+
   return {
     heading: REPORT_HEADING,
     sentence: FIXED_SENTENCE,
-    lists: [
-      { key: 'used', heading: LIST_HEADINGS.used, lines: used },
-      { key: 'keptNotRead', heading: LIST_HEADINGS.keptNotRead, lines: keptNotRead },
-      { key: 'nothingToDo', heading: LIST_HEADINGS.nothingToDo, lines: nothingToDo },
-    ],
+    lists,
     used,
     keptNotRead,
     nothingToDo,
