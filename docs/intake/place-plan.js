@@ -37,7 +37,9 @@ export function drawPlan(geometry, { room, objects, selectedId }) {
   };
   const box = geometry.planViewBox(room);
   const size = geometry.roomSizeCm(room);
-  const fontSize = Math.round(box.width / 16); // about 17 px when the plan is 280 px wide
+  // The label is drawn at 1/15 of the plan's width, rounded up, so it is at least 16 px when the plan is 254 px wide
+  // (a 320 px screen after the page and panel padding) and bigger on wider screens.
+  const fontSize = Math.ceil(box.width / 15);
   const svg = node('svg', {
     class: 'plan',
     viewBox: `${box.x} ${box.y} ${box.width} ${box.height}`,

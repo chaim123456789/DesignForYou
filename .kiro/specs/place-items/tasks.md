@@ -86,22 +86,26 @@ Edit 9 (`report.js`) and the matching display in the result screen.
 Add to the existing accessibility and privacy test style: sizes (16 px text, 44 px controls), contrast pairs for the new styles, a 320 px layout rule (no fixed widths above 320 px), keyboard order, no storage or network calls in the new files, the content security rule unchanged, the secrets search still clean.
 - **Req:** R9
 - **Verify:** Tests pass. Each criterion is marked Passed only where a test proves it. Real device checks (320 px phone, 200% zoom, screen reader, real keyboard) are listed as **Unverified: pending owner check**.
+- **Done 2026-11-23** (build-place-4): `test/place-accessibility-privacy.test.js`, 10 tests. It found one real fault (the plan label was 15.9 px at 320 px wide) and `docs/intake/place-plan.js` was fixed. Real device checks are listed in the checklist as pending owner check.
 
 ### Task 14. End to end
 One test runs the intake from setup to result with a small project: two rooms, a Locked sofa, an Unsure bed overlapping it, a wardrobe sticking out, a door and a window. It checks the clash report, the report lines, the run data and the shapes.
 - **Req:** R3, R4, R5, R7, R8
 - **Verify:** The test passes. The three clash kinds appear with the right numbers. The Locked sofa is identical after the run.
+- **Done 2026-11-23** (build-place-4): `test/place-end-to-end.test.js`, 5 tests.
 
 ### Task 15. Checklist, log and README check
 Write `acceptance-checklist.md` for this spec in the same strict format as the others (Passed only by named test; the rest pending owner check). Add the `KIRO_LOG.md` entry (credits line blank). Run the whole test suite, the sample diff and `git status`.
 - **Req:** all
 - **Verify:** The full `node --test` count and result are quoted. `git status` shows only the expected files. The checklist's named tests all exist (the existing checklist checker script passes).
+- **Done 2026-11-23** (build-place-4): `acceptance-checklist.md` written; `test-helpers/check-checklist.js` now also reads names that start with `place-items Task` and `Place Task` (before this it would have skipped them).
 
 ### Task 16. The sample's four objects get a type (LAST task, optional, only if safe)
 Owner-approved on 2026-11-23 (question 2). Give only the sample's Sofa, Garden door, Bedroom door and Kitchen window a `type` in `src/sample/sample-project.json`, so the viewer draws the new shapes for them. Regenerate `docs/sample-run.json` with `npm run export-viewer` (and run `npm run export-engine` if any `src/` engine file changes).
 - **Go / no-go first.** Before editing, check that the change is safe: the existing sample tests, the run log, the versions, the labels and the clash report must not depend on the absence of a `type`. If any of them would change, or an existing test would need to be weakened, SKIP this task and tell the owner.
 - **Req:** R6.5, R6.6
 - **Verify:** A test compares the "before" values saved in Task 1 with the new run: the two clashes (numbers, texts, severities), the run log, the version list, the labels and every rule result are identical; the only differences in `docs/sample-run.json` are the added `type` fields; the sample's four objects draw the new shapes in the stand-in scene. All earlier tests still pass. Looks in a real browser: **pending owner check**.
+- **SKIPPED 2026-11-23** (build-place-4): the go / no-go trial was not safe. With a `type` on the four objects, 12 existing tests failed, and making them pass would have meant rewriting tests that say the sample file is unchanged and that the sample has no type and draws plain blocks. The trial was undone. The owner decides whether to do it later, with those tests updated on purpose.
 
 ### Final step: pull request
 After the last task that is built (Task 16, or Task 15 if Task 16 is skipped), open one pull request and tell the owner what to click.

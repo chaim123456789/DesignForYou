@@ -12,7 +12,7 @@ for (const file of readdirSync(new URL('test/', root)).filter((f) => f.endsWith(
 const checklistPath = process.argv[2] || '.kiro/specs/room-viewer/acceptance-checklist.md';
 const checklist = readFileSync(new URL(checklistPath, root), 'utf8');
 const quoted = [...checklist.matchAll(/`([^`]+)`/g)].map((m) => m[1].replace(/\\(.)/g, '$1'))
-  .filter((q) => /^(Task \d|Step \d|fix-viewer-1:|build-viewer-3 |R\d+\.\d+:)/.test(q));
+  .filter((q) => /^(Task \d|Step \d|fix-viewer-1:|build-viewer-3 |R\d+\.\d+:|place-items Task \d|Place Task \d)/.test(q));
 const missing = [...new Set(quoted)].filter((q) => !names.has(q));
 console.log(`${checklistPath}: ${new Set(quoted).size} quoted test names checked against ${names.size} tests in test/.`);
 if (missing.length) {
