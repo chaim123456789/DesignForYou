@@ -3,7 +3,7 @@
 // It uses only the existing Brain functions and the existing Coordinator and agents (copied to docs/engine/).
 //
 // What goes into the Brain: the name, floors and rooms, the overall notes plus the style profile tags,
-// the room override notes, and the items. The brief, the profile sentences and the image count are
+// the room override notes, the style items and the placed furniture, doors and windows. The brief, the profile sentences and the image count are
 // kept as optional project fields. No agent reads them. Images themselves never enter the Brain.
 import { createProject, createItem } from '../engine/brain/brain.js';
 import { setProjectInspiration, setRoomOverride } from '../engine/brain/inspiration.js';
@@ -16,6 +16,9 @@ import { createReviewerAgent } from '../engine/agents/reviewer/agent.js';
 import { buildProfile } from './taste.js';
 import { allImages } from './state.js';
 import { STYLE_CONFLICTS } from './limits.js';
+import { toBrainPosition } from './place-geometry.js';
+
+const OWNER_FOR_KIND = { layout: 'Layout', door: 'Builder', window: 'Builder' };
 
 // A fixed clock, so the same inputs always give the same versions. Same dates as the sample's clock.
 function fixedClock() {
@@ -48,7 +51,7 @@ export function buildBrain(state) {
   const profile = buildProfile(state.tasteAnswers, state.removedTags);
   const project = createProject({
     name: state.name,
-    floors: state.floors.map((f) => ({ name: f.name, rooms: f.rooms.map((r) => ({ name: r.name })) })),
+    floors: state.floors.map((f) => ({ name: f.name, rooms: f.rooms.map((r) => ({ name: r.name, width: r.width, depth: r.depth })) })),
     brief: state.brief,
     styleProfile: profile.sentences,
     imageCount: allImages(state).length,
@@ -74,6 +77,21 @@ export function buildBrain(state) {
     const value = { detail: item.text };
     if (item.tag) value.tag = item.tag;
     createItem(project, { kind: 'style', owner: 'Style', status: item.status, room: roomId[item.room], value });
+  }
+  // Placed furniture, doors and windows. Lengths go from centimetres to metres here, once.
+  // Furniture is a layout item (owner Layout); a door or window is a door or window item (owner Builder).
+  for (const object of state.placed || []) {
+    const position = toBrainPosition(object);
+    const value = object.kind === 'layout'
+      ? { name: object.name, type: object.type, turn: object.turn, position }
+      : { name: object.name, position };
+    createItem(project, {
+      kind: object.kind,
+      owner: OWNER_FOR_KIND[object.kind],
+      status: object.status,
+      room: roomId[object.room],
+      value,
+    });
   }
   createItem(project, {
     kind: 'clash',

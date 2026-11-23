@@ -123,7 +123,7 @@ Doors and windows: the existing `wallPanel` still decides the wall and the panel
 
 `viewer.js` draws every part as a normal box with the same material code it already has. The clash outline is drawn once, around the object's overall box, as today.
 
-The sample's furniture has no type, so `shapeParts` returns an empty list and the plain block is drawn (R7.3, R6.4).
+The sample's furniture has no type, so `shapeParts` returns an empty list and the plain block is drawn (R7.3, R6.4). After the optional last task (Task 16, owner-approved) the sample's four objects get a type and the viewer draws the new shapes for them.
 
 ## 8. The result report
 
@@ -152,7 +152,7 @@ Two kinds of existing expectation change because the app really has one more ste
 | `test/viewer-real-script.test.js` | The literal `build-intake-5` (three places) becomes `build-place-1`. |
 | `test/readme-how-to-use.test.js` | Its list of step words gains the new step's name. The README gets the matching sentence. |
 
-If the owner prefers not to touch these tests (question 1), the fallback is described there.
+Owner answered yes on 2026-11-23. These edits are done in Task 9 (not earlier, so the suite stays green while the new step does not exist yet).
 
 ## 11. Risks
 
@@ -177,10 +177,12 @@ If the owner prefers not to touch these tests (question 1), the fallback is desc
 - New screen is a real numbered step (step 7 of 8), directly after "Your items".
 - Doors and windows start flush to the top wall, with a Wall drop-down to move them to another wall.
 - Sizes and limits as in section 3.
-- The sample's data and result are untouched, and the sample furniture stays a plain block.
+- The sample's data and result are untouched until the optional last task (Task 16); then only a `type` is added to its four objects, and nothing else in the result changes.
 - One new pull request per task group, as before: this spec first, then the build.
 
-## 13. Questions for the owner (two)
+## 13. Questions for the owner (two), answered 2026-11-23
+
+**Answers:** Question 1: yes (only the expected values: the step count and the cache tag `build-place-1`; nothing deleted or loosened; the exact changed lines are listed in the pull request). Question 2: yes, but as the LAST task of the whole spec (Task 16), only if it is safe, giving only the sample's four existing objects a type, with a test proving that the clashes, run log, versions, labels and rule results are identical, and `docs/sample-run.json` regenerated with the export script. If it looks risky it is skipped and the owner is told.
 
 1. **May I update the existing tests that count the steps and the cache tag?** (Section 10: three files, only expected values, nothing deleted or loosened.) I recommend **yes**. Adding a real step cannot be done without it. The fallback if you say no: no new numbered step. The placing screen would become a side page opened from "Your items" by a button, and the step count would stay 7. The cache tag test would still need updating, so a "no" costs a clumsier screen and saves only one test change.
 2. **Should the sample's sofa and doors also get types, so the sample shows the new shapes?** I recommend **no**. It would change `sample-project.json` and `docs/sample-run.json`, and you asked for the sample's result to stay exactly as it is. The visitor's own project shows the new shapes.

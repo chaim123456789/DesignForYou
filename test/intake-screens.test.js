@@ -263,16 +263,16 @@ test('Task 6: an unusable red box is not fatal (the error goes to the browser co
 // ---- The cache tag and the status line -----------------------------------------------------
 
 test('Task 6: the page files carry the cache tag build-intake-1, and the grey status lines name it', async () => {
-  assert.match(html, /styles\.css\?v=build-intake-5/);
-  assert.match(html, /viewer\.js\?v=build-intake-5/);
-  assert.match(html, /intake\/screens\.js\?v=build-intake-5/);
+  assert.match(html, /styles\.css\?v=build-place-1/);
+  assert.match(html, /viewer\.js\?v=build-place-1/);
+  assert.match(html, /intake\/screens\.js\?v=build-place-1/);
   assert.match(html, /id="script-status">Page script: not started yet/);
   assert.match(html, /id="intake-script-status" class="status-line">Screens script: not started yet/);
   for (const text of [html, readDoc('viewer.js'), readDoc('intake/screens.js')]) assert.doesNotMatch(text, /build-viewer-3/);
-  assert.match(readDoc('viewer.js'), /const PAGE_VERSION = 'build-intake-5'/);
-  assert.match(readDoc('intake/screens.js'), /const PAGE_VERSION = 'build-intake-5'/);
+  assert.match(readDoc('viewer.js'), /const PAGE_VERSION = 'build-place-1'/);
+  assert.match(readDoc('intake/screens.js'), /const PAGE_VERSION = 'build-place-1'/);
   await withScreens(() => {}, async (page) => {
-    assert.equal(page.el('intake-script-status').textContent, 'Page script build-intake-5 (screens): finished setting up.');
+    assert.equal(page.el('intake-script-status').textContent, 'Page script build-place-1 (screens): finished setting up.');
   });
 });
 

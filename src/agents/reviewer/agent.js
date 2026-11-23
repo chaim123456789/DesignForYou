@@ -6,7 +6,7 @@
 // clash item. The Coordinator sends that proposal to the gatekeeper, so the
 // report is saved through the gatekeeper and appears in version history.
 //
-// Two checks (R9.3):
+// Four checks (the first two are R9.3; the last two were added for placed furniture, doors and windows):
 //  1. A door or window whose position overlaps furniture in the same room.
 //  2. A room's style notes that conflict with a Locked style item in that room.
 //     "Conflicts" uses the pairs in options.styleConflicts, for example
@@ -26,6 +26,24 @@ export const NO_CLASHES_NOTE = 'The Reviewer found nothing in this small list of
 // True if two rectangles share any area. Touching edges do not count.
 function overlaps(a, b) {
   return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.depth && b.y < a.y + a.depth;
+}
+
+// 1 mm, in metres. Used only by the two newer checks.
+const TOLERANCE = 0.001;
+
+// True if two rectangles share more than the tolerance of area in both directions.
+function overlapsBeyondTolerance(a, b) {
+  const across = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+  const down = Math.min(a.y + a.depth, b.y + b.depth) - Math.max(a.y, b.y);
+  return across > TOLERANCE && down > TOLERANCE;
+}
+
+// True if the rectangle is not fully inside 0..width and 0..depth of a room (touching a wall is inside).
+function sticksOut(position, room) {
+  return position.x < -TOLERANCE
+    || position.y < -TOLERANCE
+    || position.x + position.width > room.width + TOLERANCE
+    || position.y + position.depth > room.depth + TOLERANCE;
 }
 
 function roomName(view, roomId) {
@@ -87,6 +105,46 @@ function overrideAgainstLockedClashes(view, conflicts) {
   return clashes;
 }
 
+function furnitureOverlapClashes(view) {
+  const clashes = [];
+  const furniture = view.items.filter((i) => i.kind === 'layout' && i.room && i.value && i.value.position);
+  for (let i = 0; i < furniture.length; i += 1) {
+    for (let j = i + 1; j < furniture.length; j += 1) {
+      const a = furniture[i];
+      const b = furniture[j];
+      if (a.room !== b.room || !overlapsBeyondTolerance(a.value.position, b.value.position)) continue;
+      clashes.push({
+        type: 'Furniture overlaps furniture',
+        items: [a.id, b.id],
+        room: a.room,
+        description: `In the ${roomName(view, a.room)}, the ${a.value.name} overlaps the ${b.value.name}.`,
+        severity: 'Medium',
+      });
+    }
+  }
+  return clashes;
+}
+
+function outsideRoomClashes(view) {
+  const clashes = [];
+  const rooms = view.floors.flatMap((f) => f.rooms);
+  for (const item of view.items) {
+    if (!['layout', 'door', 'window'].includes(item.kind) || !item.room) continue;
+    const position = item.value && item.value.position;
+    const room = rooms.find((r) => r.id === item.room);
+    if (!position || !room || !(room.width > 0) || !(room.depth > 0)) continue;
+    if (!sticksOut(position, room)) continue;
+    clashes.push({
+      type: 'Object outside its room',
+      items: [item.id],
+      room: room.id,
+      description: `In the ${room.name}, the ${item.value.name} sticks out of the room.`,
+      severity: item.kind === 'door' ? 'High' : 'Medium',
+    });
+  }
+  return clashes;
+}
+
 // options.styleConflicts : list of [tagA, tagB] pairs that conflict.
 // options.isSample       : add the SAMPLE PROJECT label (also used if the Brain says isSample).
 // options.reportItemId   : which clash item to save the report in (default: the first clash item).
@@ -100,7 +158,13 @@ export function createReviewerAgent(options = {}) {
       throw new Error('The Reviewer needs a clash report item to save its report in. None was found.');
     }
 
-    const clashes = [...openingOnFurnitureClashes(view), ...overrideAgainstLockedClashes(view, conflicts)];
+    // The two older kinds come first, so their numbers never change when the newer kinds are added.
+    const clashes = [
+      ...openingOnFurnitureClashes(view),
+      ...overrideAgainstLockedClashes(view, conflicts),
+      ...furnitureOverlapClashes(view),
+      ...outsideRoomClashes(view),
+    ];
     // Each clash gets a number so the report is easy to refer to.
     const numbered = clashes.map((c, index) => ({ number: index + 1, ...c }));
     const labels = getLabels({ isSample: Boolean(options.isSample || view.isSample) });

@@ -67,10 +67,13 @@ Browser only. No login. Nothing is sent anywhere and nothing is stored. Plain Ja
 3. The summary page lists the type and turn of furniture in plain words.
 
 ## R6. The sample stays exactly as it is
-1. `src/sample/sample-project.json` is not changed.
+Owner approval 2026-11-23 (question 2): the sample's four existing objects (Sofa, Garden door, Bedroom door, Kitchen window) get a `type` in the LAST task only (Task 16), and only if that task is safe. Until Task 16, R6.1 to R6.4 apply as written. After Task 16, R6.1 and R6.4 are replaced by R6.5 and R6.6 below.
+1. `src/sample/sample-project.json` is not changed (until Task 16).
 2. `docs/sample-run.json` is identical after `npm run export-viewer` (empty `git diff`).
 3. The sample's clash report (the clashes, their numbers, texts and severities) is identical.
-4. The sample's furniture has no type, so in the 3D view it keeps the plain block it has today.
+4. The sample's furniture has no type, so in the 3D view it keeps the plain block it has today (until Task 16).
+5. After Task 16: the only change in `sample-project.json` is a `type` on those four objects. The two clashes, their numbers, texts and severities, the run log, the versions, the labels and every rule result are identical to before, and a test proves it. `docs/sample-run.json` is regenerated with `npm run export-viewer`; its only differences are the added `type` fields.
+6. If Task 16 is not safe, it is skipped and the owner is told. The sample then stays as in R6.1 to R6.4.
 
 ## R7. The 3D shapes
 Each type is drawn as a few simple boxes, so it is recognisable from a normal viewing angle. Sizes are fractions of the object's footprint, so a resized object keeps its shape.
@@ -111,6 +114,6 @@ Each type is drawn as a few simple boxes, so it is recognisable from a normal vi
 8. The draft statement ("drafts for professional review, not verified engineering") stays on every screen, and the plan and 3D view are not claimed as accurate.
 
 ## R10. Safety for existing work
-1. All existing tests keep passing. None is deleted or weakened. Where the new screen changes a number or list an existing test checks (for example "Step 6 of 7"), the expected value is updated in that test and the change is listed in the pull request (decision in design.md, question 1).
+1. All existing tests keep passing. None is deleted or weakened. Where the new screen changes a number or list an existing test checks (for example "Step 6 of 7"), the expected value is updated in that test and the change is listed in the pull request (owner answered yes to question 1 on 2026-11-23; only expected values change, in Task 9).
 2. No installs, no new dependencies, and no `package.json` change.
 3. `LICENSE` is unchanged. `.kiro` is not in `.gitignore`. No secrets or personal data in any file.
