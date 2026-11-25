@@ -7,7 +7,7 @@
 // Every result says it is a draft for professional review and not an electrical design.
 import { loadKnowledge } from '../../knowledge/load.js';
 import {
-  roomsOf, roomTypeOf, ruleForType, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, mm,
+  roomsOf, roomTypeOf, typePhrase, ruleForType, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, mm,
   SIDES, openingSide, alongWall, placeOnWall, overlaps,
 } from '../common.js';
 import { buildProposal } from '../../proposal.js';
@@ -80,7 +80,7 @@ export function makeLightingElectricalAgent(knowledge = loadLightingElectricalKn
           position: { x: mm(((i % cols) + 0.5) * (size.width / cols)), y: mm((Math.floor(i / cols) + 0.5) * (size.depth / rows)) },
         }));
         const value = { name: `Lights of ${room.name}`, lux, area: mm(area), fixtures, rule: ruleForType(k.levels, type).id, notice: ELECTRICAL_NOTICE };
-        add(light, 'lights-by-level', `The ${room.name} (a ${type}) aims for about ${lux} lux. That takes about ${count} ceiling light${count === 1 ? '' : 's'} of ${fixtureRule.lumens} lumens.`, 'high', [
+        add(light, 'lights-by-level', `The ${room.name} (${typePhrase(type)}) aims for about ${lux} lux. That takes about ${count} ceiling light${count === 1 ? '' : 's'} of ${fixtureRule.lumens} lumens.`, 'high', [
           { id: 'use-lights', label: `${count} ceiling light${count === 1 ? '' : 's'}, ${mount}`, newValue: value },
         ]);
       }

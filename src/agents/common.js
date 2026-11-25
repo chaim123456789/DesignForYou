@@ -35,6 +35,9 @@ export function roomTypeOf(roomName, knownTypes) {
   return hit === undefined ? 'other' : hit;
 }
 
+// A type in a sentence, with its article: "a bedroom". A room with no listed type is "a room like this".
+export const typePhrase = (roomType) => (roomType === 'other' ? 'a room like this' : `a ${roomType}`);
+
 export function isWetType(roomType, knownTypes) {
   const rule = knownTypes.find((r) => r.when.roomType === roomType);
   return rule ? rule.then.wet === true : false;

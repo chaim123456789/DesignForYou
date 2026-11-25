@@ -11,7 +11,7 @@
 // An opening whose room has no known size is skipped: the agent does not guess a size.
 import { loadKnowledge } from '../../knowledge/load.js';
 import {
-  roomsOf, roomTypeOf, ruleForType, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, mm,
+  roomsOf, roomTypeOf, typePhrase, ruleForType, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, mm,
   SIDES, distancesToWalls, openingSide, alongWall, placeOnWall, overlaps,
 } from '../common.js';
 import { buildProposal } from '../../proposal.js';
@@ -185,7 +185,7 @@ export function makeDoorsWindowsAgent(knowledge = loadDoorsWindowsKnowledge()) {
         },
       }));
       if (options.length === 0) continue;
-      add(slot, 'windows-daylight', `The ${room.name} (a ${type}) has no window. A ${type} usually has window area of about ${Math.round(share * 100)} in 100 of its floor area for daylight.`, 'high', options);
+      add(slot, 'windows-daylight', `The ${room.name} has no window. ${typePhrase(type)[0].toUpperCase()}${typePhrase(type).slice(1)} usually has window area of about ${Math.round(share * 100)} in 100 of its floor area for daylight.`, 'high', options);
     }
     return proposals;
   }

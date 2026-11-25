@@ -8,7 +8,7 @@
 //   Ceiling: its height comes from the wall height; a ceiling below the smallest usual height for the room type is flagged.
 import { loadKnowledge } from '../../knowledge/load.js';
 import {
-  roomsOf, neighboursOf, roomTypeOf, isWetType, ruleForType, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, mm,
+  roomsOf, neighboursOf, roomTypeOf, typePhrase, isWetType, ruleForType, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, mm,
 } from '../common.js';
 import { buildProposal } from '../../proposal.js';
 
@@ -93,18 +93,18 @@ export function makeFloorsCeilingsAgent(knowledge = loadFloorsCeilingsKnowledge(
         const cur = floor.value && floor.value.surface;
         const make = (s) => ({ name: `Floor of ${room.name}`, surface: s.name, wetSafe: s.wetSafe, thresholds: thresholdsFor(room, s), rule: o.rule.id });
         if (!cur) {
-          const options = o.list.slice(0, 2).map((s, i) => ({ id: `surface-${s.name.replace(/\s+/g, '-')}`, label: `${s.name}${i === 0 ? ' (recommended)' : ''}`, newValue: make(s) }));
+          const options = o.list.slice(0, 2).map((s, i) => ({ id: `surface-${s.name.replace(/\s+/g, '-')}`, label: s.name, newValue: make(s) }));
           add(floor, o.wet ? 'floors-wet-safe-surface' : 'floors-surface-by-room',
             o.wet
               ? `The ${room.name} is a wet room (${o.type}), so only wet-safe floor surfaces are offered.`
-              : `A ${o.type} usually has ${o.list[0].name}. Other usual choices are shown too.`,
+              : `${typePhrase(o.type)[0].toUpperCase()}${typePhrase(o.type).slice(1)} usually has ${o.list[0].name}. Other usual choices are shown too.`,
             'high', options);
         } else {
           const known = o.rule.then.surfaces.find((s) => s.name === cur);
           const wetSafe = known ? known.wetSafe : floor.value.wetSafe === true;
           if (o.wet && !wetSafe) {
             add(floor, 'floors-wet-safe-surface', `${cur} is not wet-safe, and the ${room.name} is a wet room. Pick a wet-safe surface.`, 'high',
-              o.list.slice(0, 2).map((s, i) => ({ id: `surface-${s.name.replace(/\s+/g, '-')}`, label: `${s.name}${i === 0 ? ' (recommended)' : ''}`, newValue: make(s) })));
+              o.list.slice(0, 2).map((s, i) => ({ id: `surface-${s.name.replace(/\s+/g, '-')}`, label: s.name, newValue: make(s) })));
           } else {
             const mine = { name: cur, wetSafe };
             const next = { ...floor.value, wetSafe, thresholds: thresholdsFor(room, mine) };
@@ -129,8 +129,8 @@ export function makeFloorsCeilingsAgent(knowledge = loadFloorsCeilingsKnowledge(
         if (typeof cur === 'number') {
           if (cur < min.then.minHeight) {
             const raised = { name: `Ceiling of ${room.name}`, height: min.then.minHeight, type: 'flat', rule: min.id };
-            const kept = { name: `Ceiling of ${room.name}`, height: cur, type: 'flat', rule: min.id, flag: `Lower than the usual ${min.then.minHeight} m for a ${type}. Check with a professional.` };
-            add(ceiling, 'ceilings-below-minimum', `The ceiling of the ${room.name} is ${mm(cur)} m, lower than the usual ${min.then.minHeight} m for a ${type}.`, 'low', [
+            const kept = { name: `Ceiling of ${room.name}`, height: cur, type: 'flat', rule: min.id, flag: `Lower than the usual ${min.then.minHeight} m for ${typePhrase(type)}. Check with a professional.` };
+            add(ceiling, 'ceilings-below-minimum', `The ceiling of the ${room.name} is ${mm(cur)} m, lower than the usual ${min.then.minHeight} m for ${typePhrase(type)}.`, 'low', [
               { id: 'raise-to-minimum', label: `Raise it to ${min.then.minHeight} m`, newValue: raised },
               { id: 'keep-flagged', label: `Keep ${mm(cur)} m and flag it`, newValue: kept },
             ]);
@@ -141,9 +141,9 @@ export function makeFloorsCeilingsAgent(knowledge = loadFloorsCeilingsKnowledge(
           if (height !== null) {
             const value = { name: `Ceiling of ${room.name}`, height, type: 'flat', rule: min.id };
             if (height < min.then.minHeight) {
-              add(ceiling, 'ceilings-below-minimum', `The walls of the ${room.name} are ${mm(height)} m high, lower than the usual ${min.then.minHeight} m for a ${type}.`, 'low', [
+              add(ceiling, 'ceilings-below-minimum', `The walls of the ${room.name} are ${mm(height)} m high, lower than the usual ${min.then.minHeight} m for ${typePhrase(type)}.`, 'low', [
                 { id: 'raise-to-minimum', label: `Raise it to ${min.then.minHeight} m`, newValue: { ...value, height: min.then.minHeight } },
-                { id: 'keep-flagged', label: `Keep ${mm(height)} m and flag it`, newValue: { ...value, flag: `Lower than the usual ${min.then.minHeight} m for a ${type}. Check with a professional.` } },
+                { id: 'keep-flagged', label: `Keep ${mm(height)} m and flag it`, newValue: { ...value, flag: `Lower than the usual ${min.then.minHeight} m for ${typePhrase(type)}. Check with a professional.` } },
               ]);
             } else {
               add(ceiling, 'ceilings-height-from-walls', `The ceiling of the ${room.name} follows the wall height, ${mm(height)} m.`, 'high', [

@@ -9,7 +9,7 @@
 // Neighbours are assumed to sit side by side in the order entered (see roomsOf in ../common.js).
 import { loadKnowledge } from '../../knowledge/load.js';
 import {
-  roomsOf, neighboursOf, roomTypeOf, ruleForType, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, mm,
+  roomsOf, neighboursOf, roomTypeOf, typePhrase, ruleForType, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, mm,
 } from '../common.js';
 import { buildProposal } from '../../proposal.js';
 
@@ -100,8 +100,8 @@ export function makeWallsAgent(knowledge = loadWallsKnowledge()) {
         if (w * d < min.then.minArea) d = Math.ceil((min.then.minArea / w) * 10) / 10;
         const bigger = { width: w, depth: d, from: 'minimum' };
         propose('walls-below-minimum',
-          `${room.name} (${sizeText(size)}) is under the smallest typical size for a ${type}. Keep your size, or use ${sizeText(bigger)}.`, 'low', [
-            { id: 'keep-size', label: `Keep my size (${sizeText(size)})`, newValue: make(size, { warning: `Smaller than the typical minimum for a ${type}.` }) },
+          `${room.name} (${sizeText(size)}) is under the smallest typical size for ${typePhrase(type)}. Keep your size, or use ${sizeText(bigger)}.`, 'low', [
+            { id: 'keep-size', label: `Keep my size (${sizeText(size)})`, newValue: make(size, { warning: `Smaller than the typical minimum for ${typePhrase(type)}.` }) },
             { id: 'use-minimum', label: `Use the smallest typical size (${sizeText(bigger)})`, newValue: make(bigger) },
           ]);
         continue;

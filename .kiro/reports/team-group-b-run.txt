@@ -1,0 +1,340 @@
+DESIGN TEAM: GROUP B CHECKPOINT RUN (a made-up project, not the sample)
+Plans are drafts for professional review. They are not verified engineering.
+Every answer below is a scripted answer: the first option, chosen by the test script and not by a person.
+
+Project: Made-up test home
+  Floor Ground: Kitchen 4 x 3 m; Living Room 5 x 3 m; Study (no size entered)
+  Floor Upper: Bedroom 4 x 3 m; Bathroom 2.5 x 2.5 m
+Rooms on one floor are taken to sit side by side in the order entered (an assumption until floor plans can be uploaded).
+
+STEP 1: Walls (first pass)
+  Proposal 1 [Rule-based] rule walls-segments-from-size, confidence high
+    Item: Walls of Kitchen (item-1)
+    Why: Wall segments for Kitchen from its size (4 by 3 m). Walls shared with a neighbouring room are one wall, not two.
+    Option 1: Use these walls for Kitchen (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-segments) -> accepted, version 1
+  Proposal 2 [Rule-based] rule walls-segments-from-size, confidence high
+    Item: Walls of Living Room (item-2)
+    Why: Wall segments for Living Room from its size (5 by 3 m). Walls shared with a neighbouring room are one wall, not two.
+    Option 1: Use these walls for Living Room (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-segments) -> accepted, version 2
+  Proposal 3 [Rule-based] rule walls-default-size, confidence low
+    Item: Walls of Study (item-3)
+    Why: Study has no entered size. Use the default 4 by 4 m, or wait until you enter the size.
+    Option 1: Use the default size (4 by 4 m)
+    Option 2: Wait until I enter the size
+    Option 3: Custom
+    scripted answer: option 1 (use-default) -> accepted, version 3
+  Proposal 4 [Rule-based] rule walls-segments-from-size, confidence high
+    Item: Walls of Bedroom (item-4)
+    Why: Wall segments for Bedroom from its size (4 by 3 m). Walls shared with a neighbouring room are one wall, not two.
+    Option 1: Use these walls for Bedroom (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-segments) -> accepted, version 4
+  Proposal 5 [Rule-based] rule walls-segments-from-size, confidence high
+    Item: Walls of Bathroom (item-5)
+    Why: Wall segments for Bathroom from its size (2.5 by 2.5 m). Walls shared with a neighbouring room are one wall, not two.
+    Option 1: Use these walls for Bathroom (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-segments) -> accepted, version 5
+STEP 2: Doors and windows (first pass), stale items: Living room door (item-11), Kitchen window (item-12), Garden door (item-13), Bedroom door (item-14), Bedroom window (item-15), Bathroom door (item-16), Window for Living Room (item-17), Window for Study (item-18), Window for Bathroom (item-19)
+  Proposal 6 [Rule-based] rule doors-corner-distance, confidence high
+    Item: Garden door (item-13)
+    Why: The Garden door in the Living Room is closer to a corner than 0.1 m. Move it clear of the corner.
+    Option 1: Move the Garden door 0.08 m along the north wall, clear of the corner (recommended)
+    Option 2: Centre the Garden door on the north wall
+    Option 3: Custom
+    scripted answer: option 1 (move-clear) -> accepted, version 6
+  Proposal 7 [Rule-based] rule windows-daylight, confidence high
+    Item: Window for Living Room (item-17)
+    Why: The Living Room has no window. A living room usually has window area of about 10 in 100 of its floor area for daylight.
+    Option 1: A 1.25 m window on the north wall (recommended)
+    Option 2: A 1.25 m window on the south wall
+    Option 3: Custom
+    scripted answer: option 1 (window-north) -> accepted, version 7
+  Proposal 8 [Rule-based] rule windows-daylight, confidence high
+    Item: Window for Study (item-18)
+    Why: The Study has no window. A room like this usually has window area of about 10 in 100 of its floor area for daylight.
+    Option 1: A 1.333 m window on the north wall (recommended)
+    Option 2: A 1.333 m window on the south wall
+    Option 3: Custom
+    scripted answer: option 1 (window-north) -> accepted, version 8
+STEP 3: Floors and ceilings (first pass), stale items: Ceiling of Kitchen (item-6), Ceiling of Living Room (item-7), Ceiling of Study (item-8), Ceiling of Bedroom (item-9), Ceiling of Bathroom (item-10), Floor of Kitchen (item-20), Floor of Living Room (item-21), Floor of Study (item-22), Floor of Bedroom (item-23), Floor of Bathroom (item-24)
+  Proposal 9 [Rule-based] rule floors-wet-safe-surface, confidence high
+    Item: Floor of Kitchen (item-20)
+    Why: The Kitchen is a wet room (kitchen), so only wet-safe floor surfaces are offered.
+    Option 1: ceramic tile (recommended)
+    Option 2: vinyl
+    Option 3: Custom
+    scripted answer: option 1 (surface-ceramic-tile) -> accepted, version 9
+  Proposal 10 [Rule-based] rule ceilings-height-from-walls, confidence high
+    Item: Ceiling of Kitchen (item-6)
+    Why: The ceiling of the Kitchen follows the wall height, 2.4 m.
+    Option 1: Ceiling height 2.4 m (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-wall-height) -> accepted, version 10
+  Proposal 11 [Rule-based] rule floors-surface-by-room, confidence high
+    Item: Floor of Living Room (item-21)
+    Why: A living room usually has oak floorboards. Other usual choices are shown too.
+    Option 1: oak floorboards (recommended)
+    Option 2: carpet
+    Option 3: Custom
+    Threshold in option 1: water bar under Living room door, between ceramic tile and oak floorboards (rule thresholds-wet-dry)
+    scripted answer: option 1 (surface-oak-floorboards) -> accepted, version 11
+  Proposal 12 [Rule-based] rule ceilings-height-from-walls, confidence high
+    Item: Ceiling of Living Room (item-7)
+    Why: The ceiling of the Living Room follows the wall height, 2.4 m.
+    Option 1: Ceiling height 2.4 m (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-wall-height) -> accepted, version 12
+  Proposal 13 [Rule-based] rule floors-surface-by-room, confidence high
+    Item: Floor of Study (item-22)
+    Why: A room like this usually has oak floorboards. Other usual choices are shown too.
+    Option 1: oak floorboards (recommended)
+    Option 2: carpet
+    Option 3: Custom
+    scripted answer: option 1 (surface-oak-floorboards) -> accepted, version 13
+  Proposal 14 [Rule-based] rule ceilings-height-from-walls, confidence high
+    Item: Ceiling of Study (item-8)
+    Why: The ceiling of the Study follows the wall height, 2.4 m.
+    Option 1: Ceiling height 2.4 m (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-wall-height) -> accepted, version 14
+  Proposal 15 [Rule-based] rule floors-surface-by-room, confidence high
+    Item: Floor of Bedroom (item-23)
+    Why: A bedroom usually has carpet. Other usual choices are shown too.
+    Option 1: carpet (recommended)
+    Option 2: oak floorboards
+    Option 3: Custom
+    scripted answer: option 1 (surface-carpet) -> accepted, version 15
+  Proposal 16 [Rule-based] rule ceilings-height-from-walls, confidence high
+    Item: Ceiling of Bedroom (item-9)
+    Why: The ceiling of the Bedroom follows the wall height, 2.4 m.
+    Option 1: Ceiling height 2.4 m (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-wall-height) -> accepted, version 16
+  Proposal 17 [Rule-based] rule floors-wet-safe-surface, confidence high
+    Item: Floor of Bathroom (item-24)
+    Why: The Bathroom is a wet room (bathroom), so only wet-safe floor surfaces are offered.
+    Option 1: ceramic tile (recommended)
+    Option 2: vinyl
+    Option 3: Custom
+    scripted answer: option 1 (surface-ceramic-tile) -> accepted, version 17
+  Proposal 18 [Rule-based] rule ceilings-height-from-walls, confidence high
+    Item: Ceiling of Bathroom (item-10)
+    Why: The ceiling of the Bathroom follows the wall height, 2.4 m.
+    Option 1: Ceiling height 2.4 m (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-wall-height) -> accepted, version 18
+STEP 4: Lighting and electrical (first pass), stale items: Lights of Kitchen (item-25), Switches and sockets of Kitchen (item-26), Lights of Living Room (item-27), Switches and sockets of Living Room (item-28), Lights of Study (item-29), Switches and sockets of Study (item-30), Lights of Bedroom (item-31), Switches and sockets of Bedroom (item-32), Lights of Bathroom (item-33), Switches and sockets of Bathroom (item-34)
+  Proposal 19 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Kitchen (item-25)
+    Why: The Kitchen (a kitchen) aims for about 300 lux. That takes about 9 ceiling lights of 800 lumens.
+    Option 1: 9 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 19
+  Proposal 20 [Rule-based] rule electrical-switches-sockets, confidence high
+    Item: Switches and sockets of Kitchen (item-26)
+    Why: 1 switch beside the door and 3 sockets along the free wall of the Kitchen.
+    Option 1: 1 switch, 3 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 20
+  Proposal 21 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Living Room (item-27)
+    Why: The Living Room (a living room) aims for about 150 lux. That takes about 6 ceiling lights of 800 lumens.
+    Option 1: 6 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 21
+  Proposal 22 [Rule-based] rule electrical-switches-sockets, confidence high
+    Item: Switches and sockets of Living Room (item-28)
+    Why: 1 switch beside the door and 5 sockets along the free wall of the Living Room.
+    Option 1: 1 switch, 5 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 22
+  Proposal 23 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Study (item-29)
+    Why: The Study (a room like this) aims for about 100 lux. That takes about 4 ceiling lights of 800 lumens.
+    Option 1: 4 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 23
+  Proposal 24 [Rule-based] rule electrical-switches-sockets, confidence high
+    Item: Switches and sockets of Study (item-30)
+    Why: 0 switches beside the doors and 3 sockets along the free wall of the Study.
+    Option 1: 0 switches, 3 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 24
+  Proposal 25 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Bedroom (item-31)
+    Why: The Bedroom (a bedroom) aims for about 100 lux. That takes about 3 ceiling lights of 800 lumens.
+    Option 1: 3 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 25
+  Proposal 26 [Rule-based] rule electrical-switches-sockets, confidence high
+    Item: Switches and sockets of Bedroom (item-32)
+    Why: 1 switch beside the door and 5 sockets along the free wall of the Bedroom.
+    Option 1: 1 switch, 5 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 26
+  Proposal 27 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Bathroom (item-33)
+    Why: The Bathroom (a bathroom) aims for about 200 lux. That takes about 4 ceiling lights of 800 lumens.
+    Option 1: 4 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 27
+  Proposal 28 [Rule-based] rule electrical-wet-zone, confidence high
+    Item: Switches and sockets of Bathroom (item-34)
+    Why: The Bathroom is a wet zone: a switch by the door and no ordinary sockets.
+    Option 1: 1 switch, 0 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 28
+STEP 5: Reviewer (first pass)
+  No proposals. Nothing needed to change.
+
+The run finished. 28 proposals, 28 versions, every one approved by "scripted answer".
+
+RUN LOG
+  Walls: started
+  Walls: proposed Walls of Kitchen (item-1)
+  Walls: proposed Walls of Living Room (item-2)
+  Walls: proposed Walls of Study (item-3)
+  Walls: proposed Walls of Bedroom (item-4)
+  Walls: proposed Walls of Bathroom (item-5)
+  Walls: answered Walls of Kitchen (item-1) by scripted answer
+  Walls: answered Walls of Living Room (item-2) by scripted answer
+  Walls: answered Walls of Study (item-3) by scripted answer
+  Walls: answered Walls of Bedroom (item-4) by scripted answer
+  Walls: answered Walls of Bathroom (item-5) by scripted answer
+  Walls: finished
+  Doors and windows: started
+  Doors and windows: proposed Garden door (item-13)
+  Doors and windows: proposed Living Room window (item-17)
+  Doors and windows: proposed Study window (item-18)
+  Doors and windows: answered Garden door (item-13) by scripted answer
+  Doors and windows: answered Living Room window (item-17) by scripted answer
+  Doors and windows: answered Study window (item-18) by scripted answer
+  Doors and windows: still-fine Living room door (item-11) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Kitchen window (item-12) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Bedroom door (item-14) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Bedroom window (item-15) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Bathroom door (item-16) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Window for Bathroom (item-19) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: finished
+  Floors and ceilings: started
+  Floors and ceilings: proposed Floor of Kitchen (item-20)
+  Floors and ceilings: proposed Ceiling of Kitchen (item-6)
+  Floors and ceilings: proposed Floor of Living Room (item-21)
+  Floors and ceilings: proposed Ceiling of Living Room (item-7)
+  Floors and ceilings: proposed Floor of Study (item-22)
+  Floors and ceilings: proposed Ceiling of Study (item-8)
+  Floors and ceilings: proposed Floor of Bedroom (item-23)
+  Floors and ceilings: proposed Ceiling of Bedroom (item-9)
+  Floors and ceilings: proposed Floor of Bathroom (item-24)
+  Floors and ceilings: proposed Ceiling of Bathroom (item-10)
+  Floors and ceilings: answered Floor of Kitchen (item-20) by scripted answer
+  Floors and ceilings: answered Ceiling of Kitchen (item-6) by scripted answer
+  Floors and ceilings: answered Floor of Living Room (item-21) by scripted answer
+  Floors and ceilings: answered Ceiling of Living Room (item-7) by scripted answer
+  Floors and ceilings: answered Floor of Study (item-22) by scripted answer
+  Floors and ceilings: answered Ceiling of Study (item-8) by scripted answer
+  Floors and ceilings: answered Floor of Bedroom (item-23) by scripted answer
+  Floors and ceilings: answered Ceiling of Bedroom (item-9) by scripted answer
+  Floors and ceilings: answered Floor of Bathroom (item-24) by scripted answer
+  Floors and ceilings: answered Ceiling of Bathroom (item-10) by scripted answer
+  Floors and ceilings: finished
+  Lighting and electrical: started
+  Lighting and electrical: proposed Lights of Kitchen (item-25)
+  Lighting and electrical: proposed Switches and sockets of Kitchen (item-26)
+  Lighting and electrical: proposed Lights of Living Room (item-27)
+  Lighting and electrical: proposed Switches and sockets of Living Room (item-28)
+  Lighting and electrical: proposed Lights of Study (item-29)
+  Lighting and electrical: proposed Switches and sockets of Study (item-30)
+  Lighting and electrical: proposed Lights of Bedroom (item-31)
+  Lighting and electrical: proposed Switches and sockets of Bedroom (item-32)
+  Lighting and electrical: proposed Lights of Bathroom (item-33)
+  Lighting and electrical: proposed Switches and sockets of Bathroom (item-34)
+  Lighting and electrical: answered Lights of Kitchen (item-25) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Kitchen (item-26) by scripted answer
+  Lighting and electrical: answered Lights of Living Room (item-27) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Living Room (item-28) by scripted answer
+  Lighting and electrical: answered Lights of Study (item-29) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Study (item-30) by scripted answer
+  Lighting and electrical: answered Lights of Bedroom (item-31) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Bedroom (item-32) by scripted answer
+  Lighting and electrical: answered Lights of Bathroom (item-33) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Bathroom (item-34) by scripted answer
+  Lighting and electrical: finished
+  Furniture: skipped - Switched off in its config.
+  Decor: skipped - Switched off in its config.
+  Style: skipped - Switched off in its config.
+  Reviewer: started
+  Reviewer: note - Working without Furniture, which is switched off.
+  Reviewer: note - Working without Decor, which is switched off.
+  Reviewer: note - Working without Style, which is switched off.
+  Reviewer: finished
+
+VERSIONS
+  Version 1: Walls changed Walls of Kitchen (item-1), approved by scripted answer, based on nothing recorded
+  Version 2: Walls changed Walls of Living Room (item-2), approved by scripted answer, based on nothing recorded
+  Version 3: Walls changed Walls of Study (item-3), approved by scripted answer, based on nothing recorded
+  Version 4: Walls changed Walls of Bedroom (item-4), approved by scripted answer, based on nothing recorded
+  Version 5: Walls changed Walls of Bathroom (item-5), approved by scripted answer, based on nothing recorded
+  Version 6: Doors and windows changed Garden door (item-13), approved by scripted answer, based on item-2@5
+  Version 7: Doors and windows changed Living Room window (item-17), approved by scripted answer, based on item-2@6
+  Version 8: Doors and windows changed Study window (item-18), approved by scripted answer, based on item-3@7
+  Version 9: Floors and ceilings changed Floor of Kitchen (item-20), approved by scripted answer, based on item-1@8, item-11@8
+  Version 10: Floors and ceilings changed Ceiling of Kitchen (item-6), approved by scripted answer, based on item-1@9
+  Version 11: Floors and ceilings changed Floor of Living Room (item-21), approved by scripted answer, based on item-2@10, item-13@10, item-20@10
+  Version 12: Floors and ceilings changed Ceiling of Living Room (item-7), approved by scripted answer, based on item-2@11
+  Version 13: Floors and ceilings changed Floor of Study (item-22), approved by scripted answer, based on item-3@12
+  Version 14: Floors and ceilings changed Ceiling of Study (item-8), approved by scripted answer, based on item-3@13
+  Version 15: Floors and ceilings changed Floor of Bedroom (item-23), approved by scripted answer, based on item-4@14, item-14@14
+  Version 16: Floors and ceilings changed Ceiling of Bedroom (item-9), approved by scripted answer, based on item-4@15
+  Version 17: Floors and ceilings changed Floor of Bathroom (item-24), approved by scripted answer, based on item-5@16, item-16@16
+  Version 18: Floors and ceilings changed Ceiling of Bathroom (item-10), approved by scripted answer, based on item-5@17
+  Version 19: Lighting and electrical changed Lights of Kitchen (item-25), approved by scripted answer, based on item-1@18, item-11@18, item-12@18, item-6@18
+  Version 20: Lighting and electrical changed Switches and sockets of Kitchen (item-26), approved by scripted answer, based on item-1@19, item-11@19, item-12@19, item-6@19, item-25@19
+  Version 21: Lighting and electrical changed Lights of Living Room (item-27), approved by scripted answer, based on item-2@20, item-13@20, item-17@20, item-7@20
+  Version 22: Lighting and electrical changed Switches and sockets of Living Room (item-28), approved by scripted answer, based on item-2@21, item-13@21, item-17@21, item-7@21, item-27@21
+  Version 23: Lighting and electrical changed Lights of Study (item-29), approved by scripted answer, based on item-3@22, item-18@22, item-8@22
+  Version 24: Lighting and electrical changed Switches and sockets of Study (item-30), approved by scripted answer, based on item-3@23, item-18@23, item-8@23, item-29@23
+  Version 25: Lighting and electrical changed Lights of Bedroom (item-31), approved by scripted answer, based on item-4@24, item-14@24, item-15@24, item-9@24
+  Version 26: Lighting and electrical changed Switches and sockets of Bedroom (item-32), approved by scripted answer, based on item-4@25, item-14@25, item-15@25, item-9@25, item-31@25
+  Version 27: Lighting and electrical changed Lights of Bathroom (item-33), approved by scripted answer, based on item-5@26, item-16@26, item-19@26, item-10@26
+  Version 28: Lighting and electrical changed Switches and sockets of Bathroom (item-34), approved by scripted answer, based on item-5@27, item-16@27, item-19@27, item-10@27, item-33@27
+
+Stale items left at the end: 0
+
+KNOWLEDGE FILES AND THEIR SOURCES (pending owner check: none of these sources was opened)
+- doors-windows/door-sizes.json: Door sizes
+    source: Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- doors-windows/swing-clearance.json: Corner distance and door swing
+    source: Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- doors-windows/window-daylight.json: Windows and daylight
+    source: Approved Document F: Ventilation (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/ventilation-approved-document-f | Open Government Licence v3.0 | not checked
+- floors-ceilings/ceiling-heights.json: Ceiling heights
+    source: Technical housing standards: nationally described space standard (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/technical-housing-standards-nationally-described-space-standard | Open Government Licence v3.0 | not checked
+- floors-ceilings/floor-surfaces-by-room.json: Floor surfaces by room type
+    source: Approved Document C: Resistance to moisture (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/site-preparation-and-resistance-to-contaminates-and-moisture-approved-document-c | Open Government Licence v3.0 | not checked
+- floors-ceilings/thresholds.json: Thresholds under doors
+    source: Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- lighting-electrical/light-levels.json: Light levels
+    source: Approved Document L: Conservation of fuel and power (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/conservation-of-fuel-and-power-approved-document-l | Open Government Licence v3.0 | not checked
+- lighting-electrical/socket-spacing.json: Socket spacing
+    source: Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+    source: Approved Document P: Electrical safety, dwellings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/electrical-safety-approved-document-p | Open Government Licence v3.0 | not checked
+- lighting-electrical/switch-placement.json: Switch placement
+    source: Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- lighting-electrical/wet-zones.json: Wet zones
+    source: Approved Document P: Electrical safety, dwellings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/electrical-safety-approved-document-p | Open Government Licence v3.0 | not checked
+- shared/room-types.json: Room types
+    source: Approved Document F: Ventilation (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/ventilation-approved-document-f | Open Government Licence v3.0 | not checked
+- walls/room-minimum-sizes.json: Smallest room sizes and the default size
+    source: Technical housing standards: nationally described space standard (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/technical-housing-standards-nationally-described-space-standard | Open Government Licence v3.0 | not checked
+- walls/wall-thickness.json: Wall thickness and height
+    source: Approved Document A: Structure (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/structure-approved-document-a | Open Government Licence v3.0 | not checked
+
+All results above are Rule-based. No AI was used.
+Plans are drafts for professional review. They are not verified engineering.
+
