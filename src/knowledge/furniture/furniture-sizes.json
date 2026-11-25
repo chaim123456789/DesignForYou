@@ -1,0 +1,26 @@
+{
+  "provenance": {
+    "title": "Usual furniture sizes",
+    "covers": "A usual width and depth for each kind of furniture the place screen offers, and which pieces are tall and need free space in front. Common sizes in our own words, from general knowledge.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "size-sofa", "when": {"type": "sofa"}, "then": {"width": 2.0, "depth": 0.9, "tall": false, "front": 0.6}, "note": "Typical guideline, check local rules. Metres. A usual three-seat sofa. Front is the free space wanted before it."},
+    {"id": "size-bed", "when": {"type": "bed"}, "then": {"width": 1.6, "depth": 2.0, "tall": false, "front": 0.6}, "note": "Typical guideline, check local rules. Metres. A usual double bed. Front is the free space wanted beside it."},
+    {"id": "size-table", "when": {"type": "table"}, "then": {"width": 1.4, "depth": 0.8, "tall": false, "front": 0.0}, "note": "Typical guideline, check local rules. Metres. A usual dining table."},
+    {"id": "size-wardrobe", "when": {"type": "wardrobe"}, "then": {"width": 1.2, "depth": 0.6, "tall": true, "front": 0.8}, "note": "Typical guideline, check local rules. Metres. A usual wardrobe. Front is the free space wanted so its doors can open."},
+    {"id": "size-desk", "when": {"type": "desk"}, "then": {"width": 1.2, "depth": 0.6, "tall": false, "front": 0.6}, "note": "Typical guideline, check local rules. Metres. A usual desk. Front is the free space wanted for a chair."},
+    {"id": "size-bath", "when": {"type": "bath"}, "then": {"width": 1.7, "depth": 0.75, "tall": true, "front": 0.6}, "note": "Typical guideline, check local rules. Metres. A usual bath. Front is the free space wanted to step in."},
+    {"id": "size-kitchen-unit", "when": {"type": "kitchen unit"}, "then": {"width": 2.4, "depth": 0.6, "tall": true, "front": 0.9}, "note": "Typical guideline, check local rules. Metres. A usual run of kitchen units. Front is the free space wanted to work and open doors."},
+    {"id": "size-other", "when": {"type": "other"}, "then": {"width": 1.0, "depth": 0.6, "tall": false, "front": 0.0}, "note": "Typical guideline, check local rules. Metres. A piece with no listed type is taken to need no front space."}
+  ]
+}

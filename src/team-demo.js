@@ -48,7 +48,9 @@ const nameOf = (project, itemId) => {
 
 function sourceLines() {
   const lines = ['KNOWLEDGE FILES AND THEIR SOURCES (pending owner check: none of these sources was opened)'];
-  for (const file of listKnowledgeFiles().filter((f) => f !== 'allowed-licences.json')) {
+  // Group B printout: only the knowledge of the four Group B agents and the shared files (Group C has its own printout).
+  const groupB = ['shared/', 'walls/', 'doors-windows/', 'floors-ceilings/', 'lighting-electrical/'];
+  for (const file of listKnowledgeFiles().filter((f) => groupB.some((d) => f.startsWith(d)))) {
     const k = loadKnowledge(file);
     lines.push(`- ${file}: ${k.provenance.title}`);
     for (const s of k.provenance.sources) lines.push(`    source: ${s.name} | ${s.url} | ${s.licence} | ${s.checked}`);

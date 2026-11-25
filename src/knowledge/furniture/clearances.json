@@ -1,0 +1,29 @@
+{
+  "provenance": {
+    "title": "Clear space around furniture",
+    "covers": "How much free space is wanted between pieces, around a door that swings in, and how far a socket needs to stay uncovered. Written from general knowledge in our own words.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      },
+      {
+        "name": "Approved Document P: Electrical safety, dwellings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/electrical-safety-approved-document-p",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "clear-walkway", "when": {"between": "pieces"}, "then": {"minGap": 0.6}, "note": "Typical guideline, check local rules. Metres. Pieces that stand apart should leave at least this much to walk between them. Touching is allowed."},
+    {"id": "clear-door-swing", "when": {"door": "swings in"}, "then": {"swing": "square as wide as the door"}, "note": "Typical guideline, check local rules. A door that opens into the room keeps a free square as wide as the door."},
+    {"id": "clear-search", "when": {"search": "new spot"}, "then": {"step": 0.1, "farApart": 0.5}, "note": "Typical guideline, check local rules. Metres. Step used when looking for a free spot. The second choice is at least this far from the first."},
+    {"id": "clear-crowded", "when": {"room": "too small"}, "then": {"step": 0.5, "touch": 0.05}, "note": "Typical guideline, check local rules. Metres. How much bigger to make a room that cannot hold its furniture. Touch: how near a wall counts as against it."},
+  {"id": "clear-socket-reach", "when": {"socket": "reachable"}, "then": {"reach": 0.1, "minFree": 2}, "note": "Typical guideline, check local rules. Metres. A tall piece may not cover a socket if that leaves fewer than the minimum number of sockets in the room free."}
+  ]
+}

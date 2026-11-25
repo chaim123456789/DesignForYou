@@ -1,6 +1,6 @@
 # Tasks: Design team
 
-Status: approved by the owner on 2026-11-25 (paid AI call decided later: only the gate, a cap of zero by default and the stand-in are built; home page, portfolio, item picker and library are separate later specs). Group A is built on branch `build-team-1` (merged). Group B is built on branch `build-team-2`.
+Status: approved by the owner on 2026-11-25 (paid AI call decided later: only the gate, a cap of zero by default and the stand-in are built; home page, portfolio, item picker and library are separate later specs). Group A is built on branch `build-team-1` (merged). Group B is built on branch `build-team-2` (merged). Group C is built on branch `build-team-3`.
 
 Four groups of six tasks. Build one group at a time. Each group ends in a working, tested state, and I stop at the end of each group for the owner to check and merge.
 

@@ -14,11 +14,26 @@
 import { createGatekeeper } from './brain/gatekeeper.js';
 import { makeReadOnlyView } from './coordinator.js';
 import { checkProposal, CUSTOM_OPTION_ID } from './proposal.js';
-import { findStale, agentsToRecheck } from './ripple.js';
+import { findStale, agentsToRecheck, ITSELF_STALE } from './ripple.js';
 
 const REVIEWER = 'Reviewer';
 export const SCRIPTED = 'scripted answer';
 const USER_APPROVER = 'user';
+
+// Items a re-check cannot help. `seeds` are items nobody can fix by looking again (a Locked item flagged "needs your look", an item
+// the user skipped). An item is also unfixable when EVERY reason it is stale is "that item is itself stale" and that item is
+// unfixable (found step by step). A reason like "that item changed in version N" is always fixable: the owner can look again.
+// stale: the list from findStale. Returns a Set of item ids.
+export function findUnfixable(stale, seeds) {
+  const unfixable = new Set(seeds);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const st of stale) {
+      if (!unfixable.has(st.itemId) && st.because.every((b) => b.why.endsWith(ITSELF_STALE) && unfixable.has(b.itemId))) { unfixable.add(st.itemId); grew = true; }
+    }
+  }
+  return unfixable;
+}
 
 // An empty stand-in agent: proposes nothing.
 export const standInTeamAgent = () => [];
@@ -101,9 +116,11 @@ export function createRun(project, options = {}) {
     if (wasKind === 'first' && step.applied > 0) {
       const { agents: plan, errors } = agentsToRecheck(project, registry);
       if (errors.length > 0) { fail(step.agent, errors[0].message); return; }
+      // Items a re-check cannot help do not add a ripple step: looking at them again would change nothing (see findUnfixable).
+      const unfixable = findUnfixable(findStale(project, registry).stale, [...needsLook, ...keptAsIs.map((k) => k.itemId)]);
       // An item the user skipped ("kept as is") is not asked about again in this run. It stays stale and is reported.
       const skipped = new Set(keptAsIs.map((k) => k.itemId));
-      const redo = plan.filter((a) => a.recheck && ranBefore.has(a.agent) && enabled.get(a.agent) && a.itemIds.some((id) => !skipped.has(id)));
+      const redo = plan.filter((a) => a.recheck && ranBefore.has(a.agent) && enabled.get(a.agent) && a.itemIds.some((id) => !skipped.has(id) && !unfixable.has(id)));
       if (redo.length > 0) {
         ripplePasses += 1;
         for (const a of plan) {
@@ -133,11 +150,19 @@ export function createRun(project, options = {}) {
       proposals = agent(view, { mode: step.kind, staleItemIds: [...staleIds] });
       if (!Array.isArray(proposals)) throw new Error('An agent must return a list of proposals.');
       const context = { items: view.items, order: registry.order };
-      for (const p of proposals) {
+      const inThisStep = new Set();
+      proposals = proposals.map((p) => {
         checkProposal(p, context);
         if (p.agent !== step.agent) throw new Error(`Proposal "${p.id}" says it is from ${p.agent}, but ${step.agent} is running.`);
-        if (seenProposalIds.has(p.id)) throw new Error(`Proposal id "${p.id}" was already used in this run.`);
-      }
+        // Two proposals with one id in the same step is a bug in the agent. The same id in a LATER step is normal: an agent that
+        // looks at the same item and rule again after another change. That proposal gets a numbered id, so every answer is unique.
+        if (inThisStep.has(p.id)) throw new Error(`Proposal id "${p.id}" was already used in this run.`);
+        inThisStep.add(p.id);
+        if (!seenProposalIds.has(p.id)) return p;
+        let n = 2;
+        while (seenProposalIds.has(`${p.id}#${n}`)) n += 1;
+        return Object.freeze({ ...p, id: `${p.id}#${n}` });
+      });
     } catch (error) {
       return fail(step.agent, error && error.message ? error.message : String(error));
     }

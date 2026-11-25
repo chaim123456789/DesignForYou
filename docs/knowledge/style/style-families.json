@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "title": "Style families",
+    "covers": "Three plain style families: their tags, the words that point to them, and the floor surfaces that suit them. Our own common-sense groups, not taken from a source. No open source for taste was found.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "The Grammar of Ornament (Owen Jones, 1856), a public domain book on colour and pattern, via Project Gutenberg. Listed as a place to check against. It was not opened.",
+        "url": "gutenberg.org",
+        "licence": "Public domain",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "family-warm-natural", "when": {"family": "warm natural"}, "then": {"tag": "warm oak", "tags": ["warm oak", "linen", "soft wool"], "words": ["oak", "wood", "warm", "linen", "natural", "cosy", "wool"], "materials": ["oak floorboards"]}, "note": "Typical guideline, check local rules. Warm woods and soft cloth."},
+    {"id": "family-cool-modern", "when": {"family": "cool modern"}, "then": {"tag": "cold steel", "tags": ["cold steel", "glossy chrome", "concrete grey"], "words": ["steel", "chrome", "cold", "concrete", "glass", "modern", "industrial"], "materials": ["ceramic tile"]}, "note": "Typical guideline, check local rules. Metal, glass and hard surfaces."},
+    {"id": "family-calm-neutral", "when": {"family": "calm neutral"}, "then": {"tag": "pale ash", "tags": ["pale ash", "white plaster", "soft grey"], "words": ["white", "pale", "calm", "neutral", "light", "quiet", "minimal"], "materials": ["carpet", "vinyl"]}, "note": "Typical guideline, check local rules. Light, quiet colours."}
+  ]
+}

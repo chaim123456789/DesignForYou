@@ -1,0 +1,454 @@
+DESIGN TEAM: GROUP C CHECKPOINT RUN (a made-up project, not the sample)
+Plans are drafts for professional review. They are not verified engineering.
+Every answer below is a scripted answer: the first option, chosen by the test script and not by a person. One suggestion is skipped on purpose.
+
+Project: Made-up two-room home
+  Floor Ground: Living Room 5 x 4 m
+  Floor Upper: Bedroom 2.4 x 3 m
+  Inspiration for the whole project: warm oak, quiet mornings
+The Living Room and the Bedroom are on different floors, so a change to one room's wall must not touch the other.
+
+PART 1: THE FIRST RUN THROUGH ALL EIGHT AGENTS
+Run 1 STEP 1: Walls (first pass)
+  Proposal 1 [Rule-based] rule walls-segments-from-size, confidence high
+    Item: Walls of Living Room (item-1)
+    Why: Wall segments for Living Room from its size (5 by 4 m). Walls shared with a neighbouring room are one wall, not two.
+    Option 1: Use these walls for Living Room (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-segments) -> accepted, version 1
+  Proposal 2 [Rule-based] rule walls-below-minimum, confidence low
+    Item: Walls of Bedroom (item-2)
+    Why: Bedroom (2.4 by 3 m) is under the smallest typical size for a bedroom. Keep your size, or use 2.4 by 3.2 m.
+    Option 1: Keep my size (2.4 by 3 m)
+    Option 2: Use the smallest typical size (2.4 by 3.2 m)
+    Option 3: Custom
+    scripted answer: option 1 (keep-size) -> accepted, version 2
+Run 1 STEP 2: Doors and windows (first pass), stale items: Living room door (item-5), Living room window (item-6), Bedroom door (item-7), Bedroom window (item-8)
+  No proposals. Nothing needed to change.
+Run 1 STEP 3: Floors and ceilings (first pass), stale items: Ceiling of Living Room (item-3), Ceiling of Bedroom (item-4), Floor of Living Room (item-9), Floor of Bedroom (item-10)
+  Proposal 3 [Rule-based] rule floors-surface-by-room, confidence high
+    Item: Floor of Living Room (item-9)
+    Why: A living room usually has oak floorboards. Other usual choices are shown too.
+    Option 1: oak floorboards (recommended)
+    Option 2: carpet
+    Option 3: Custom
+    scripted answer: option 1 (surface-oak-floorboards) -> accepted, version 3
+  Proposal 4 [Rule-based] rule ceilings-height-from-walls, confidence high
+    Item: Ceiling of Living Room (item-3)
+    Why: The ceiling of the Living Room follows the wall height, 2.4 m.
+    Option 1: Ceiling height 2.4 m (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-wall-height) -> accepted, version 4
+  Proposal 5 [Rule-based] rule floors-surface-by-room, confidence high
+    Item: Floor of Bedroom (item-10)
+    Why: A bedroom usually has carpet. Other usual choices are shown too.
+    Option 1: carpet (recommended)
+    Option 2: oak floorboards
+    Option 3: Custom
+    scripted answer: option 1 (surface-carpet) -> accepted, version 5
+  Proposal 6 [Rule-based] rule ceilings-height-from-walls, confidence high
+    Item: Ceiling of Bedroom (item-4)
+    Why: The ceiling of the Bedroom follows the wall height, 2.4 m.
+    Option 1: Ceiling height 2.4 m (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-wall-height) -> accepted, version 6
+Run 1 STEP 4: Lighting and electrical (first pass), stale items: Lights of Living Room (item-11), Switches and sockets of Living Room (item-12), Lights of Bedroom (item-13), Switches and sockets of Bedroom (item-14)
+  Proposal 7 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Living Room (item-11)
+    Why: The Living Room (a living room) aims for about 150 lux. That takes about 8 ceiling lights of 800 lumens.
+    Option 1: 8 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 7
+  Proposal 8 [Rule-based] rule electrical-switches-sockets, confidence high
+    Item: Switches and sockets of Living Room (item-12)
+    Why: 1 switch beside the door and 5 sockets along the free wall of the Living Room.
+    Option 1: 1 switch, 5 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 8
+  Proposal 9 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Bedroom (item-13)
+    Why: The Bedroom (a bedroom) aims for about 100 lux. That takes about 2 ceiling lights of 800 lumens.
+    Option 1: 2 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 9
+  Proposal 10 [Rule-based] rule electrical-switches-sockets, confidence high
+    Item: Switches and sockets of Bedroom (item-14)
+    Why: 1 switch beside the door and 2 sockets along the free wall of the Bedroom.
+    Option 1: 1 switch, 2 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 10
+Run 1 STEP 5: Furniture (first pass), stale items: Sofa (item-15), Coffee table (item-16), Side table (item-17), Locked desk (item-18), Long sofa (item-19), Desk (item-20)
+  Proposal 11 [Rule-based] rule clear-walkway, confidence low
+    Item: Side table (item-17)
+    Why: The Side table overlaps the Sofa in the Living Room.
+    Option 1: Move the Side table to x 2.6 m, y 1.5 m
+    Option 2: Move the Side table to x 0 m, y 0.5 m
+    Option 3: Custom
+    scripted answer: SKIP (kept as is) -> nothing changed
+  Proposal 12 [Rule-based] rule clear-crowded, confidence low, REQUEST to Walls
+    Item: Walls of Bedroom (item-2)
+    Why: The Long sofa (2.8 m by 0.9 m) is bigger than the Bedroom (2.4 m by 3 m). Ask Walls to make the room wider? (Long sofa)
+    Option 1: Make the Bedroom 0.4 m wider (the pieces just fit)
+    Option 2: Make the Bedroom 1 m wider (with space to walk)
+    Option 3: Custom
+    scripted answer: option 1 (just-fits) -> accepted, version 11
+Run 1 STEP 6: Doors and windows (re-check), stale items: Bedroom door (item-7), Bedroom window (item-8)
+  No proposals. Nothing needed to change.
+Run 1 STEP 7: Floors and ceilings (re-check), stale items: Ceiling of Bedroom (item-4), Floor of Bedroom (item-10)
+  No proposals. Nothing needed to change.
+Run 1 STEP 8: Lighting and electrical (re-check), stale items: Lights of Bedroom (item-13), Switches and sockets of Bedroom (item-14)
+  Proposal 13 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Bedroom (item-13)
+    Why: The Bedroom (a bedroom) aims for about 100 lux. That takes about 3 ceiling lights of 800 lumens.
+    Option 1: 3 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 12
+  Proposal 14 [Rule-based] rule electrical-switches-sockets, confidence high
+    Item: Switches and sockets of Bedroom (item-14)
+    Why: 1 switch beside the door and 2 sockets along the free wall of the Bedroom.
+    Option 1: 1 switch, 2 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 13
+Run 1 STEP 9: Furniture (re-check), stale items: Side table (item-17), Locked desk (item-18), Long sofa (item-19), Desk (item-20)
+  Proposal 15 [Rule-based] rule clear-walkway, confidence low
+    Item: Side table (item-17)
+    Why: The Side table overlaps the Sofa in the Living Room.
+    Option 1: Move the Side table to x 2.6 m, y 1.5 m
+    Option 2: Move the Side table to x 0 m, y 0.5 m
+    Option 3: Custom
+    scripted answer: SKIP (kept as is) -> nothing changed
+Run 1 STEP 10: Decor (first pass), stale items: Decor of Living Room (item-21), Decor of Bedroom (item-22)
+  Proposal 16 [Rule-based] rule rug-seating-group, confidence high
+    Item: Decor of Living Room (item-21)
+    Why: For the Living Room: a 2.6 by 2.3 m rug under the seating group, a picture with its middle 1.45 m up, 1 curtain.
+    Option 1: Use this decor for the Living Room (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-decor) -> accepted, version 14
+  Proposal 17 [Rule-based] rule rug-seating-group, confidence low
+    Item: Decor of Bedroom (item-22)
+    Why: For the Bedroom: a 2.6 by 1.1 m rug under the seating group, a picture with its middle 1.45 m up, 1 curtain. Two walls suit the picture about equally.
+    Option 1: Hang the picture on the west wall
+    Option 2: Hang the picture on the east wall
+    Option 3: Custom
+    scripted answer: option 1 (art-west) -> accepted, version 15
+Run 1 STEP 11: Style (first pass), stale items: Style of the floor in Living Room (item-23), Style of the decor in Living Room (item-24), Style of the floor in Bedroom (item-25), Style of the decor in Bedroom (item-26)
+  Proposal 18 [Rule-based] rule family-warm-natural, confidence high
+    Item: Style of the floor in Living Room (item-23)
+    Why: Style of the floor in Living Room follows the warm natural family.
+    Option 1: Follow warm natural (warm oak) (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (family-warm-natural) -> accepted, version 16
+  Proposal 19 [Rule-based] rule family-warm-natural, confidence high
+    Item: Style of the decor in Living Room (item-24)
+    Why: Style of the decor in Living Room follows the warm natural family.
+    Option 1: Follow warm natural (warm oak) (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (family-warm-natural) -> accepted, version 17
+  Proposal 20 [Rule-based] rule family-calm-neutral, confidence low
+    Item: Style of the floor in Bedroom (item-25)
+    Why: Style of the floor in Bedroom: the floor, the room's inspiration point to two families (calm neutral and warm natural). That is a matter of taste.
+    Option 1: Follow calm neutral (pale ash)
+    Option 2: Follow warm natural (warm oak)
+    Option 3: Custom
+    scripted answer: option 1 (family-calm-neutral) -> accepted, version 18
+  Proposal 21 [Rule-based] rule family-warm-natural, confidence high
+    Item: Style of the decor in Bedroom (item-26)
+    Why: Style of the decor in Bedroom follows the warm natural family.
+    Option 1: Follow warm natural (warm oak) (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (family-warm-natural) -> accepted, version 19
+Run 1 STEP 12: Reviewer (first pass), stale items: item-27
+  Proposal 22 [Rule-based] rule report-summary, confidence high
+    Item: item-27
+    Why: The Reviewer's report has 8 lines.
+    Option 1: Save the Reviewer's report (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (save-report) -> accepted, version 20
+
+Run 1 finished: 22 proposals, 20 versions.
+The Locked desk was not changed: it is still at x 4.6, y 3.
+Left stale after run 1: Side table (item-17), Locked desk (item-18), Decor of Living Room (item-21), Style of the decor in Living Room (item-24), item-27
+
+THE REVIEWER'S SAVED REPORT
+  8 findings found, using these checks: A door or window on furniture, A room style against a Locked item, Furniture on furniture, An object outside its room, A door that opens into furniture, A light with no switch, A room with no window light, Items out of date after an earlier change, Items kept as they are, Locked items that need your look.
+  1. [Rule-based] Medium: In the Bedroom, the Bedroom window sits where the Long sofa is placed.
+  2. [Rule-based] Medium: In the Living Room, the Sofa overlaps the Side table.
+  3. [Rule-based] Medium: In the Living Room, the Locked desk sticks out of the room.
+  4. [Rule-based] Medium: The Side table may be out of date: something it was based on changed and it was not re-checked.
+  5. [Rule-based] Medium: The Decor of Living Room may be out of date: something it was based on changed and it was not re-checked.
+  6. [Rule-based] Medium: The Style of the decor in Living Room may be out of date: something it was based on changed and it was not re-checked.
+  7. [Rule-based] Low: You chose to keep the Side table as it is, so a suggestion for it was skipped.
+  8. [Rule-based] High: The Locked desk is Locked and out of date with earlier work. It was not changed. Please take a look.
+
+PART 2: A WALL IS MOVED, AND THE RIPPLE RE-CHECKS WHAT DEPENDS ON IT
+Run 2 STEP 13: Walls (first pass)
+  Proposal 23 [Rule-based] rule walls-segments-from-size, confidence high
+    Item: Walls of Living Room (item-1)
+    Why: The wall of the Living Room is moved 0.3 m.
+    Option 1: Move the wall 0.3 m (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (moved) -> accepted, version 21
+Run 2 STEP 14: Doors and windows (first pass), stale items: Living room door (item-5), Living room window (item-6)
+  No proposals. Nothing needed to change.
+Run 2 STEP 15: Floors and ceilings (first pass), stale items: Ceiling of Living Room (item-3), Floor of Living Room (item-9)
+  No proposals. Nothing needed to change.
+Run 2 STEP 16: Lighting and electrical (first pass), stale items: Lights of Living Room (item-11), Switches and sockets of Living Room (item-12)
+  Proposal 24 [Rule-based] rule lights-by-level, confidence high
+    Item: Lights of Living Room (item-11)
+    Why: The Living Room (a living room) aims for about 150 lux. That takes about 8 ceiling lights of 800 lumens.
+    Option 1: 8 ceiling lights, flush or hanging (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-lights) -> accepted, version 22
+  Proposal 25 [Rule-based] rule electrical-switches-sockets, confidence high
+    Item: Switches and sockets of Living Room (item-12)
+    Why: 1 switch beside the door and 5 sockets along the free wall of the Living Room.
+    Option 1: 1 switch, 5 sockets (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-switches-sockets) -> accepted, version 23
+Run 2 STEP 17: Furniture (first pass), stale items: Sofa (item-15), Coffee table (item-16), Side table (item-17), Locked desk (item-18)
+  Proposal 26 [Rule-based] rule clear-walkway, confidence low
+    Item: Side table (item-17)
+    Why: The Side table overlaps the Sofa in the Living Room.
+    Option 1: Move the Side table to x 2.6 m, y 1.5 m
+    Option 2: Move the Side table to x 0 m, y 0.5 m
+    Option 3: Custom
+    scripted answer: option 1 (move-1) -> accepted, version 24
+Run 2 STEP 18: Decor (first pass), stale items: Decor of Living Room (item-21)
+  Proposal 27 [Rule-based] rule rug-seating-group, confidence high
+    Item: Decor of Living Room (item-21)
+    Why: For the Living Room: a 3.2 by 2.3 m rug under the seating group, a picture with its middle 1.45 m up, 1 curtain.
+    Option 1: Use this decor for the Living Room (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (use-decor) -> accepted, version 25
+Run 2 STEP 19: Style (first pass), stale items: Style of the decor in Living Room (item-24)
+  No proposals. Nothing needed to change.
+Run 2 STEP 20: Reviewer (first pass), stale items: item-27
+  Proposal 28 [Rule-based] rule report-summary, confidence high
+    Item: item-27
+    Why: The Reviewer's report has 6 lines.
+    Option 1: Save the Reviewer's report (recommended)
+    Option 2: Custom
+    scripted answer: option 1 (save-report) -> accepted, version 26
+
+Run 2 finished: 6 new versions.
+What each agent was told to re-check in run 2 (only the Living Room's items; the Bedroom's are never in a list):
+  Walls: nothing stale
+  Doors and windows: Living room door (item-5), Living room window (item-6)
+  Floors and ceilings: Ceiling of Living Room (item-3), Floor of Living Room (item-9)
+  Lighting and electrical: Lights of Living Room (item-11), Switches and sockets of Living Room (item-12)
+  Furniture: Sofa (item-15), Coffee table (item-16), Side table (item-17), Locked desk (item-18)
+  Decor: Decor of Living Room (item-21)
+  Style: Style of the decor in Living Room (item-24)
+  Reviewer: item-27
+Run log of run 2 (ripple lines):
+  Doors and windows: still-fine Living room door (item-5) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Living room window (item-6) - Re-checked after an earlier change. Nothing needed to change.
+  Floors and ceilings: still-fine Ceiling of Living Room (item-3) - Re-checked after an earlier change. Nothing needed to change.
+  Floors and ceilings: still-fine Floor of Living Room (item-9) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: still-fine Sofa (item-15) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: still-fine Coffee table (item-16) - Re-checked after an earlier change. Nothing needed to change.
+  Style: still-fine Style of the decor in Living Room (item-24) - Re-checked after an earlier change. Nothing needed to change.
+Left stale after run 2: Locked desk (item-18), Decor of Living Room (item-21), Style of the decor in Living Room (item-24), item-27
+
+RUN LOG (both runs)
+  Walls: started
+  Walls: proposed Walls of Living Room (item-1)
+  Walls: proposed Walls of Bedroom (item-2)
+  Walls: answered Walls of Living Room (item-1) by scripted answer
+  Walls: answered Walls of Bedroom (item-2) by scripted answer
+  Walls: finished
+  Doors and windows: started
+  Doors and windows: still-fine Living room door (item-5) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Living room window (item-6) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Bedroom door (item-7) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Bedroom window (item-8) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: finished
+  Floors and ceilings: started
+  Floors and ceilings: proposed Floor of Living Room (item-9)
+  Floors and ceilings: proposed Ceiling of Living Room (item-3)
+  Floors and ceilings: proposed Floor of Bedroom (item-10)
+  Floors and ceilings: proposed Ceiling of Bedroom (item-4)
+  Floors and ceilings: answered Floor of Living Room (item-9) by scripted answer
+  Floors and ceilings: answered Ceiling of Living Room (item-3) by scripted answer
+  Floors and ceilings: answered Floor of Bedroom (item-10) by scripted answer
+  Floors and ceilings: answered Ceiling of Bedroom (item-4) by scripted answer
+  Floors and ceilings: finished
+  Lighting and electrical: started
+  Lighting and electrical: proposed Lights of Living Room (item-11)
+  Lighting and electrical: proposed Switches and sockets of Living Room (item-12)
+  Lighting and electrical: proposed Lights of Bedroom (item-13)
+  Lighting and electrical: proposed Switches and sockets of Bedroom (item-14)
+  Lighting and electrical: answered Lights of Living Room (item-11) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Living Room (item-12) by scripted answer
+  Lighting and electrical: answered Lights of Bedroom (item-13) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Bedroom (item-14) by scripted answer
+  Lighting and electrical: finished
+  Furniture: started
+  Furniture: proposed Side table (item-17)
+  Furniture: proposed Walls of Bedroom (item-2)
+  Furniture: kept-as-is Side table (item-17) by scripted answer - Skipped. The item is kept as it is.
+  Furniture: answered Walls of Bedroom (item-2) by scripted answer
+  Furniture: still-fine Sofa (item-15) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: still-fine Coffee table (item-16) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: refused Locked desk (item-18) - Item "item-18" is Locked and cannot be changed.
+  Furniture: needs-look Locked desk (item-18) - Locked item "item-18" is out of date with earlier work. It was not changed. Please take a look.
+  Furniture: still-fine Long sofa (item-19) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: still-fine Desk (item-20) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: finished
+  Walls: not-affected - Not affected: nothing it depends on changed.
+  Doors and windows: re-check - Re-check 2 items: item-7 is stale because "item-2" changed in version 11, after version 2 that this item was based on. (and 1 more)
+  Floors and ceilings: re-check - Re-check 2 items: item-4 is stale because "item-2" changed in version 11, after version 5 that this item was based on. (and 1 more)
+  Lighting and electrical: re-check - Re-check 2 items: item-13 is stale because "item-2" changed in version 11, after version 8 that this item was based on. (and 1 more)
+  Furniture: re-check - Re-check 4 items: item-17 is stale because "item-1" changed in version 1, after version 0 that this item was based on. (and 3 more)
+  Decor: not-affected - Re-check comes later in the normal order.
+  Style: not-affected - Re-check comes later in the normal order.
+  Reviewer: not-affected - Re-check comes later in the normal order.
+  Doors and windows: started
+  Doors and windows: still-fine Bedroom door (item-7) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Bedroom window (item-8) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: finished
+  Floors and ceilings: started
+  Floors and ceilings: still-fine Ceiling of Bedroom (item-4) - Re-checked after an earlier change. Nothing needed to change.
+  Floors and ceilings: still-fine Floor of Bedroom (item-10) - Re-checked after an earlier change. Nothing needed to change.
+  Floors and ceilings: finished
+  Lighting and electrical: started
+  Lighting and electrical: proposed Lights of Bedroom (item-13)
+  Lighting and electrical: proposed Switches and sockets of Bedroom (item-14)
+  Lighting and electrical: answered Lights of Bedroom (item-13) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Bedroom (item-14) by scripted answer
+  Lighting and electrical: finished
+  Lighting and electrical: left-stale - A change made during the re-check pass may have made other items stale. They are left as they are and will be reported.
+  Furniture: started
+  Furniture: proposed Side table (item-17)
+  Furniture: kept-as-is Side table (item-17) by scripted answer - Skipped. The item is kept as it is.
+  Furniture: refused Locked desk (item-18) - Item "item-18" is Locked and cannot be changed.
+  Furniture: needs-look Locked desk (item-18) - Locked item "item-18" is out of date with earlier work. It was not changed. Please take a look.
+  Furniture: still-fine Long sofa (item-19) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: still-fine Desk (item-20) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: finished
+  Decor: started
+  Decor: proposed Decor of Living Room (item-21)
+  Decor: proposed Decor of Bedroom (item-22)
+  Decor: answered Decor of Living Room (item-21) by scripted answer
+  Decor: answered Decor of Bedroom (item-22) by scripted answer
+  Decor: finished
+  Style: started
+  Style: proposed Style of the floor in Living Room (item-23)
+  Style: proposed Style of the decor in Living Room (item-24)
+  Style: proposed Style of the floor in Bedroom (item-25)
+  Style: proposed Style of the decor in Bedroom (item-26)
+  Style: answered Style of the floor in Living Room (item-23) by scripted answer
+  Style: answered Style of the decor in Living Room (item-24) by scripted answer
+  Style: answered Style of the floor in Bedroom (item-25) by scripted answer
+  Style: answered Style of the decor in Bedroom (item-26) by scripted answer
+  Style: finished
+  Reviewer: started
+  Reviewer: proposed item-27
+  Reviewer: answered item-27 by scripted answer
+  Reviewer: finished
+  Walls: started
+  Walls: proposed Walls of Living Room (item-1)
+  Walls: answered Walls of Living Room (item-1) by scripted answer
+  Walls: finished
+  Doors and windows: started
+  Doors and windows: still-fine Living room door (item-5) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: still-fine Living room window (item-6) - Re-checked after an earlier change. Nothing needed to change.
+  Doors and windows: finished
+  Floors and ceilings: started
+  Floors and ceilings: still-fine Ceiling of Living Room (item-3) - Re-checked after an earlier change. Nothing needed to change.
+  Floors and ceilings: still-fine Floor of Living Room (item-9) - Re-checked after an earlier change. Nothing needed to change.
+  Floors and ceilings: finished
+  Lighting and electrical: started
+  Lighting and electrical: proposed Lights of Living Room (item-11)
+  Lighting and electrical: proposed Switches and sockets of Living Room (item-12)
+  Lighting and electrical: answered Lights of Living Room (item-11) by scripted answer
+  Lighting and electrical: answered Switches and sockets of Living Room (item-12) by scripted answer
+  Lighting and electrical: finished
+  Furniture: started
+  Furniture: proposed Side table (item-17)
+  Furniture: answered Side table (item-17) by scripted answer
+  Furniture: still-fine Sofa (item-15) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: still-fine Coffee table (item-16) - Re-checked after an earlier change. Nothing needed to change.
+  Furniture: refused Locked desk (item-18) - Item "item-18" is Locked and cannot be changed.
+  Furniture: needs-look Locked desk (item-18) - Locked item "item-18" is out of date with earlier work. It was not changed. Please take a look.
+  Furniture: finished
+  Decor: started
+  Decor: proposed Decor of Living Room (item-21)
+  Decor: answered Decor of Living Room (item-21) by scripted answer
+  Decor: finished
+  Style: started
+  Style: still-fine Style of the decor in Living Room (item-24) - Re-checked after an earlier change. Nothing needed to change.
+  Style: finished
+  Reviewer: started
+  Reviewer: proposed item-27
+  Reviewer: answered item-27 by scripted answer
+  Reviewer: finished
+
+VERSIONS
+  Version 1: Walls changed Walls of Living Room (item-1), approved by scripted answer, based on nothing recorded
+  Version 2: Walls changed Walls of Bedroom (item-2), approved by scripted answer, based on nothing recorded
+  Version 3: Floors and ceilings changed Floor of Living Room (item-9), approved by scripted answer, based on item-1@2, item-5@2
+  Version 4: Floors and ceilings changed Ceiling of Living Room (item-3), approved by scripted answer, based on item-1@3
+  Version 5: Floors and ceilings changed Floor of Bedroom (item-10), approved by scripted answer, based on item-2@4, item-7@4
+  Version 6: Floors and ceilings changed Ceiling of Bedroom (item-4), approved by scripted answer, based on item-2@5
+  Version 7: Lighting and electrical changed Lights of Living Room (item-11), approved by scripted answer, based on item-1@6, item-5@6, item-6@6, item-3@6
+  Version 8: Lighting and electrical changed Switches and sockets of Living Room (item-12), approved by scripted answer, based on item-1@7, item-5@7, item-6@7, item-3@7, item-11@7
+  Version 9: Lighting and electrical changed Lights of Bedroom (item-13), approved by scripted answer, based on item-2@8, item-7@8, item-8@8, item-4@8
+  Version 10: Lighting and electrical changed Switches and sockets of Bedroom (item-14), approved by scripted answer, based on item-2@9, item-7@9, item-8@9, item-4@9, item-13@9
+  Version 11: Walls changed Walls of Bedroom (item-2), approved by scripted answer, based on nothing recorded
+  Version 12: Lighting and electrical changed Lights of Bedroom (item-13), approved by scripted answer, based on item-2@11, item-7@11, item-8@11, item-4@11
+  Version 13: Lighting and electrical changed Switches and sockets of Bedroom (item-14), approved by scripted answer, based on item-2@12, item-7@12, item-8@12, item-4@12, item-13@12
+  Version 14: Decor changed Decor of Living Room (item-21), approved by scripted answer, based on item-1@13, item-6@13, item-11@13, item-15@13, item-16@13, item-17@13, item-18@13
+  Version 15: Decor changed Decor of Bedroom (item-22), approved by scripted answer, based on item-2@14, item-8@14, item-13@14, item-19@14, item-20@14
+  Version 16: Style changed Style of the floor in Living Room (item-23), approved by scripted answer, based on item-9@15
+  Version 17: Style changed Style of the decor in Living Room (item-24), approved by scripted answer, based on item-21@16
+  Version 18: Style changed Style of the floor in Bedroom (item-25), approved by scripted answer, based on item-10@17
+  Version 19: Style changed Style of the decor in Bedroom (item-26), approved by scripted answer, based on item-22@18
+  Version 20: Reviewer changed item-27, approved by scripted answer, based on item-1@19, item-2@19, item-3@19, item-4@19, item-5@19, item-6@19, item-7@19, item-8@19, item-9@19, item-10@19, item-11@19, item-12@19, item-13@19, item-14@19, item-15@19, item-16@19, item-17@19, item-18@19, item-19@19, item-20@19, item-21@19, item-22@19, item-23@19, item-24@19, item-25@19, item-26@19
+  Version 21: Walls changed Walls of Living Room (item-1), approved by scripted answer, based on nothing recorded
+  Version 22: Lighting and electrical changed Lights of Living Room (item-11), approved by scripted answer, based on item-1@21, item-5@21, item-6@21, item-3@21
+  Version 23: Lighting and electrical changed Switches and sockets of Living Room (item-12), approved by scripted answer, based on item-1@22, item-5@22, item-6@22, item-3@22, item-11@22
+  Version 24: Furniture changed Side table (item-17), approved by scripted answer, based on item-1@23, item-5@23, item-6@23, item-9@23, item-12@23
+  Version 25: Decor changed Decor of Living Room (item-21), approved by scripted answer, based on item-1@24, item-6@24, item-11@24, item-15@24, item-16@24, item-17@24, item-18@24
+  Version 26: Reviewer changed item-27, approved by scripted answer, based on item-1@25, item-2@25, item-3@25, item-4@25, item-5@25, item-6@25, item-7@25, item-8@25, item-9@25, item-10@25, item-11@25, item-12@25, item-13@25, item-14@25, item-15@25, item-16@25, item-17@25, item-18@25, item-19@25, item-20@25, item-21@25, item-22@25, item-23@25, item-24@25, item-25@25, item-26@25
+
+KNOWLEDGE FILES OF GROUP C AND THEIR SOURCES (pending owner check: none of these sources was opened)
+- decor/curtains.json: Curtains
+    How wide a curtain rail is for a window, how high it hangs and how far the curtain reaches down. Rules of thumb in our own words. No open source for the numbers was found.
+    source: Approved Document M (UK government), for reach heights only. Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- decor/hanging-heights.json: Hanging heights for art
+    How high a picture hangs, its assumed size, and the free wall it needs. Rules of thumb in our own words. No open source for the numbers was found.
+    source: Approved Document M (UK government), for reach heights only. Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- decor/rug-sizes.json: Rug sizes
+    How big a rug under a seating group is, and how far it sits from the walls. Rules of thumb in our own words. No open source for the numbers was found.
+    source: Approved Document M (UK government), for reach heights only. Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- furniture/clearances.json: Clear space around furniture
+    How much free space is wanted between pieces, around a door that swings in, and how far a socket needs to stay uncovered. Written from general knowledge in our own words.
+    source: Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+    source: Approved Document P: Electrical safety, dwellings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/electrical-safety-approved-document-p | Open Government Licence v3.0 | not checked
+- furniture/furniture-sizes.json: Usual furniture sizes
+    A usual width and depth for each kind of furniture the place screen offers, and which pieces are tall and need free space in front. Common sizes in our own words, from general knowledge.
+    source: Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- furniture/layout-patterns.json: Common layout patterns
+    Simple placement habits for a room: where the head of a bed should not be, and which pieces are normally pushed against a wall. Common habits, our own words.
+    source: Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- reviewer/checks.json: Reviewer checks
+    Which checks the Reviewer runs, their wording and severity. The checks are our own plain list. The listed documents are only places to check against.
+    source: Approved Document M (UK government), for door and space rules. Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+    source: Approved Document P: Electrical safety, dwellings (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/electrical-safety-approved-document-p | Open Government Licence v3.0 | not checked
+    source: Approved Document F: Ventilation (UK government). Listed as a place to check against. It was not opened. | gov.uk/government/publications/ventilation-approved-document-f | Open Government Licence v3.0 | not checked
+- reviewer/severities.json: Severity levels
+    The three levels a finding can have, and how to read each. The checks are our own plain list. The listed documents are only places to check against.
+    source: Approved Document M (UK government), for door and space rules. Listed as a place to check against. It was not opened. | gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m | Open Government Licence v3.0 | not checked
+- style/conflict-pairs.json: Conflicting pairs
+    Pairs of style tags that clash when used together in one room. Our own common-sense groups, not taken from a source. No open source for taste was found.
+    source: The Grammar of Ornament (Owen Jones, 1856), a public domain book on colour and pattern, via Project Gutenberg. Listed as a place to check against. It was not opened. | gutenberg.org | Public domain | not checked
+- style/palettes.json: Palettes
+    A short list of colour names for each style family. Our own common-sense groups, not taken from a source. No open source for taste was found.
+    source: The Grammar of Ornament (Owen Jones, 1856), a public domain book on colour and pattern, via Project Gutenberg. Listed as a place to check against. It was not opened. | gutenberg.org | Public domain | not checked
+- style/style-families.json: Style families
+    Three plain style families: their tags, the words that point to them, and the floor surfaces that suit them. Our own common-sense groups, not taken from a source. No open source for taste was found.
+    source: The Grammar of Ornament (Owen Jones, 1856), a public domain book on colour and pattern, via Project Gutenberg. Listed as a place to check against. It was not opened. | gutenberg.org | Public domain | not checked
+
+All results above are Rule-based. No AI was used.
+Plans are drafts for professional review. They are not verified engineering.

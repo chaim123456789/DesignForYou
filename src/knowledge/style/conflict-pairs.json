@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "title": "Conflicting pairs",
+    "covers": "Pairs of style tags that clash when used together in one room. Our own common-sense groups, not taken from a source. No open source for taste was found.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "The Grammar of Ornament (Owen Jones, 1856), a public domain book on colour and pattern, via Project Gutenberg. Listed as a place to check against. It was not opened.",
+        "url": "gutenberg.org",
+        "licence": "Public domain",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "conflict-oak-steel", "when": {"pair": ["warm oak", "cold steel"]}, "then": {"severity": "Medium"}, "note": "Typical guideline, check local rules. Warm wood against cold metal."},
+    {"id": "conflict-linen-chrome", "when": {"pair": ["linen", "glossy chrome"]}, "then": {"severity": "Medium"}, "note": "Typical guideline, check local rules. Soft cloth against shiny metal."},
+    {"id": "conflict-oak-concrete", "when": {"pair": ["warm oak", "concrete grey"]}, "then": {"severity": "Low"}, "note": "Typical guideline, check local rules. Warm wood against hard grey."}
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "title": "Palettes",
+    "covers": "A short list of colour names for each style family. Our own common-sense groups, not taken from a source. No open source for taste was found.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "The Grammar of Ornament (Owen Jones, 1856), a public domain book on colour and pattern, via Project Gutenberg. Listed as a place to check against. It was not opened.",
+        "url": "gutenberg.org",
+        "licence": "Public domain",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "palette-warm-natural", "when": {"family": "warm natural"}, "then": {"colours": ["oak brown", "cream", "olive green"]}, "note": "Typical guideline, check local rules. Colour names only."},
+    {"id": "palette-cool-modern", "when": {"family": "cool modern"}, "then": {"colours": ["steel grey", "charcoal", "glass blue"]}, "note": "Typical guideline, check local rules. Colour names only."},
+    {"id": "palette-calm-neutral", "when": {"family": "calm neutral"}, "then": {"colours": ["off white", "pale grey", "sand"]}, "note": "Typical guideline, check local rules. Colour names only."}
+  ]
+}

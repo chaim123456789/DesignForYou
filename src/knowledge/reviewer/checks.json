@@ -1,0 +1,41 @@
+{
+  "provenance": {
+    "title": "Reviewer checks",
+    "covers": "Which checks the Reviewer runs, their wording and severity. The checks are our own plain list. The listed documents are only places to check against.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M (UK government), for door and space rules. Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      },
+      {
+        "name": "Approved Document P: Electrical safety, dwellings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/electrical-safety-approved-document-p",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      },
+      {
+        "name": "Approved Document F: Ventilation (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/ventilation-approved-document-f",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "check-door-on-furniture", "when": {"kinds": ["door", "window", "layout"], "builtin": true}, "then": {"type": "Door or window on furniture", "severity": "Medium", "name": "A door or window on furniture"}, "note": "Typical guideline, check local rules. Kept from the first Reviewer."},
+    {"id": "check-style-against-locked", "when": {"kinds": ["style"], "builtin": true}, "then": {"type": "Style against Locked item", "severity": "Medium", "name": "A room style against a Locked item"}, "note": "Typical guideline, check local rules. Kept from the first Reviewer."},
+    {"id": "check-furniture-overlap", "when": {"kinds": ["layout"], "builtin": true}, "then": {"type": "Furniture overlaps furniture", "severity": "Medium", "name": "Furniture on furniture"}, "note": "Typical guideline, check local rules. Kept from the first Reviewer."},
+    {"id": "check-outside-room", "when": {"kinds": ["layout", "door", "window"], "builtin": true}, "then": {"type": "Object outside its room", "severity": "Medium", "name": "An object outside its room"}, "note": "Typical guideline, check local rules. Kept from the first Reviewer."},
+    {"id": "check-door-swing-furniture", "when": {"kinds": ["door", "layout"]}, "then": {"type": "Door opens into furniture", "severity": "High", "name": "A door that opens into furniture", "sentence": "In the {room}, the swing of the {a} runs into the {b}."}, "note": "Typical guideline, check local rules. A door that opens into the room needs a free square as wide as the door."},
+    {"id": "check-light-without-switch", "when": {"kinds": ["light", "electrical"]}, "then": {"type": "Light with no switch", "severity": "Medium", "name": "A light with no switch", "sentence": "The {room} has lights but no switch to turn them on."}, "note": "Typical guideline, check local rules. Every lit room needs a switch."},
+    {"id": "check-no-window-light", "when": {"kinds": ["window"], "roomTypes": ["living room", "bedroom", "kitchen"]}, "then": {"type": "Room with no window light", "severity": "Medium", "name": "A room with no window light", "sentence": "The {room} has no window, so it gets no daylight."}, "note": "Typical guideline, check local rules. A living room, bedroom or kitchen should have a window."},
+    {"id": "report-stale", "when": {"report": "stale"}, "then": {"type": "Item out of date", "severity": "Medium", "name": "Items out of date after an earlier change", "sentence": "The {a} may be out of date: something it was based on changed and it was not re-checked."}, "note": "Typical guideline, check local rules. An item that waited too long."},
+    {"id": "report-kept-as-is", "when": {"report": "kept as is"}, "then": {"type": "Item kept as is", "severity": "Low", "name": "Items kept as they are", "sentence": "You chose to keep the {a} as it is, so a suggestion for it was skipped."}, "note": "Typical guideline, check local rules. A skipped suggestion."},
+    {"id": "report-needs-look", "when": {"report": "needs look"}, "then": {"type": "Locked item needs your look", "severity": "High", "name": "Locked items that need your look", "sentence": "The {a} is Locked and out of date with earlier work. It was not changed. Please take a look."}, "note": "Typical guideline, check local rules. A Locked item is never changed."},
+    {"id": "report-summary", "when": {"report": "summary"}, "then": {"type": "Report", "severity": "Low", "name": "The report as a whole"}, "note": "Typical guideline, check local rules. The one saved report."}
+  ]
+}
