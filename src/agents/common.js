@@ -62,11 +62,12 @@ export const sameValue = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 export const proposalId = (prefix, itemId, ruleId, mode) => `${prefix}:${itemId}:${ruleId}:${mode || 'first'}`;
 
-// A room's size: what the user entered, or what an earlier decision (the wall item) says, or nothing.
+// A room's size. The size the Walls agent decided (kept on the room's wall item) comes first, because every later agent works from
+// the confirmed walls. Without a decision, the size the user entered. Without either, nothing: an agent does not guess a size.
 export function sizeOf(room, wallItem) {
-  if (room.width > 0 && room.depth > 0) return { width: room.width, depth: room.depth, from: 'entered' };
   const decided = wallItem && wallItem.value && wallItem.value.size;
   if (decided && decided.width > 0 && decided.depth > 0) return { width: decided.width, depth: decided.depth, from: decided.from };
+  if (room.width > 0 && room.depth > 0) return { width: room.width, depth: room.depth, from: 'entered' };
   return null;
 }
 
