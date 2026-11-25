@@ -68,5 +68,23 @@ export function createGatekeeper(project, options = {}) {
     return { accepted: true, version };
   }
 
-  return { changeItem, changeStatus };
+  // Refresh an item's basis after a re-check says "still fine". Same guard order as changeItem:
+  //   1. Locked: refused (a stale Locked item stays flagged for the user to look at).
+  //   2. Not the owner: refused.
+  //   3. Otherwise the basis is replaced and one run-log line is written. No version is written,
+  //      because the item's value did not change.
+  function refreshBasis(who, itemId, basis) {
+    const item = mustFindItem(project, itemId);
+    if (item.status === 'Locked') {
+      return refuse(project, who, item, `Item "${item.id}" is Locked and cannot be changed.`);
+    }
+    if (who !== item.owner) {
+      return refuse(project, who, item, `${who} does not own item "${item.id}". Its owner is ${item.owner}.`);
+    }
+    item.basis = structuredClone(checkBasis(project, basis, item.id));
+    project.runLog.push({ agent: who, event: 'still-fine', item: item.id, reason: 'Re-checked after an earlier change. Nothing needed to change.' });
+    return { accepted: true };
+  }
+
+  return { changeItem, changeStatus, refreshBasis };
 }
