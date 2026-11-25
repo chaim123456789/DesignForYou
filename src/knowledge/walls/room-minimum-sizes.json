@@ -1,0 +1,27 @@
+{
+  "provenance": {
+    "title": "Smallest room sizes and the default size",
+    "covers": "Smallest sensible side and area per room type, and the default size when none is entered. Common rules of thumb from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Technical housing standards: nationally described space standard (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/technical-housing-standards-nationally-described-space-standard",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "walls-min-kitchen", "when": {"roomType": "kitchen"}, "then": {"minSide": 1.8, "minArea": 5.0}, "note": "Typical guideline, check local rules. Smallest side in metres, smallest area in square metres."},
+    {"id": "walls-min-bathroom", "when": {"roomType": "bathroom"}, "then": {"minSide": 1.5, "minArea": 3.0}, "note": "Typical guideline, check local rules. Smallest side in metres, smallest area in square metres."},
+    {"id": "walls-min-toilet", "when": {"roomType": "toilet"}, "then": {"minSide": 0.9, "minArea": 1.2}, "note": "Typical guideline, check local rules. Smallest side in metres, smallest area in square metres."},
+    {"id": "walls-min-utility", "when": {"roomType": "utility"}, "then": {"minSide": 1.2, "minArea": 2.0}, "note": "Typical guideline, check local rules. Smallest side in metres, smallest area in square metres."},
+    {"id": "walls-min-living-room", "when": {"roomType": "living room"}, "then": {"minSide": 2.8, "minArea": 10.0}, "note": "Typical guideline, check local rules. Smallest side in metres, smallest area in square metres."},
+    {"id": "walls-min-bedroom", "when": {"roomType": "bedroom"}, "then": {"minSide": 2.2, "minArea": 7.5}, "note": "Typical guideline, check local rules. Smallest side in metres, smallest area in square metres."},
+    {"id": "walls-min-hall", "when": {"roomType": "hall"}, "then": {"minSide": 0.9, "minArea": 2.0}, "note": "Typical guideline, check local rules. Smallest side in metres, smallest area in square metres."},
+    {"id": "walls-min-other", "when": {"roomType": "other"}, "then": {"minSide": 1.2, "minArea": 2.0}, "note": "Typical guideline, check local rules. Smallest side in metres, smallest area in square metres."},
+    {"id": "walls-default-size", "when": {"roomType": "default"}, "then": {"width": 4.0, "depth": 4.0}, "note": "Typical guideline, check local rules. Used only when the user entered no room size, and only if the user picks it."}
+  ]
+}

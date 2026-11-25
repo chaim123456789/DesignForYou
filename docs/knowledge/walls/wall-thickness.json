@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "title": "Wall thickness and height",
+    "covers": "How thick outside and inside walls usually are and a common wall height. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document A: Structure (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/structure-approved-document-a",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "walls-thickness-external", "when": {"wall": "external"}, "then": {"thickness": 0.3}, "note": "Typical guideline, check local rules. Metres. An outside wall with insulation is about this thick."},
+    {"id": "walls-thickness-internal", "when": {"wall": "internal"}, "then": {"thickness": 0.1}, "note": "Typical guideline, check local rules. Metres. A plain inside partition wall is about this thick."},
+    {"id": "walls-height-default", "when": {"wall": "any"}, "then": {"height": 2.4}, "note": "Typical guideline, check local rules. Metres. A common finished wall height in a home."}
+  ]
+}
