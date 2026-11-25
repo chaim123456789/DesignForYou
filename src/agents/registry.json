@@ -1,0 +1,13 @@
+{
+  "note": "The one place that lists the design team: run order and direct dependencies. Nobody may depend on a later agent. The Reviewer is last.",
+  "agents": [
+    { "name": "Walls", "folder": "walls", "dependsOn": [] },
+    { "name": "Doors and windows", "folder": "doors-windows", "dependsOn": ["Walls"] },
+    { "name": "Floors and ceilings", "folder": "floors-ceilings", "dependsOn": ["Walls", "Doors and windows"] },
+    { "name": "Lighting and electrical", "folder": "lighting-electrical", "dependsOn": ["Walls", "Doors and windows", "Floors and ceilings"] },
+    { "name": "Furniture", "folder": "furniture", "dependsOn": ["Walls", "Doors and windows", "Floors and ceilings", "Lighting and electrical"] },
+    { "name": "Decor", "folder": "decor", "dependsOn": ["Walls", "Doors and windows", "Lighting and electrical", "Furniture"] },
+    { "name": "Style", "folder": "style", "dependsOn": ["Walls", "Doors and windows", "Floors and ceilings", "Lighting and electrical", "Furniture", "Decor"] },
+    { "name": "Reviewer", "folder": "reviewer", "dependsOn": ["Walls", "Doors and windows", "Floors and ceilings", "Lighting and electrical", "Furniture", "Decor", "Style"] }
+  ]
+}
