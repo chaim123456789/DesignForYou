@@ -1,0 +1,19 @@
+{
+  "provenance": {
+    "title": "Curtains",
+    "covers": "How wide a curtain rail is for a window, how high it hangs and how far the curtain reaches down. Rules of thumb in our own words. No open source for the numbers was found.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M (UK government), for reach heights only. Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "curtain-width", "when": {"decor": "curtain"}, "then": {"overlap": 0.2, "railBelowCeiling": 0.1, "floorGap": 0.02, "minWindowWidth": 0.6}, "note": "Typical guideline, check local rules. Metres. The rail reaches past the window by the overlap each side. A window narrower than the minimum gets no curtain."}
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "title": "Hanging heights for art",
+    "covers": "How high a picture hangs, its assumed size, and the free wall it needs. Rules of thumb in our own words. No open source for the numbers was found.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M (UK government), for reach heights only. Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "art-centre-height", "when": {"decor": "art"}, "then": {"height": 1.45}, "note": "Typical guideline, check local rules. Metres. The middle of a picture hangs about at eye level, measured from the floor."},
+    {"id": "art-size", "when": {"decor": "art"}, "then": {"width": 0.6, "height": 0.5}, "note": "Typical guideline, check local rules. Metres. The size a picture is taken to have until the user gives one."},
+    {"id": "art-free-wall", "when": {"decor": "art"}, "then": {"clearFromOpening": 0.3, "clearFromCorner": 0.3, "closeWithin": 0.3, "touch": 0.05}, "note": "Typical guideline, check local rules. Metres. Free wall kept beside doors, windows and corners. Walls within the close distance count as equally good. Touch: how near a wall counts as against it."}
+  ]
+}
