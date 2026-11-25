@@ -302,3 +302,37 @@ test('design-team A6: refreshBasis through the gatekeeper refuses a non-owner an
   assert.equal(p.versions.length, 0);
   assert.equal(p.runLog.filter((e) => e.event === 'refused').length, 2);
 });
+
+test('design-team A6: refreshBasis checks Locked before the owner, keeps the basis on a refusal, and an owner is accepted', async () => {
+  const { createGatekeeper } = await import('../src/brain/gatekeeper.js');
+  const { p, ids } = build({ lockedSofa: true });
+  const { refreshBasis } = createGatekeeper(p);
+  const before = structuredClone(p.items.find((i) => i.id === ids.sofa).basis);
+  const byNonOwner = refreshBasis('Decor', ids.sofa, [{ itemId: ids.wall, version: 0 }]);
+  assert.match(byNonOwner.reason, /is Locked/, 'a non-owner on a Locked item gets the Locked reason first');
+  assert.match(refreshBasis('Furniture', ids.sofa, []).reason, /is Locked/);
+  assert.deepEqual(p.items.find((i) => i.id === ids.sofa).basis, before);
+  const open = refreshBasis('Doors and windows', ids.door, [{ itemId: ids.wall, version: 0 }]);
+  assert.equal(open.accepted, true);
+  assert.equal(p.versions.length, 0);
+  assert.equal(p.runLog.at(-1).event, 'still-fine');
+});
+
+test('design-team A6: a stale Locked item\'s refused refresh is written to the run log', () => {
+  const { p, ids } = build({ lockedSofa: true });
+  const agents = { Walls: (view) => [prop(view, 'Walls', ids.wall, [opt('a', { n: 'moved' })])] };
+  runWithScript(p, { registry, agents, now: NOW });
+  assert.ok(p.runLog.some((e) => e.event === 'refused' && e.agent === 'Furniture' && e.item === ids.sofa && /is Locked/.test(e.reason)));
+});
+
+test('design-team A6: only the two Coordinators call the gatekeeper in src/, and the team Coordinator never calls changeStatus', async () => {
+  const { readFileSync, readdirSync, statSync } = await import('node:fs');
+  const path = await import('node:path');
+  const srcDir = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'src');
+  const walk = (dir) => readdirSync(dir).flatMap((n) => (statSync(path.join(dir, n)).isDirectory() ? walk(path.join(dir, n)) : [path.join(dir, n)]));
+  const callers = walk(srcDir).filter((f) => f.endsWith('.js') && /\bchangeItem\(|\bchangeStatus\(|\brefreshBasis\(/.test(readFileSync(f, 'utf8')))
+    .map((f) => path.relative(srcDir, f).split(path.sep).join('/')).sort();
+  assert.deepEqual(callers, ['brain/gatekeeper.js', 'coordinator.js', 'team-coordinator.js']);
+  assert.doesNotMatch(readFileSync(path.join(srcDir, 'team-coordinator.js'), 'utf8'), /changeStatus/);
+  for (const f of ['ripple.js', 'proposal.js']) assert.doesNotMatch(readFileSync(path.join(srcDir, f), 'utf8'), /changeItem|changeStatus|refreshBasis|appendVersion/);
+});

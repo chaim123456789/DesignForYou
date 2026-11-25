@@ -130,7 +130,7 @@ The file names above are the plan. Each is written in its own task, and the owne
 Rules are data (conditions and results), not code, and the agent code is a small loop that reads them. That keeps the rules readable by a non-coder and keeps agents small. A text field has a maximum length (R6.4).
 
 ### 5.3 How the browser gets them
-`npm run export-engine` already copies engine files from `src/` to `docs/engine/` byte for byte. Its file list (`src/viewer/engine-files.js`) is extended to include the new agents and `src/knowledge/`. The existing byte-for-byte test then covers them. The page loads the knowledge files from its own address, as it does `sample-run.json`, so the content security rule needs no new address.
+`npm run export-engine` already copies engine files from `src/` to `docs/engine/` byte for byte. Knowledge data files are copied the same way, byte for byte, but to `docs/knowledge/` (changed in Task A3: an existing test says `docs/engine/` holds only the 12 listed code files, and that test may not be edited). Its file list (`src/viewer/engine-files.js`) is extended to include the new agents and `src/knowledge/`. The existing byte-for-byte test then covers them. The page loads the knowledge files from its own address, as it does `sample-run.json`, so the content security rule needs no new address.
 
 ### 5.4 Checks
 - A test reads every file and enforces R6.4 (provenance, sources, allowed licence, length limit).

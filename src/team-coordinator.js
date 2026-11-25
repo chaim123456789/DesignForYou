@@ -80,12 +80,12 @@ export function createRun(project, options = {}) {
     for (const s of staleNow) {
       if (step.proposedItems.has(s.itemId)) continue; // answered by a proposal (accepted or kept as is)
       const item = project.items.find((i) => i.id === s.itemId);
-      if (item.status === 'Locked') {
+      // The gatekeeper decides. A Locked item is refused (and the refusal is logged); then it is flagged for the user.
+      const r = refreshBasis(step.agent, item.id, item.basis.map((b) => ({ itemId: b.itemId, version: project.versions.length })));
+      if (!r.accepted && item.status === 'Locked') {
         needsLook.add(item.id);
         log({ agent: step.agent, event: 'needs-look', item: item.id, reason: `Locked item "${item.id}" is out of date with earlier work. It was not changed. Please take a look.` });
-        continue;
       }
-      refreshBasis(step.agent, item.id, item.basis.map((b) => ({ itemId: b.itemId, version: project.versions.length })));
     }
     log({ agent: step.agent, event: 'finished' });
     if (step.kind === 'recheck' && step.applied > 0) {
