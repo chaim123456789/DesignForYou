@@ -3,7 +3,8 @@
 // Then a second scripted run moves the Living Room's wall, so the ripple can be checked.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRun } from '../src/team-coordinator.js';
+import { readFileSync } from 'node:fs';
+import { createRun, findUnfixable } from '../src/team-coordinator.js';
 import { buildProposal } from '../src/proposal.js';
 import { buildTeam } from '../test-helpers/team-project.js';
 import { findStale, agentsToRecheck } from '../src/ripple.js';
@@ -221,4 +222,51 @@ test('design-team C5: the same proposal id in a later step gets a numbered id, a
   const result = bad.next();
   assert.equal(result.done, true);
   assert.match(result.reason, /was already used in this run/);
+});
+
+test('design-team C5: findUnfixable follows "is itself stale" step by step, but never counts a plain "changed" reason', () => {
+  const changed = (id) => ({ itemId: id, why: `"${id}" changed in version 3, after version 0 that this item was based on.` });
+  const itself = (id) => ({ itemId: id, why: `"${id}" is itself stale.` });
+  const stale = [
+    { itemId: 'x', owner: 'Furniture', locked: false, because: [changed('w')] }, // x is skipped (a seed)
+    { itemId: 'y', owner: 'Decor', locked: false, because: [itself('x')] },      // only stale because x is stale: unfixable
+    { itemId: 'z', owner: 'Style', locked: false, because: [itself('y')] },      // only stale because y is: unfixable
+    { itemId: 'm', owner: 'Decor', locked: false, because: [changed('x')] },     // x CHANGED: its owner can still look again
+    { itemId: 'n', owner: 'Decor', locked: false, because: [itself('x'), changed('w')] }, // one reason can be fixed
+  ];
+  assert.deepEqual([...findUnfixable(stale, ['x'])].sort(), ['x', 'y', 'z']);
+  assert.deepEqual([...findUnfixable(stale, [])].sort(), []);
+});
+
+test('design-team C5: a request aimed at a Locked wall is refused by the gatekeeper, flagged "needs your look", and the wall stays as it was', () => {
+  const t = buildGroupCProject();
+  const wall = t.project.items.find((i) => i.id === t.slots.walls[BEDROOM]);
+  wall.status = 'Locked';
+  const before = structuredClone(wall.value);
+  const asker = (view) => [buildProposal({
+    id: 'ask-wall', agent: 'Furniture', itemId: wall.id, why: 'A request to widen the Bedroom.', source: 'rule', ruleId: 'clear-crowded', confidence: 'low',
+    options: [{ id: 'a', label: 'A', newValue: { ...wall.value, note: 'a' } }, { id: 'b', label: 'B', newValue: { ...wall.value, note: 'b' } }],
+    request: { itemId: wall.id, owner: 'Walls' },
+  }, { items: view.items })];
+  const run = createRun(t.project, { registry, now: () => FIXED_TIME, scripted: true, agents: { Furniture: asker } });
+  let step;
+  do { step = run.next(); } while (!step.done && step.agent !== 'Furniture');
+  const result = run.answer('ask-wall', 'a');
+  assert.equal(result.applied, false);
+  assert.match(result.reason, /is Locked and cannot be changed/);
+  assert.deepEqual(wall.value, before);
+  assert.equal(t.project.versions.some((v) => v.item === wall.id), false);
+  assert.ok(t.project.runLog.some((e) => e.event === 'refused' && e.item === wall.id));
+  assert.ok(t.project.runLog.some((e) => e.event === 'needs-look' && e.item === wall.id));
+  assert.deepEqual(run.needsLook, [wall.id]);
+});
+
+test('design-team C5: the four new agents import nothing that can write to the Brain and never call the gatekeeper', () => {
+  const folders = ['furniture', 'decor', 'team-style', 'team-reviewer'];
+  for (const f of folders) {
+    const code = readFileSync(new URL(`../src/agents/${f}/agent.js`, import.meta.url), 'utf8');
+    const imports = [...code.matchAll(/^import[\s\S]*?from '(.+)';$/gm)].map((m) => m[1]);
+    assert.ok(!imports.some((i) => i.includes('gatekeeper') || i.includes('brain/brain.js')), `${f} imports ${imports}`);
+    assert.doesNotMatch(code, /createGatekeeper|changeItem|changeStatus|refreshBasis|appendVersion|createItem|runLog\.push|\.items\.push|\.versions\.push|writeFile|appendFile/);
+  }
 });

@@ -31,6 +31,9 @@ function basisError(item, entry, byId, position) {
   return null;
 }
 
+// The ending of the reason given when an item is stale only because something it was based on is itself stale.
+export const ITSELF_STALE = 'is itself stale.';
+
 // Find stale items and basis errors.
 // registry: the checked registry from registry.js (order of agents).
 // Returns { stale, errors }.
@@ -68,7 +71,7 @@ export function findStale(project, registry) {
       if (changedAt > entry.version) {
         reasons.push({ itemId: target.id, why: `"${target.id}" changed in version ${changedAt}, after version ${entry.version} that this item was based on.` });
       } else if (because(target).length > 0) {
-        reasons.push({ itemId: target.id, why: `"${target.id}" is itself stale.` });
+        reasons.push({ itemId: target.id, why: `"${target.id}" ${ITSELF_STALE}` });
       }
     }
     visiting.delete(item.id);
