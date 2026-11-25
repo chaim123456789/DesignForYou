@@ -1,0 +1,9 @@
+{
+  "about": "The spending guard for the demo. capUsd 0 means AI is off. The estimates are placeholders until real prices are checked.",
+  "capUsd": 0,
+  "spentUsd": 0,
+  "estimateUsd": {
+    "read-photo": 0.02,
+    "judge-taste": 0.005
+  }
+}

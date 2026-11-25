@@ -27,8 +27,9 @@ export function buildRunLayout(state) {
   return { ...VIEWER_NUMBERS, styleMarker: { ...VIEWER_NUMBERS.styleMarker }, rooms };
 }
 
-export function buildOwnRunData(project, state) {
+// team (optional): the design team's run (design-team D5), shown in the viewer's team panel.
+export function buildOwnRunData(project, state, team) {
   // own: true marks a visitor's project, so its doors and windows are drawn with frames.
   // The sample's run file has no such flag, so the sample stays as it is.
-  return { ...makeRunData(project, buildRunLayout(state)), own: true };
+  return { ...makeRunData(project, buildRunLayout(state), team ? { team } : {}), own: true };
 }

@@ -4,12 +4,34 @@
 // getBrainAtVersion, so there is no second way of replaying history.
 import { listVersions, getBrainAtVersion } from '../brain/brain.js';
 
-const KIND_WORDS = { style: 'style note', layout: 'furniture', door: 'door', window: 'window', clash: 'review report' };
+const KIND_WORDS = {
+  style: 'style note', layout: 'furniture', door: 'door', window: 'window', clash: 'review report',
+  wall: 'walls', floor: 'floor', ceiling: 'ceiling', light: 'lights', electrical: 'switches and sockets', decor: 'decor',
+};
+
+// The small things the design team places inside an item (design-team D5): light fittings, switches and sockets, a rug.
+// They become "marks": plain rectangles in metres, in the room's plan coordinates. Only these three kinds have marks, so items of
+// the old sample (style, furniture, doors, windows, the report) are copied exactly as before.
+function marksOf(item) {
+  const v = item.value || {};
+  const marks = [];
+  const pos = (p) => p && typeof p.x === 'number' && typeof p.y === 'number';
+  if (item.kind === 'light') {
+    for (const f of v.fixtures || []) if (pos(f.position)) marks.push({ role: 'light', x: f.position.x, y: f.position.y });
+  } else if (item.kind === 'electrical') {
+    for (const sw of v.switches || []) if (pos(sw.position)) marks.push({ role: 'switch', ...structuredClone(sw.position), height: sw.height });
+    for (const so of v.sockets || []) if (pos(so.position)) marks.push({ role: 'socket', ...structuredClone(so.position), height: so.height });
+  } else if (item.kind === 'decor') {
+    const r = v.rug;
+    if (r && pos(r) && r.width > 0 && r.depth > 0) marks.push({ role: 'rug', x: r.x, y: r.y, width: r.width, depth: r.depth });
+  }
+  return marks;
+}
 
 // The plain name shown for an item (no ids).
 function itemName(item) {
   const v = item.value || {};
-  if (item.kind === 'style') return v.detail;
+  if (item.kind === 'style') return typeof v.name === 'string' && v.name !== '' ? v.name : v.detail; // a design-team style note has its own name
   if (item.kind === 'clash') return 'Review report';
   return v.name;
 }
@@ -28,6 +50,10 @@ function snapshotItem(item) {
   // Placed furniture carries a type and a turn. Items without them (the sample) are unchanged.
   if (v.type !== undefined) out.type = v.type;
   if (v.turn !== undefined) out.turn = v.turn;
+  if (item.kind === 'light' || item.kind === 'electrical' || item.kind === 'decor') {
+    const marks = marksOf(item);
+    if (marks.length > 0) out.marks = marks;
+  }
   if (item.kind === 'clash') {
     out.summary = v.summary;
     out.clashes = structuredClone(v.clashes || []);
@@ -52,7 +78,8 @@ function versionSentence(v, itemsById, roomNames) {
   return `${base}${v.who} changed the ${KIND_WORDS[item.kind] || 'item'} "${name}"${where}`;
 }
 
-export function makeRunData(project, layout) {
+// options.team: the design team's run (from makeTeamData), shown in the viewer's team panel. Without it the data is as before.
+export function makeRunData(project, layout, options = {}) {
   const roomNames = new Map(project.floors.flatMap((f) => f.rooms.map((r) => [r.id, r.name])));
   const itemsById = new Map(project.items.map((i) => [i.id, i]));
 
@@ -96,5 +123,6 @@ export function makeRunData(project, layout) {
     floors,
     versions,
     snapshots,
+    ...(options.team ? { team: structuredClone(options.team) } : {}),
   };
 }

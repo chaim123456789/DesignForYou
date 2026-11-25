@@ -4,6 +4,7 @@
 // that anything was understood, analysed or designed, and never claims AI.
 import { STYLE_CONFLICTS } from './limits.js';
 import { buildProfile } from './taste.js';
+import { describeTeamRun, taggedLine, SCRIPTED_WORDS } from '../engine/label.js';
 
 // The one fixed sentence (R10.1). The start screen and the result screen must use this exact text.
 export const FIXED_SENTENCE = 'The design team is a set of fixed rules, not AI. It does not look at your images or read your brief.';
@@ -169,5 +170,68 @@ export function buildReport(state, run, options = {}) {
     pairs,
     pairsText: pairs.map(describePair),
     clashLine,
+  };
+}
+
+// ---- The report for a run of the eight-agent design team (design-team D3) ----------------------------
+// Every line starts with its tag, "Rule-based:" or "AI:". The fixed sentence above stays true while AI is off, so it stays;
+// the team sentence (R8.2) is added next to it. "Understood" and "noticed" are never used: nothing here is an AI reading.
+// run: { ok, project }. The numbers come only from the project's run log, so the lines say only what really happened.
+export function buildTeamReport(state, run) {
+  if (!run || run.ok !== true || !run.project) return null;
+  const project = run.project;
+  const nameOf = (id) => {
+    const item = project.items.find((i) => i.id === id);
+    return item && item.value && typeof item.value.name === 'string' ? item.value.name : 'an item';
+  };
+  const team = describeTeamRun(project, nameOf);
+  if (!team) return null;
+
+  const agents = [];
+  for (const row of team.rows) if (!agents.includes(row.agent)) agents.push(row.agent);
+  const count = (agent, event, source) => team.rows.filter((r) => r.agent === agent && r.event === event && (source === undefined || r.source === source)).length;
+  const used = [];
+  const nothingToDo = [];
+  for (const agent of agents) {
+    const rule = count(agent, 'proposed', 'rule');
+    const ai = count(agent, 'proposed', 'ai');
+    const skipped = count(agent, 'started') === 0 ? count(agent, 'skipped') : 0;
+    if (skipped > 0) { nothingToDo.push(taggedLine('rule', `${agent} was switched off, so it did nothing.`)); continue; }
+    if (rule + ai === 0) { nothingToDo.push(taggedLine('rule', `${agent} had nothing to propose this time.`)); continue; }
+    const answered = team.rows.filter((r) => r.agent === agent && r.event === 'answered' && r.details.includes('accepted') && !r.details.includes('refused'));
+    const kept = count(agent, 'kept-as-is');
+    if (rule > 0) used.push(taggedLine('rule', `${agent} made ${plural(rule, 'proposal', 'proposals')} from fixed rules and knowledge files. ${plural(answered.length, 'change was', 'changes were')} applied and ${plural(kept, 'suggestion was', 'suggestions were')} kept as it is.`));
+    if (ai > 0) used.push(taggedLine('ai', `${agent} made ${plural(ai, 'proposal', 'proposals')} with AI help for taste: ${team.rows.filter((r) => r.agent === agent && r.event === 'proposed' && r.source === 'ai').map((r) => r.details).join('; ')}.`));
+  }
+  const notes = team.rows.filter((r) => r.event === 'note' && /^AI was not used/.test(r.details.replace(/^item: [^.]*\. /, '')));
+  if (!team.aiUsed) used.push(taggedLine('rule', notes.length > 0 ? 'AI was not used. The Style agent kept its rule-based result where two options were close.' : 'AI was not used.'));
+  const refused = project.runLog.filter((e) => e.event === 'refused');
+  const needsLook = project.runLog.filter((e) => e.event === 'needs-look');
+  if (needsLook.length > 0) used.push(taggedLine('rule', `${plural(needsLook.length, 'Locked item needs', 'Locked items need')} your look. It was not changed.`));
+  else if (refused.length === 0) nothingToDo.push(taggedLine('rule', 'No Locked item needed protecting this time.'));
+  if (team.scripted) used.push(taggedLine('rule', `Every answer was a ${SCRIPTED_WORDS}, not yours.`));
+
+  const keptNotRead = [];
+  if (typeof project.brief === 'string' && project.brief.trim() !== '') keptNotRead.push(taggedLine('rule', 'Your brief. It is kept with your project and was not read.'));
+  const imageCount = typeof project.imageCount === 'number' ? project.imageCount : countImages(state);
+  if (imageCount > 0) keptNotRead.push(taggedLine('rule', `Your ${plural(imageCount, 'image', 'images')}. They stay in this page, are never uploaded, and were not looked at, because AI is off.`));
+  if (keptNotRead.length === 0) keptNotRead.push(taggedLine('rule', 'You added no brief and no images.'));
+  if (used.length === 0) used.push(taggedLine('rule', 'The design team had nothing to change.'));
+  if (nothingToDo.length === 0) nothingToDo.push(taggedLine('rule', 'Nothing was left idle.'));
+
+  const clashItem = project.items.find((i) => i.kind === 'clash');
+  const lists = [
+    { key: 'used', heading: LIST_HEADINGS.used, lines: used },
+    { key: 'keptNotRead', heading: LIST_HEADINGS.keptNotRead, lines: keptNotRead },
+    { key: 'nothingToDo', heading: LIST_HEADINGS.nothingToDo, lines: nothingToDo },
+  ];
+  return {
+    heading: REPORT_HEADING,
+    sentence: FIXED_SENTENCE,
+    teamSentences: team.sentences.slice(),
+    lists, used, keptNotRead, nothingToDo,
+    clashLine: clashItem && clashItem.value && typeof clashItem.value.summary === 'string' ? taggedLine('rule', clashItem.value.summary) : null,
+    aiUsed: team.aiUsed,
+    scripted: team.scripted,
   };
 }

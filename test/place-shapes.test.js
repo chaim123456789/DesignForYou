@@ -202,8 +202,11 @@ test('place-items Task 7: the sample\'s boxes are identical to before (same fing
   const run = JSON.parse(readFileSync(new URL('../docs/sample-run.json', import.meta.url), 'utf8'));
   const all = run.snapshots.map((s) => buildScene(run, s.version));
   const hash = createHash('sha256').update(JSON.stringify(all)).digest('hex');
-  assert.equal(hash, 'd04a5af0a926b294531b3619f7f105050f8f32e5d4402d0e1e27527842e58f42');
+  // D6: new value for the design-team sample (old value d04a5af0...e58f42 for the four-agent sample).
+  assert.equal(hash, 'f1e6e3906fedd2dcc2fa9e9a15898b77292ee99c8c0ed9a8c3b6aa768a62ebaf');
+  // D6: the design-team sample's furniture has a type, so it gets a shape; its doors and windows are still plain panels (not own).
   for (const box of all.flat()) {
+    if (box.type === 'furniture') { assert.ok(['sofa', 'table', 'kitchen unit', 'bed', 'wardrobe', 'bath'].includes(box.furnitureType)); continue; }
     assert.equal('furnitureType' in box, false);
     assert.equal('turn' in box, false);
     assert.deepEqual(shapeParts(box), []);

@@ -29,7 +29,8 @@ async function withPage(body) {
 
 const shown = (page) => page.labels().filter((l) => l.style.display !== 'none');
 const shownBlockNames = (page) => shown(page).filter((l) => !/room-label|floor-label/.test(l.className)).map((l) => l.textContent).sort();
-const blocks = (version = LAST) => buildScene(run, version).filter((b) => b.itemId !== undefined);
+// D6: the design-team sample's small marks (lights, switches, sockets, rugs) carry no text label (noLabel), so they are not counted.
+const blocks = (version = LAST) => buildScene(run, version).filter((b) => b.itemId !== undefined && !b.noLabel);
 const clashNames = (version = LAST) => blocks(version).filter((b) => b.clash).map((b) => b.label).sort();
 
 async function pixelOfBlock(page, name) {

@@ -16,7 +16,9 @@ import { buildOwnRunData } from '../docs/intake/run-data.js';
 installImportHooks();
 
 let caseNumber = 40000;
-const SAMPLE_MESH_COUNT = 26; // measured on the viewer before Task 8 (slabs, room outlines, blocks, edges, clash outlines)
+// D6: measured on the viewer with the design-team sample (old value 26 for the four-agent sample): slabs, room outlines, blocks,
+// the parts of the typed furniture, the small marks, edges and clash outlines.
+const SAMPLE_MESH_COUNT = 118;
 
 function ownRun(placeThem) {
   const s = createState();
@@ -178,7 +180,8 @@ test('place-items Task 8: the sample draws exactly the same meshes as before (pl
     const children = group(page).children;
     const itemMeshes = children.filter((o) => o.isMesh && o.userData && o.userData.itemId !== undefined);
     assert.equal(children.length, SAMPLE_MESH_COUNT);
-    for (const m of itemMeshes) assert.equal(m.userData.part, undefined, 'no part of a shape in the sample');
+    // D6: only the sample's typed furniture is drawn in parts; doors, windows, style patches and the small marks are plain blocks.
+    for (const m of itemMeshes) if (m.userData.part !== undefined) assert.equal(m.userData.type, 'furniture', 'only furniture has parts in the sample');
   });
 });
 

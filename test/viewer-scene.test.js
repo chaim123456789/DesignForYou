@@ -26,7 +26,7 @@ test('Task 3: 4 rooms', () => {
 
 test('Task 3: every door, window and furniture box lies inside its room', () => {
   const boxes = buildScene(run, LATEST).filter((b) => ['door', 'window', 'furniture'].includes(b.type));
-  assert.equal(boxes.length, 4);
+  assert.equal(boxes.length, 13); // D6: the design-team sample has 4 doors, 3 windows and 6 pieces of furniture (old value 4)
   for (const b of boxes) {
     const room = roomOf(b);
     const floorY = room.floor.elevation;
@@ -60,7 +60,8 @@ test('Task 3: Locked and Unsure boxes get different colour names', () => {
 });
 
 test('Task 3: clash boxes are marked for the Garden door, the Sofa and the oak bed frame marker at the latest version', () => {
-  assert.deepEqual(clashedNames(LATEST), ['Garden door', 'Oak bed frame stays as it is', 'Sofa']);
+  // D6: the design-team sample's Reviewer also reports items out of date and the Locked bed that needs a look (old value: Garden door, Oak bed frame stays as it is, Sofa).
+  assert.deepEqual(clashedNames(LATEST), ['Decor of Living Room', 'Garden door', 'Oak bed', 'Oak bed frame stays as it is', 'Sofa', 'Style of the decor in Bedroom', 'Style of the decor in Living Room']);
 });
 
 test('Task 3: no box is marked as a clash at version 0', () => {
@@ -80,10 +81,11 @@ test('Task 3: an item created after version N is absent at version N', () => {
 });
 
 test('Task 3: describeItem gives name, status in words, owner, kind and room name', () => {
-  const d = describeItem(run, LATEST, 'item-6');
+  // D6: in the design-team sample the Garden door is item-13 (old item-6) and its owner is Doors and windows (old Builder).
+  const d = describeItem(run, LATEST, 'item-13');
   assert.equal(d.name, 'Garden door');
   assert.equal(d.status, 'Unsure');
-  assert.equal(d.owner, 'Builder');
+  assert.equal(d.owner, 'Doors and windows');
   assert.equal(d.kind, 'Door');
   assert.equal(d.room, 'Living Room');
   const locked = describeItem(run, LATEST, 'item-1');
@@ -93,12 +95,13 @@ test('Task 3: describeItem gives name, status in words, owner, kind and room nam
 });
 
 test('Task 3: describeItem gives the clash sentence for clash items', () => {
-  const door = describeItem(run, LATEST, 'item-6');
+  // D6: design-team sample ids and sentences (old: item-6 "sits where the Sofa is placed", item-7 none, item-9 the report with 2).
+  const door = describeItem(run, LATEST, 'item-13');
   assert.equal(door.clashes.length, 1);
-  assert.match(door.clashes[0], /Garden door sits where the Sofa is placed/);
-  assert.equal(describeItem(run, LATEST, 'item-7').clashes.length, 0);
-  assert.equal(describeItem(run, 0, 'item-6').clashes.length, 0);
-  assert.equal(describeItem(run, LATEST, 'item-9').clashes.length, 2);
+  assert.match(door.clashes[0], /the swing of the Garden door runs into the Sofa/);
+  assert.equal(describeItem(run, LATEST, 'item-14').clashes.length, 0);
+  assert.equal(describeItem(run, 0, 'item-13').clashes.length, 0);
+  assert.equal(describeItem(run, LATEST, 'item-51').clashes.length, 9);
 });
 
 test('Task 3: no text contains an id', () => {

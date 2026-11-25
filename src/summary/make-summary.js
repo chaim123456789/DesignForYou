@@ -1,7 +1,7 @@
 // Builds one readable HTML page from a Project Brain (R10). Read only: it never
 // changes the Brain. It needs no server and sends nothing over a network.
 // Internal ids and field names are turned into plain words (R10.2).
-import { getLabels, SAMPLE_LABEL } from '../label.js';
+import { getLabels, SAMPLE_LABEL, describeTeamRun } from '../label.js';
 
 export const SECTION_HEADINGS = Object.freeze({
   structure: 'Project structure',
@@ -12,6 +12,12 @@ export const SECTION_HEADINGS = Object.freeze({
 });
 
 const KIND_WORDS = {
+  wall: 'Walls',
+  ceiling: 'Ceiling',
+  floor: 'Floor',
+  light: 'Lighting',
+  electrical: 'Switches and sockets',
+  decor: 'Decor',
   style: 'Style',
   layout: 'Furniture and layout',
   door: 'Door',
@@ -86,6 +92,8 @@ export function makeSummaryHtml(project) {
   const plainSentence = (text) => String(text || '').replace(/"(item-\d+)"/g, (_, id) => `"${itemName(id)}"`);
   const roomWords = (roomId) => (roomId ? roomNames.get(roomId) || 'Unknown room' : 'Whole project');
 
+  // A design-team run says where each line came from (Rule-based or AI). The old four-agent sample has none of this, so its page is unchanged.
+  const team = describeTeamRun(project, itemName);
   const labels = getLabels(project);
   const showsSample = labels.includes(SAMPLE_LABEL);
   const banner = labels.map((l) => `<p class="${l === SAMPLE_LABEL ? 'label' : 'statement'}">${esc(l)}</p>`).join('\n');
@@ -115,14 +123,14 @@ ${itemRows}
 </table>`;
 
   // 3. Run log
-  const logRows = project.runLog.map((e, n) => {
+  const logRows = team ? team.rows.map((r) => `<tr><td>${r.number}</td><td>${esc(r.agent)}</td><td>${esc(r.what)}</td><td>${esc(r.tag)}</td><td>${esc(plainSentence(r.details))}</td></tr>`).join('\n') : project.runLog.map((e, n) => {
     const parts = [];
     if (e.item) parts.push(`item: ${itemName(e.item)}`);
     if (e.reason) parts.push(plainSentence(e.reason));
     return `<tr><td>${n + 1}</td><td>${esc(e.agent)}</td><td>${esc(EVENT_WORDS[e.event] || e.event)}</td><td>${esc(parts.join('. '))}</td></tr>`;
   }).join('\n');
   const runLog = `<table>
-<tr><th>Step</th><th>Agent</th><th>What happened</th><th>Details</th></tr>
+${team ? '<tr><th>Step</th><th>Agent</th><th>What happened</th><th>Where it came from</th><th>Details</th></tr>' : '<tr><th>Step</th><th>Agent</th><th>What happened</th><th>Details</th></tr>'}
 ${logRows}
 </table>`;
 
@@ -145,15 +153,16 @@ ${rows}
   }
 
   // 5. Versions
-  const versionRows = project.versions.map((v) => `<tr><td>${esc(v.number)}</td><td>${esc(v.time)}</td><td>${esc(v.who)}</td>
-<td>${esc(itemName(v.item))}</td><td>${esc(v.field === 'status' ? 'Status' : 'Value')}</td><td>${esc(valueWords(v.oldValue))}</td><td>${esc(valueWords(v.newValue))}</td></tr>`).join('\n');
+  const versionRows = project.versions.map((v, n) => `<tr><td>${esc(v.number)}</td><td>${esc(v.time)}</td><td>${esc(v.who)}</td>
+<td>${esc(itemName(v.item))}</td><td>${esc(v.field === 'status' ? 'Status' : 'Value')}</td><td>${esc(valueWords(v.oldValue))}</td><td>${esc(valueWords(v.newValue))}</td>${team ? `<td>${esc(team.versionSources[n] === 'ai' ? 'AI' : 'Rule-based')}</td><td>${esc(v.approvedBy || 'not recorded')}</td>` : ''}</tr>`).join('\n');
   const versions = project.versions.length === 0
     ? '<p>No changes have been made yet.</p>'
     : `${showsSample ? '<p>The times below come from a fixed sample clock, so every run of the sample looks the same.</p>\n' : ''}<table>
-<tr><th>Version</th><th>Time</th><th>Changed by</th><th>Item</th><th>What changed</th><th>Before</th><th>After</th></tr>
+<tr><th>Version</th><th>Time</th><th>Changed by</th><th>Item</th><th>What changed</th><th>Before</th><th>After</th>${team ? '<th>Where it came from</th><th>Approved by</th>' : ''}</tr>
 ${versionRows}
 </table>`;
 
+  const teamNotes = team ? team.sentences.map((t) => `<p class="statement">${esc(t)}</p>\n`).join('') : '';
   const footer = labels.map((l) => `<p class="statement">${esc(l)}</p>`).join('\n');
 
   return `<!DOCTYPE html>
@@ -174,7 +183,7 @@ th { background: #eee; }
 <body>
 ${banner}
 <h1>${esc(project.name)}: summary</h1>
-<h2>${SECTION_HEADINGS.structure}</h2>
+${teamNotes}<h2>${SECTION_HEADINGS.structure}</h2>
 ${structure}
 <h2>${SECTION_HEADINGS.items}</h2>
 ${items}

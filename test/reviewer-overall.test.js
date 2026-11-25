@@ -7,6 +7,7 @@ import { runPipeline, makeReadOnlyView } from '../src/coordinator.js';
 import { createReviewerAgent, NO_CLASHES, NO_CLASHES_NOTE } from '../src/agents/reviewer/agent.js';
 import { runSample } from '../src/sample/run-sample.js';
 import { makeSampleRun } from '../src/viewer/make-sample-run.js';
+import { runTeamSample, makeTeamSampleRun } from '../src/sample/run-team-sample.js';
 import { createState, setProjectName, addFloor, addRoom, addNote, addItem } from '../docs/intake/state.js';
 import { QUESTIONS } from '../docs/intake/taste.js';
 import { runDesignTeam } from '../docs/intake/build-brain.js';
@@ -156,9 +157,11 @@ test('Task 5b: the Reviewer still only reads: it returns one proposal for its ow
 });
 
 test('Task 5b: the sample run output is unchanged (matches docs/sample-run.json exactly, and has no overall-style clash)', () => {
-  const { project } = runSample();
+  // D6: the sample file now comes from the design-team sample. The old four-agent run is still checked below.
+  const team = runTeamSample();
   const expected = readFileSync(new URL('../docs/sample-run.json', import.meta.url), 'utf8');
-  assert.equal(JSON.stringify(makeSampleRun(project), null, 2) + '\n', expected);
+  assert.equal(JSON.stringify(makeTeamSampleRun(team), null, 2) + '\n', expected);
+  const { project } = runSample();
   const report = project.items.find((i) => i.kind === 'clash').value;
   assert.equal(report.clashes.length, 2);
   assert.equal(report.clashes.some((c) => c.type === 'Overall style against Locked item'), false);

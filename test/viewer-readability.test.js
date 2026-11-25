@@ -52,7 +52,7 @@ const overlaps = (a, b) => ['x', 'y', 'z'].every((axis) => {
 
 test('Task 7b step 2: doors are thin tall panels, under 0.2 m thick and about 2.0 m tall, standing on the floor', () => {
   const doors = boxes.filter((b) => b.type === 'door');
-  assert.equal(doors.length, 2);
+  assert.equal(doors.length, 4); // D6: the design-team sample has 4 doors (old value 2)
   for (const d of doors) {
     assert.ok(Math.min(d.width, d.depth) < 0.2, `${d.label} is ${Math.min(d.width, d.depth)} m thick`);
     assert.ok(d.height >= 1.9 && d.height <= 2.1, `${d.label} is ${d.height} m tall`);
@@ -63,12 +63,13 @@ test('Task 7b step 2: doors are thin tall panels, under 0.2 m thick and about 2.
 
 test('Task 7b step 2: windows are thin panels with the sill above the floor, about 0.9 m up and 1.2 m high', () => {
   const windows = boxes.filter((b) => b.type === 'window');
-  assert.equal(windows.length, 1);
-  const w = windows[0];
-  const room = boxes.find((b) => b.type === 'room' && w.x >= b.x && w.x <= b.x + b.width && w.z >= b.z - 1e-9 && w.z <= b.z + b.depth && w.y >= b.y);
-  assert.ok(Math.min(w.width, w.depth) < 0.2);
-  assert.ok(w.y - room.y >= 0.8 && w.y - room.y <= 1.0, `sill is ${w.y - room.y} m`);
-  assert.ok(w.height >= 1.1 && w.height <= 1.3);
+  assert.equal(windows.length, 3); // D6: the design-team sample has 3 windows (old value 1); each is checked
+  for (const w of windows) {
+    const room = boxes.find((b) => b.type === 'room' && w.x >= b.x && w.x <= b.x + b.width && w.z >= b.z - 1e-9 && w.z <= b.z + b.depth && w.y >= b.y && w.y < b.y + b.height);
+    assert.ok(Math.min(w.width, w.depth) < 0.2);
+    assert.ok(w.y - room.y >= 0.8 && w.y - room.y <= 1.0, `sill is ${w.y - room.y} m`);
+    assert.ok(w.height >= 1.1 && w.height <= 1.3);
+  }
 });
 
 test('Task 7b step 2: a door or window lies along the wall edge nearest to its position', () => {
@@ -97,7 +98,7 @@ test('Task 7b step 3: the sofa is about 0.8 m high, and style markers are flat p
   assert.ok(sofa.height >= 0.7 && sofa.height <= 0.9, `sofa is ${sofa.height} m high`);
   assert.ok(sofa.height > Math.min(sofa.width, sofa.depth) * 0.3, 'furniture is a solid block, not a sheet');
   const markers = boxes.filter((b) => b.type === 'style-marker');
-  assert.equal(markers.length, 4);
+  assert.equal(markers.length, 12); // D6: the design-team sample has 12 style notes (old value 4)
   for (const m of markers) {
     assert.ok(m.height <= 0.06, `${m.label} is ${m.height} m high`);
     assert.ok(m.height * 5 < Math.min(m.width, m.depth), 'a marker is much wider than it is high');

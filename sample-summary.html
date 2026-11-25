@@ -17,6 +17,8 @@ th { background: #eee; }
 <p class="label">SAMPLE PROJECT</p>
 <p class="statement">Plans are drafts for professional review. They are not verified engineering.</p>
 <h1>Sample Two-Storey Home: summary</h1>
+<p class="statement">The design team works from fixed rules and knowledge files (Rule-based). Two jobs can use AI: reading a photo and judging taste. AI is off, so nothing in this result came from AI.</p>
+<p class="statement">Answers marked &quot;scripted answer&quot; were chosen by a fixed script, not by a person.</p>
 <h2>Project structure</h2>
 <p>Project name: <strong>Sample Two-Storey Home</strong></p>
 <p>Overall style for the whole project: warm oak, linen, soft white walls</p>
@@ -46,61 +48,398 @@ th { background: #eee; }
 <td>Plain white wall tiles</td><td>Style</td><td>Bathroom</td>
 <td class="unsure">Unsure</td><td>Style</td><td>Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)</td></tr>
 <tr>
-<td>Sofa</td><td>Furniture and layout</td><td>Living Room</td>
-<td class="unsure">Unsure</td><td>Layout</td><td>Sofa (1.0 m from the left, 3.0 m from the top, 2.0 m wide, 1.0 m deep; Placement checked by Layout)</td></tr>
+<td>Walls of Kitchen</td><td>Walls</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Walls</td><td>Walls of Kitchen</td></tr>
+<tr>
+<td>Walls of Living Room</td><td>Walls</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Walls</td><td>Walls of Living Room</td></tr>
+<tr>
+<td>Walls of Bedroom</td><td>Walls</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Walls</td><td>Walls of Bedroom</td></tr>
+<tr>
+<td>Walls of Bathroom</td><td>Walls</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Walls</td><td>Walls of Bathroom</td></tr>
+<tr>
+<td>Ceiling of Kitchen</td><td>Ceiling</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Floors and ceilings</td><td>Ceiling of Kitchen (flat)</td></tr>
+<tr>
+<td>Ceiling of Living Room</td><td>Ceiling</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Floors and ceilings</td><td>Ceiling of Living Room (flat)</td></tr>
+<tr>
+<td>Ceiling of Bedroom</td><td>Ceiling</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Floors and ceilings</td><td>Ceiling of Bedroom (flat)</td></tr>
+<tr>
+<td>Ceiling of Bathroom</td><td>Ceiling</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Floors and ceilings</td><td>Ceiling of Bathroom (flat)</td></tr>
 <tr>
 <td>Garden door</td><td>Door</td><td>Living Room</td>
-<td class="unsure">Unsure</td><td>Builder</td><td>Garden door (1.5 m from the left, 3.0 m from the top, 0.9 m wide, 0.9 m deep; Opening checked by Builder)</td></tr>
+<td class="unsure">Unsure</td><td>Doors and windows</td><td>Garden door (1.5 m from the left, 3.9 m from the top, 0.9 m wide, 0.1 m deep)</td></tr>
 <tr>
 <td>Bedroom door</td><td>Door</td><td>Bedroom</td>
-<td class="unsure">Unsure</td><td>Builder</td><td>Bedroom door (0.2 m from the left, 0.0 m from the top, 0.9 m wide, 0.9 m deep; Opening checked by Builder)</td></tr>
+<td class="unsure">Unsure</td><td>Doors and windows</td><td>Bedroom door (0.2 m from the left, 0.0 m from the top, 0.9 m wide, 0.1 m deep)</td></tr>
+<tr>
+<td>Kitchen door</td><td>Door</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Doors and windows</td><td>Kitchen door (3.8 m from the left, 0.0 m from the top, 0.9 m wide, 0.1 m deep)</td></tr>
+<tr>
+<td>Bathroom door</td><td>Door</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Doors and windows</td><td>Bathroom door (0.2 m from the left, 0.0 m from the top, 0.8 m wide, 0.1 m deep)</td></tr>
 <tr>
 <td>Kitchen window</td><td>Window</td><td>Kitchen</td>
-<td class="unsure">Unsure</td><td>Builder</td><td>Kitchen window (2.0 m from the left, 0.0 m from the top, 1.2 m wide, 0.1 m deep; Opening checked by Builder)</td></tr>
+<td class="unsure">Unsure</td><td>Doors and windows</td><td>Kitchen window (2.0 m from the left, 0.0 m from the top, 1.2 m wide, 0.1 m deep)</td></tr>
+<tr>
+<td>Window for Living Room</td><td>Window</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Doors and windows</td><td>Living Room window (2.0 m from the left, 0.0 m from the top, 2.0 m wide, 0.1 m deep)</td></tr>
+<tr>
+<td>Window for Bedroom</td><td>Window</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Doors and windows</td><td>Bedroom window (1.3 m from the left, 0.0 m from the top, 1.3 m wide, 0.1 m deep)</td></tr>
+<tr>
+<td>Window for Bathroom</td><td>Window</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Doors and windows</td><td>Window for Bathroom</td></tr>
+<tr>
+<td>Floor of Kitchen</td><td>Floor</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Floors and ceilings</td><td>Floor of Kitchen</td></tr>
+<tr>
+<td>Floor of Living Room</td><td>Floor</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Floors and ceilings</td><td>Floor of Living Room</td></tr>
+<tr>
+<td>Floor of Bedroom</td><td>Floor</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Floors and ceilings</td><td>Floor of Bedroom</td></tr>
+<tr>
+<td>Floor of Bathroom</td><td>Floor</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Floors and ceilings</td><td>Floor of Bathroom</td></tr>
+<tr>
+<td>Lights of Kitchen</td><td>Lighting</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Lighting and electrical</td><td>Lights of Kitchen</td></tr>
+<tr>
+<td>Switches and sockets of Kitchen</td><td>Switches and sockets</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Lighting and electrical</td><td>Switches and sockets of Kitchen</td></tr>
+<tr>
+<td>Lights of Living Room</td><td>Lighting</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Lighting and electrical</td><td>Lights of Living Room</td></tr>
+<tr>
+<td>Switches and sockets of Living Room</td><td>Switches and sockets</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Lighting and electrical</td><td>Switches and sockets of Living Room</td></tr>
+<tr>
+<td>Lights of Bedroom</td><td>Lighting</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Lighting and electrical</td><td>Lights of Bedroom</td></tr>
+<tr>
+<td>Switches and sockets of Bedroom</td><td>Switches and sockets</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Lighting and electrical</td><td>Switches and sockets of Bedroom</td></tr>
+<tr>
+<td>Lights of Bathroom</td><td>Lighting</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Lighting and electrical</td><td>Lights of Bathroom</td></tr>
+<tr>
+<td>Switches and sockets of Bathroom</td><td>Switches and sockets</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Lighting and electrical</td><td>Switches and sockets of Bathroom</td></tr>
+<tr>
+<td>Sofa</td><td>Furniture and layout</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Furniture</td><td>Sofa (sofa, turned 0 degrees; 1.0 m from the left, 3.0 m from the top, 2.0 m wide, 0.9 m deep)</td></tr>
+<tr>
+<td>Coffee table</td><td>Furniture and layout</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Furniture</td><td>Coffee table (table, turned 0 degrees; 1.4 m from the left, 1.8 m from the top, 1.2 m wide, 0.6 m deep)</td></tr>
+<tr>
+<td>Kitchen units</td><td>Furniture and layout</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Furniture</td><td>Kitchen units (kitchen unit, turned 0 degrees; 0.0 m from the left, 3.4 m from the top, 5.2 m wide, 0.6 m deep)</td></tr>
+<tr>
+<td>Oak bed</td><td>Furniture and layout</td><td>Bedroom</td>
+<td class="locked">Locked</td><td>Furniture</td><td>Oak bed (bed, turned 0 degrees; 1.2 m from the left, 1.6 m from the top, 1.6 m wide, 2.1 m deep)</td></tr>
+<tr>
+<td>Wardrobe</td><td>Furniture and layout</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Furniture</td><td>Wardrobe (wardrobe, turned 0 degrees; 2.8 m from the left, 0.2 m from the top, 1.0 m wide, 0.6 m deep)</td></tr>
+<tr>
+<td>Bath</td><td>Furniture and layout</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Furniture</td><td>Bath (bath, turned 0 degrees; 0.0 m from the left, 2.2 m from the top, 1.7 m wide, 0.7 m deep)</td></tr>
+<tr>
+<td>Decor of Kitchen</td><td>Decor</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Decor</td><td>Decor of Kitchen</td></tr>
+<tr>
+<td>Decor of Living Room</td><td>Decor</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Decor</td><td>Decor of Living Room</td></tr>
+<tr>
+<td>Decor of Bedroom</td><td>Decor</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Decor</td><td>Decor of Bedroom</td></tr>
+<tr>
+<td>Decor of Bathroom</td><td>Decor</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Decor</td><td>Decor of Bathroom</td></tr>
+<tr>
+<td></td><td>Style</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Style</td><td> (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr>
+<td></td><td>Style</td><td>Kitchen</td>
+<td class="unsure">Unsure</td><td>Style</td><td> (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr>
+<td></td><td>Style</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Style</td><td> (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr>
+<td></td><td>Style</td><td>Living Room</td>
+<td class="unsure">Unsure</td><td>Style</td><td> (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr>
+<td></td><td>Style</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Style</td><td> (kept in line with: cold steel, dark slate)</td></tr>
+<tr>
+<td></td><td>Style</td><td>Bedroom</td>
+<td class="unsure">Unsure</td><td>Style</td><td> (kept in line with: cold steel, dark slate)</td></tr>
+<tr>
+<td></td><td>Style</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Style</td><td> (kept in line with: warm oak, linen, soft white walls)</td></tr>
+<tr>
+<td></td><td>Style</td><td>Bathroom</td>
+<td class="unsure">Unsure</td><td>Style</td><td> (kept in line with: warm oak, linen, soft white walls)</td></tr>
 <tr>
 <td>The clash report</td><td>Clash report</td><td>Whole project</td>
-<td class="unsure">Unsure</td><td>Reviewer</td><td>2 clashes found</td></tr>
+<td class="unsure">Unsure</td><td>Reviewer</td><td>9 findings found, using these checks: A door or window on furniture, A room style against a Locked item, Furniture on furniture, An object outside its room, A door that opens into furniture, A light with no switch, A room with no window light, Items out of date after an earlier change, Items kept as they are, Locked items that need your look.</td></tr>
 </table>
 <h2>Run log</h2>
 <table>
-<tr><th>Step</th><th>Agent</th><th>What happened</th><th>Details</th></tr>
-<tr><td>1</td><td>Style</td><td>Started</td><td></td></tr>
-<tr><td>2</td><td>Style</td><td>Refused</td><td>item: Oak floor in the kitchen. Item &quot;Oak floor in the kitchen&quot; is Locked and cannot be changed.</td></tr>
-<tr><td>3</td><td>Style</td><td>Finished</td><td></td></tr>
-<tr><td>4</td><td>Layout</td><td>Started</td><td></td></tr>
-<tr><td>5</td><td>Layout</td><td>Finished</td><td></td></tr>
-<tr><td>6</td><td>Builder</td><td>Started</td><td></td></tr>
-<tr><td>7</td><td>Builder</td><td>Finished</td><td></td></tr>
-<tr><td>8</td><td>Reviewer</td><td>Started</td><td></td></tr>
-<tr><td>9</td><td>Reviewer</td><td>Finished</td><td></td></tr>
+<tr><th>Step</th><th>Agent</th><th>What happened</th><th>Where it came from</th><th>Details</th></tr>
+<tr><td>1</td><td>Walls</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>2</td><td>Walls</td><td>Proposed</td><td>Rule-based</td><td>item: Walls of Kitchen. rule walls-segments-from-size</td></tr>
+<tr><td>3</td><td>Walls</td><td>Proposed</td><td>Rule-based</td><td>item: Walls of Living Room. rule walls-segments-from-size</td></tr>
+<tr><td>4</td><td>Walls</td><td>Proposed</td><td>Rule-based</td><td>item: Walls of Bedroom. rule walls-segments-from-size</td></tr>
+<tr><td>5</td><td>Walls</td><td>Proposed</td><td>Rule-based</td><td>item: Walls of Bathroom. rule walls-segments-from-size</td></tr>
+<tr><td>6</td><td>Walls</td><td>Answered</td><td>Rule-based</td><td>item: Walls of Kitchen. choice use-segments. answered by scripted answer. accepted</td></tr>
+<tr><td>7</td><td>Walls</td><td>Answered</td><td>Rule-based</td><td>item: Walls of Living Room. choice use-segments. answered by scripted answer. accepted</td></tr>
+<tr><td>8</td><td>Walls</td><td>Answered</td><td>Rule-based</td><td>item: Walls of Bedroom. choice use-segments. answered by scripted answer. accepted</td></tr>
+<tr><td>9</td><td>Walls</td><td>Answered</td><td>Rule-based</td><td>item: Walls of Bathroom. choice use-segments. answered by scripted answer. accepted</td></tr>
+<tr><td>10</td><td>Walls</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>11</td><td>Doors and windows</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>12</td><td>Doors and windows</td><td>Proposed</td><td>Rule-based</td><td>item: Window for Living Room. rule windows-daylight</td></tr>
+<tr><td>13</td><td>Doors and windows</td><td>Proposed</td><td>Rule-based</td><td>item: Window for Bedroom. rule windows-daylight</td></tr>
+<tr><td>14</td><td>Doors and windows</td><td>Answered</td><td>Rule-based</td><td>item: Window for Living Room. choice window-north. answered by scripted answer. accepted</td></tr>
+<tr><td>15</td><td>Doors and windows</td><td>Answered</td><td>Rule-based</td><td>item: Window for Bedroom. choice window-north. answered by scripted answer. accepted</td></tr>
+<tr><td>16</td><td>Doors and windows</td><td>Still fine</td><td>Rule-based</td><td>item: Garden door. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>17</td><td>Doors and windows</td><td>Still fine</td><td>Rule-based</td><td>item: Bedroom door. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>18</td><td>Doors and windows</td><td>Still fine</td><td>Rule-based</td><td>item: Kitchen door. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>19</td><td>Doors and windows</td><td>Still fine</td><td>Rule-based</td><td>item: Bathroom door. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>20</td><td>Doors and windows</td><td>Still fine</td><td>Rule-based</td><td>item: Kitchen window. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>21</td><td>Doors and windows</td><td>Still fine</td><td>Rule-based</td><td>item: Window for Bathroom. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>22</td><td>Doors and windows</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>23</td><td>Floors and ceilings</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>24</td><td>Floors and ceilings</td><td>Proposed</td><td>Rule-based</td><td>item: Floor of Kitchen. rule floors-wet-safe-surface</td></tr>
+<tr><td>25</td><td>Floors and ceilings</td><td>Proposed</td><td>Rule-based</td><td>item: Ceiling of Kitchen. rule ceilings-height-from-walls</td></tr>
+<tr><td>26</td><td>Floors and ceilings</td><td>Proposed</td><td>Rule-based</td><td>item: Floor of Living Room. rule floors-surface-by-room</td></tr>
+<tr><td>27</td><td>Floors and ceilings</td><td>Proposed</td><td>Rule-based</td><td>item: Ceiling of Living Room. rule ceilings-height-from-walls</td></tr>
+<tr><td>28</td><td>Floors and ceilings</td><td>Proposed</td><td>Rule-based</td><td>item: Floor of Bedroom. rule floors-surface-by-room</td></tr>
+<tr><td>29</td><td>Floors and ceilings</td><td>Proposed</td><td>Rule-based</td><td>item: Ceiling of Bedroom. rule ceilings-height-from-walls</td></tr>
+<tr><td>30</td><td>Floors and ceilings</td><td>Proposed</td><td>Rule-based</td><td>item: Floor of Bathroom. rule floors-wet-safe-surface</td></tr>
+<tr><td>31</td><td>Floors and ceilings</td><td>Proposed</td><td>Rule-based</td><td>item: Ceiling of Bathroom. rule ceilings-height-from-walls</td></tr>
+<tr><td>32</td><td>Floors and ceilings</td><td>Answered</td><td>Rule-based</td><td>item: Floor of Kitchen. choice surface-ceramic-tile. answered by scripted answer. accepted</td></tr>
+<tr><td>33</td><td>Floors and ceilings</td><td>Answered</td><td>Rule-based</td><td>item: Ceiling of Kitchen. choice use-wall-height. answered by scripted answer. accepted</td></tr>
+<tr><td>34</td><td>Floors and ceilings</td><td>Answered</td><td>Rule-based</td><td>item: Floor of Living Room. choice surface-oak-floorboards. answered by scripted answer. accepted</td></tr>
+<tr><td>35</td><td>Floors and ceilings</td><td>Answered</td><td>Rule-based</td><td>item: Ceiling of Living Room. choice use-wall-height. answered by scripted answer. accepted</td></tr>
+<tr><td>36</td><td>Floors and ceilings</td><td>Answered</td><td>Rule-based</td><td>item: Floor of Bedroom. choice surface-carpet. answered by scripted answer. accepted</td></tr>
+<tr><td>37</td><td>Floors and ceilings</td><td>Answered</td><td>Rule-based</td><td>item: Ceiling of Bedroom. choice use-wall-height. answered by scripted answer. accepted</td></tr>
+<tr><td>38</td><td>Floors and ceilings</td><td>Answered</td><td>Rule-based</td><td>item: Floor of Bathroom. choice surface-ceramic-tile. answered by scripted answer. accepted</td></tr>
+<tr><td>39</td><td>Floors and ceilings</td><td>Answered</td><td>Rule-based</td><td>item: Ceiling of Bathroom. choice use-wall-height. answered by scripted answer. accepted</td></tr>
+<tr><td>40</td><td>Floors and ceilings</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>41</td><td>Lighting and electrical</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>42</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Lights of Kitchen. rule lights-by-level</td></tr>
+<tr><td>43</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Switches and sockets of Kitchen. rule electrical-switches-sockets</td></tr>
+<tr><td>44</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Lights of Living Room. rule lights-by-level</td></tr>
+<tr><td>45</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Switches and sockets of Living Room. rule electrical-switches-sockets</td></tr>
+<tr><td>46</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Lights of Bedroom. rule lights-by-level</td></tr>
+<tr><td>47</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Switches and sockets of Bedroom. rule electrical-switches-sockets</td></tr>
+<tr><td>48</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Lights of Bathroom. rule lights-by-level</td></tr>
+<tr><td>49</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Switches and sockets of Bathroom. rule electrical-wet-zone</td></tr>
+<tr><td>50</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Lights of Kitchen. choice use-lights. answered by scripted answer. accepted</td></tr>
+<tr><td>51</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Switches and sockets of Kitchen. choice use-switches-sockets. answered by scripted answer. accepted</td></tr>
+<tr><td>52</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Lights of Living Room. choice use-lights. answered by scripted answer. accepted</td></tr>
+<tr><td>53</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Switches and sockets of Living Room. choice use-switches-sockets. answered by scripted answer. accepted</td></tr>
+<tr><td>54</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Lights of Bedroom. choice use-lights. answered by scripted answer. accepted</td></tr>
+<tr><td>55</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Switches and sockets of Bedroom. choice use-switches-sockets. answered by scripted answer. accepted</td></tr>
+<tr><td>56</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Lights of Bathroom. choice use-lights. answered by scripted answer. accepted</td></tr>
+<tr><td>57</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Switches and sockets of Bathroom. choice use-switches-sockets. answered by scripted answer. accepted</td></tr>
+<tr><td>58</td><td>Lighting and electrical</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>59</td><td>Furniture</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>60</td><td>Furniture</td><td>Proposed</td><td>Rule-based</td><td>item: Walls of Kitchen. rule clear-crowded</td></tr>
+<tr><td>61</td><td>Furniture</td><td>Proposed</td><td>Rule-based</td><td>item: Sofa. rule clear-door-swing</td></tr>
+<tr><td>62</td><td>Furniture</td><td>Answered</td><td>Rule-based</td><td>item: Walls of Kitchen. choice just-fits. answered by scripted answer. accepted</td></tr>
+<tr><td>63</td><td>Furniture</td><td>Kept as it is</td><td>Rule-based</td><td>item: Sofa. answered by scripted answer. Skipped. The item is kept as it is.</td></tr>
+<tr><td>64</td><td>Furniture</td><td>Still fine</td><td>Rule-based</td><td>item: Coffee table. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>65</td><td>Furniture</td><td>Still fine</td><td>Rule-based</td><td>item: Kitchen units. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>66</td><td>Furniture</td><td>Refused</td><td>Rule-based</td><td>item: Oak bed. Item &quot;Oak bed&quot; is Locked and cannot be changed.</td></tr>
+<tr><td>67</td><td>Furniture</td><td>Needs your look</td><td>Rule-based</td><td>item: Oak bed. Locked item &quot;Oak bed&quot; is out of date with earlier work. It was not changed. Please take a look.</td></tr>
+<tr><td>68</td><td>Furniture</td><td>Still fine</td><td>Rule-based</td><td>item: Wardrobe. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>69</td><td>Furniture</td><td>Still fine</td><td>Rule-based</td><td>item: Bath. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>70</td><td>Furniture</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>71</td><td>Walls</td><td>Not affected</td><td>Rule-based</td><td>Not affected: nothing it depends on changed.</td></tr>
+<tr><td>72</td><td>Doors and windows</td><td>Re-checked</td><td>Rule-based</td><td>Re-check 2 items: item-15 is stale because &quot;Walls of Kitchen&quot; changed in version 23, after version 6 that this item was based on. (and 1 more)</td></tr>
+<tr><td>73</td><td>Floors and ceilings</td><td>Re-checked</td><td>Rule-based</td><td>Re-check 2 items: item-9 is stale because &quot;Walls of Kitchen&quot; changed in version 23, after version 7 that this item was based on. (and 1 more)</td></tr>
+<tr><td>74</td><td>Lighting and electrical</td><td>Re-checked</td><td>Rule-based</td><td>Re-check 2 items: item-25 is stale because &quot;Walls of Kitchen&quot; changed in version 23, after version 14 that this item was based on. (and 1 more)</td></tr>
+<tr><td>75</td><td>Furniture</td><td>Re-checked</td><td>Rule-based</td><td>Re-check 3 items: item-33 is stale because &quot;Walls of Living Room&quot; changed in version 2, after version 0 that this item was based on. (and 2 more)</td></tr>
+<tr><td>76</td><td>Decor</td><td>Not affected</td><td>Rule-based</td><td>Re-check comes later in the normal order.</td></tr>
+<tr><td>77</td><td>Style</td><td>Not affected</td><td>Rule-based</td><td>Re-check comes later in the normal order.</td></tr>
+<tr><td>78</td><td>Reviewer</td><td>Not affected</td><td>Rule-based</td><td>Re-check comes later in the normal order.</td></tr>
+<tr><td>79</td><td>Doors and windows</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>80</td><td>Doors and windows</td><td>Still fine</td><td>Rule-based</td><td>item: Kitchen door. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>81</td><td>Doors and windows</td><td>Still fine</td><td>Rule-based</td><td>item: Kitchen window. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>82</td><td>Doors and windows</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>83</td><td>Floors and ceilings</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>84</td><td>Floors and ceilings</td><td>Still fine</td><td>Rule-based</td><td>item: Ceiling of Kitchen. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>85</td><td>Floors and ceilings</td><td>Still fine</td><td>Rule-based</td><td>item: Floor of Kitchen. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>86</td><td>Floors and ceilings</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>87</td><td>Lighting and electrical</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>88</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Lights of Kitchen. rule lights-by-level</td></tr>
+<tr><td>89</td><td>Lighting and electrical</td><td>Proposed</td><td>Rule-based</td><td>item: Switches and sockets of Kitchen. rule electrical-switches-sockets</td></tr>
+<tr><td>90</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Lights of Kitchen. choice use-lights. answered by scripted answer. accepted</td></tr>
+<tr><td>91</td><td>Lighting and electrical</td><td>Answered</td><td>Rule-based</td><td>item: Switches and sockets of Kitchen. choice use-switches-sockets. answered by scripted answer. accepted</td></tr>
+<tr><td>92</td><td>Lighting and electrical</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>93</td><td>Lighting and electrical</td><td>Left out of date</td><td>Rule-based</td><td>A change made during the re-check pass may have made other items stale. They are left as they are and will be reported.</td></tr>
+<tr><td>94</td><td>Furniture</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>95</td><td>Furniture</td><td>Proposed</td><td>Rule-based</td><td>item: Sofa. rule clear-door-swing</td></tr>
+<tr><td>96</td><td>Furniture</td><td>Kept as it is</td><td>Rule-based</td><td>item: Sofa. answered by scripted answer. Skipped. The item is kept as it is.</td></tr>
+<tr><td>97</td><td>Furniture</td><td>Still fine</td><td>Rule-based</td><td>item: Kitchen units. Re-checked after an earlier change. Nothing needed to change.</td></tr>
+<tr><td>98</td><td>Furniture</td><td>Refused</td><td>Rule-based</td><td>item: Oak bed. Item &quot;Oak bed&quot; is Locked and cannot be changed.</td></tr>
+<tr><td>99</td><td>Furniture</td><td>Needs your look</td><td>Rule-based</td><td>item: Oak bed. Locked item &quot;Oak bed&quot; is out of date with earlier work. It was not changed. Please take a look.</td></tr>
+<tr><td>100</td><td>Furniture</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>101</td><td>Decor</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>102</td><td>Decor</td><td>Proposed</td><td>Rule-based</td><td>item: Decor of Kitchen. rule art-centre-height</td></tr>
+<tr><td>103</td><td>Decor</td><td>Proposed</td><td>Rule-based</td><td>item: Decor of Living Room. rule rug-seating-group</td></tr>
+<tr><td>104</td><td>Decor</td><td>Proposed</td><td>Rule-based</td><td>item: Decor of Bedroom. rule art-centre-height</td></tr>
+<tr><td>105</td><td>Decor</td><td>Proposed</td><td>Rule-based</td><td>item: Decor of Bathroom. rule art-centre-height</td></tr>
+<tr><td>106</td><td>Decor</td><td>Answered</td><td>Rule-based</td><td>item: Decor of Kitchen. choice use-decor. answered by scripted answer. accepted</td></tr>
+<tr><td>107</td><td>Decor</td><td>Answered</td><td>Rule-based</td><td>item: Decor of Living Room. choice art-west. answered by scripted answer. accepted</td></tr>
+<tr><td>108</td><td>Decor</td><td>Answered</td><td>Rule-based</td><td>item: Decor of Bedroom. choice art-south. answered by scripted answer. accepted</td></tr>
+<tr><td>109</td><td>Decor</td><td>Answered</td><td>Rule-based</td><td>item: Decor of Bathroom. choice art-south. answered by scripted answer. accepted</td></tr>
+<tr><td>110</td><td>Decor</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>111</td><td>Style</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>112</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: Linen curtains and soft white walls. rule family-warm-natural</td></tr>
+<tr><td>113</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: Plain white wall tiles. rule family-calm-neutral</td></tr>
+<tr><td>114</td><td>Style</td><td>Note</td><td>Rule-based</td><td>item: Plain white wall tiles. AI was not used: AI is off: the spending cap is zero. The rules were used.</td></tr>
+<tr><td>115</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: . rule family-cool-modern</td></tr>
+<tr><td>116</td><td>Style</td><td>Note</td><td>Rule-based</td><td>item: . AI was not used: AI is off: the spending cap is zero. The rules were used.</td></tr>
+<tr><td>117</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: . rule family-warm-natural</td></tr>
+<tr><td>118</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: . rule family-warm-natural</td></tr>
+<tr><td>119</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: . rule family-warm-natural</td></tr>
+<tr><td>120</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: . rule family-calm-neutral</td></tr>
+<tr><td>121</td><td>Style</td><td>Note</td><td>Rule-based</td><td>item: . AI was not used: AI is off: the spending cap is zero. The rules were used.</td></tr>
+<tr><td>122</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: . rule family-cool-modern</td></tr>
+<tr><td>123</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: . rule family-cool-modern</td></tr>
+<tr><td>124</td><td>Style</td><td>Note</td><td>Rule-based</td><td>item: . AI was not used: AI is off: the spending cap is zero. The rules were used.</td></tr>
+<tr><td>125</td><td>Style</td><td>Proposed</td><td>Rule-based</td><td>item: . rule family-warm-natural</td></tr>
+<tr><td>126</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: Linen curtains and soft white walls. choice family-warm-natural. answered by scripted answer. accepted</td></tr>
+<tr><td>127</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: Plain white wall tiles. choice family-calm-neutral. answered by scripted answer. accepted</td></tr>
+<tr><td>128</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: . choice family-cool-modern. answered by scripted answer. accepted</td></tr>
+<tr><td>129</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: . choice family-warm-natural. answered by scripted answer. accepted</td></tr>
+<tr><td>130</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: . choice family-warm-natural. answered by scripted answer. accepted</td></tr>
+<tr><td>131</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: . choice family-warm-natural. answered by scripted answer. accepted</td></tr>
+<tr><td>132</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: . choice family-calm-neutral. answered by scripted answer. accepted</td></tr>
+<tr><td>133</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: . choice family-cool-modern. answered by scripted answer. accepted</td></tr>
+<tr><td>134</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: . choice family-cool-modern. answered by scripted answer. accepted</td></tr>
+<tr><td>135</td><td>Style</td><td>Answered</td><td>Rule-based</td><td>item: . choice family-warm-natural. answered by scripted answer. accepted</td></tr>
+<tr><td>136</td><td>Style</td><td>Finished</td><td>Rule-based</td><td></td></tr>
+<tr><td>137</td><td>Reviewer</td><td>Started</td><td>Rule-based</td><td></td></tr>
+<tr><td>138</td><td>Reviewer</td><td>Proposed</td><td>Rule-based</td><td>item: The clash report. rule report-summary</td></tr>
+<tr><td>139</td><td>Reviewer</td><td>Answered</td><td>Rule-based</td><td>item: The clash report. choice save-report. answered by scripted answer. accepted</td></tr>
+<tr><td>140</td><td>Reviewer</td><td>Finished</td><td>Rule-based</td><td></td></tr>
 </table>
 <h2>Clash report</h2>
-<p>2 clashes found. The Reviewer reports clashes and does not fix them.</p>
+<p>9 findings found, using these checks: A door or window on furniture, A room style against a Locked item, Furniture on furniture, An object outside its room, A door that opens into furniture, A light with no switch, A room with no window light, Items out of date after an earlier change, Items kept as they are, Locked items that need your look.. The Reviewer reports clashes and does not fix them.</p>
 <table>
 <tr><th>No.</th><th>How serious</th><th>Kind of clash</th><th>Room</th><th>Items involved</th><th>What is wrong</th></tr>
-<tr><td>1</td><td>High</td><td>Door or window on furniture</td>
-<td>Living Room</td><td>Garden door and Sofa</td><td>In the Living Room, the Garden door sits where the Sofa is placed.</td></tr>
-<tr><td>2</td><td>Medium</td><td>Room override against Locked item</td>
+<tr><td>1</td><td>Medium</td><td>Room override against Locked item</td>
 <td>Bedroom</td><td>Oak bed frame stays as it is</td><td>In the Bedroom, the room style &quot;cold steel&quot; conflicts with the Locked item &quot;Oak bed frame stays as it is&quot; (warm oak).</td></tr>
+<tr><td>2</td><td>High</td><td>Door opens into furniture</td>
+<td>Living Room</td><td>Garden door and Sofa</td><td>In the Living Room, the swing of the Garden door runs into the Sofa.</td></tr>
+<tr><td>3</td><td>Medium</td><td>Item out of date</td>
+<td>Living Room</td><td>Sofa</td><td>The Sofa may be out of date: something it was based on changed and it was not re-checked.</td></tr>
+<tr><td>4</td><td>Medium</td><td>Item out of date</td>
+<td>Living Room</td><td>Decor of Living Room</td><td>The Decor of Living Room may be out of date: something it was based on changed and it was not re-checked.</td></tr>
+<tr><td>5</td><td>Medium</td><td>Item out of date</td>
+<td>Bedroom</td><td>Decor of Bedroom</td><td>The Decor of Bedroom may be out of date: something it was based on changed and it was not re-checked.</td></tr>
+<tr><td>6</td><td>Medium</td><td>Item out of date</td>
+<td>Living Room</td><td></td><td>The Style of the decor in Living Room may be out of date: something it was based on changed and it was not re-checked.</td></tr>
+<tr><td>7</td><td>Medium</td><td>Item out of date</td>
+<td>Bedroom</td><td></td><td>The Style of the decor in Bedroom may be out of date: something it was based on changed and it was not re-checked.</td></tr>
+<tr><td>8</td><td>Low</td><td>Item kept as is</td>
+<td>Living Room</td><td>Sofa</td><td>You chose to keep the Sofa as it is, so a suggestion for it was skipped.</td></tr>
+<tr><td>9</td><td>High</td><td>Locked item needs your look</td>
+<td>Bedroom</td><td>Oak bed</td><td>The Oak bed is Locked and out of date with earlier work. It was not changed. Please take a look.</td></tr>
 </table>
 <h2>Version history</h2>
 <p>The times below come from a fixed sample clock, so every run of the sample looks the same.</p>
 <table>
-<tr><th>Version</th><th>Time</th><th>Changed by</th><th>Item</th><th>What changed</th><th>Before</th><th>After</th></tr>
-<tr><td>1</td><td>2026-01-01T00:00:00.000Z</td><td>Style</td>
-<td>Linen curtains and soft white walls</td><td>Value</td><td>Linen curtains and soft white walls</td><td>Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)</td></tr>
-<tr><td>2</td><td>2026-01-01T00:00:01.000Z</td><td>Style</td>
-<td>Plain white wall tiles</td><td>Value</td><td>Plain white wall tiles</td><td>Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)</td></tr>
-<tr><td>3</td><td>2026-01-01T00:00:02.000Z</td><td>Layout</td>
-<td>Sofa</td><td>Value</td><td>Sofa (1.0 m from the left, 3.0 m from the top, 2.0 m wide, 1.0 m deep)</td><td>Sofa (1.0 m from the left, 3.0 m from the top, 2.0 m wide, 1.0 m deep; Placement checked by Layout)</td></tr>
-<tr><td>4</td><td>2026-01-01T00:00:03.000Z</td><td>Builder</td>
-<td>Garden door</td><td>Value</td><td>Garden door (1.5 m from the left, 3.0 m from the top, 0.9 m wide, 0.9 m deep)</td><td>Garden door (1.5 m from the left, 3.0 m from the top, 0.9 m wide, 0.9 m deep; Opening checked by Builder)</td></tr>
-<tr><td>5</td><td>2026-01-01T00:00:04.000Z</td><td>Builder</td>
-<td>Bedroom door</td><td>Value</td><td>Bedroom door (0.2 m from the left, 0.0 m from the top, 0.9 m wide, 0.9 m deep)</td><td>Bedroom door (0.2 m from the left, 0.0 m from the top, 0.9 m wide, 0.9 m deep; Opening checked by Builder)</td></tr>
-<tr><td>6</td><td>2026-01-01T00:00:05.000Z</td><td>Builder</td>
-<td>Kitchen window</td><td>Value</td><td>Kitchen window (2.0 m from the left, 0.0 m from the top, 1.2 m wide, 0.1 m deep)</td><td>Kitchen window (2.0 m from the left, 0.0 m from the top, 1.2 m wide, 0.1 m deep; Opening checked by Builder)</td></tr>
-<tr><td>7</td><td>2026-01-01T00:00:06.000Z</td><td>Reviewer</td>
-<td>The clash report</td><td>Value</td><td>Not reviewed yet</td><td>2 clashes found</td></tr>
+<tr><th>Version</th><th>Time</th><th>Changed by</th><th>Item</th><th>What changed</th><th>Before</th><th>After</th><th>Where it came from</th><th>Approved by</th></tr>
+<tr><td>1</td><td>2026-01-01T00:00:00.000Z</td><td>Walls</td>
+<td>Walls of Kitchen</td><td>Value</td><td>Walls of Kitchen</td><td>Walls of Kitchen</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>2</td><td>2026-01-01T00:00:01.000Z</td><td>Walls</td>
+<td>Walls of Living Room</td><td>Value</td><td>Walls of Living Room</td><td>Walls of Living Room</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>3</td><td>2026-01-01T00:00:02.000Z</td><td>Walls</td>
+<td>Walls of Bedroom</td><td>Value</td><td>Walls of Bedroom</td><td>Walls of Bedroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>4</td><td>2026-01-01T00:00:03.000Z</td><td>Walls</td>
+<td>Walls of Bathroom</td><td>Value</td><td>Walls of Bathroom</td><td>Walls of Bathroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>5</td><td>2026-01-01T00:00:04.000Z</td><td>Doors and windows</td>
+<td>Window for Living Room</td><td>Value</td><td>Window for Living Room</td><td>Living Room window (2.0 m from the left, 0.0 m from the top, 2.0 m wide, 0.1 m deep)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>6</td><td>2026-01-01T00:00:05.000Z</td><td>Doors and windows</td>
+<td>Window for Bedroom</td><td>Value</td><td>Window for Bedroom</td><td>Bedroom window (1.3 m from the left, 0.0 m from the top, 1.3 m wide, 0.1 m deep)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>7</td><td>2026-01-01T00:00:06.000Z</td><td>Floors and ceilings</td>
+<td>Floor of Kitchen</td><td>Value</td><td>Floor of Kitchen</td><td>Floor of Kitchen</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>8</td><td>2026-01-01T00:00:07.000Z</td><td>Floors and ceilings</td>
+<td>Ceiling of Kitchen</td><td>Value</td><td>Ceiling of Kitchen</td><td>Ceiling of Kitchen (flat)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>9</td><td>2026-01-01T00:00:08.000Z</td><td>Floors and ceilings</td>
+<td>Floor of Living Room</td><td>Value</td><td>Floor of Living Room</td><td>Floor of Living Room</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>10</td><td>2026-01-01T00:00:09.000Z</td><td>Floors and ceilings</td>
+<td>Ceiling of Living Room</td><td>Value</td><td>Ceiling of Living Room</td><td>Ceiling of Living Room (flat)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>11</td><td>2026-01-01T00:00:10.000Z</td><td>Floors and ceilings</td>
+<td>Floor of Bedroom</td><td>Value</td><td>Floor of Bedroom</td><td>Floor of Bedroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>12</td><td>2026-01-01T00:00:11.000Z</td><td>Floors and ceilings</td>
+<td>Ceiling of Bedroom</td><td>Value</td><td>Ceiling of Bedroom</td><td>Ceiling of Bedroom (flat)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>13</td><td>2026-01-01T00:00:12.000Z</td><td>Floors and ceilings</td>
+<td>Floor of Bathroom</td><td>Value</td><td>Floor of Bathroom</td><td>Floor of Bathroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>14</td><td>2026-01-01T00:00:13.000Z</td><td>Floors and ceilings</td>
+<td>Ceiling of Bathroom</td><td>Value</td><td>Ceiling of Bathroom</td><td>Ceiling of Bathroom (flat)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>15</td><td>2026-01-01T00:00:14.000Z</td><td>Lighting and electrical</td>
+<td>Lights of Kitchen</td><td>Value</td><td>Lights of Kitchen</td><td>Lights of Kitchen</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>16</td><td>2026-01-01T00:00:15.000Z</td><td>Lighting and electrical</td>
+<td>Switches and sockets of Kitchen</td><td>Value</td><td>Switches and sockets of Kitchen</td><td>Switches and sockets of Kitchen</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>17</td><td>2026-01-01T00:00:16.000Z</td><td>Lighting and electrical</td>
+<td>Lights of Living Room</td><td>Value</td><td>Lights of Living Room</td><td>Lights of Living Room</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>18</td><td>2026-01-01T00:00:17.000Z</td><td>Lighting and electrical</td>
+<td>Switches and sockets of Living Room</td><td>Value</td><td>Switches and sockets of Living Room</td><td>Switches and sockets of Living Room</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>19</td><td>2026-01-01T00:00:18.000Z</td><td>Lighting and electrical</td>
+<td>Lights of Bedroom</td><td>Value</td><td>Lights of Bedroom</td><td>Lights of Bedroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>20</td><td>2026-01-01T00:00:19.000Z</td><td>Lighting and electrical</td>
+<td>Switches and sockets of Bedroom</td><td>Value</td><td>Switches and sockets of Bedroom</td><td>Switches and sockets of Bedroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>21</td><td>2026-01-01T00:00:20.000Z</td><td>Lighting and electrical</td>
+<td>Lights of Bathroom</td><td>Value</td><td>Lights of Bathroom</td><td>Lights of Bathroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>22</td><td>2026-01-01T00:00:21.000Z</td><td>Lighting and electrical</td>
+<td>Switches and sockets of Bathroom</td><td>Value</td><td>Switches and sockets of Bathroom</td><td>Switches and sockets of Bathroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>23</td><td>2026-01-01T00:00:22.000Z</td><td>Walls</td>
+<td>Walls of Kitchen</td><td>Value</td><td>Walls of Kitchen</td><td>Walls of Kitchen</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>24</td><td>2026-01-01T00:00:23.000Z</td><td>Lighting and electrical</td>
+<td>Lights of Kitchen</td><td>Value</td><td>Lights of Kitchen</td><td>Lights of Kitchen</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>25</td><td>2026-01-01T00:00:24.000Z</td><td>Lighting and electrical</td>
+<td>Switches and sockets of Kitchen</td><td>Value</td><td>Switches and sockets of Kitchen</td><td>Switches and sockets of Kitchen</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>26</td><td>2026-01-01T00:00:25.000Z</td><td>Decor</td>
+<td>Decor of Kitchen</td><td>Value</td><td>Decor of Kitchen</td><td>Decor of Kitchen</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>27</td><td>2026-01-01T00:00:26.000Z</td><td>Decor</td>
+<td>Decor of Living Room</td><td>Value</td><td>Decor of Living Room</td><td>Decor of Living Room</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>28</td><td>2026-01-01T00:00:27.000Z</td><td>Decor</td>
+<td>Decor of Bedroom</td><td>Value</td><td>Decor of Bedroom</td><td>Decor of Bedroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>29</td><td>2026-01-01T00:00:28.000Z</td><td>Decor</td>
+<td>Decor of Bathroom</td><td>Value</td><td>Decor of Bathroom</td><td>Decor of Bathroom</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>30</td><td>2026-01-01T00:00:29.000Z</td><td>Style</td>
+<td>Linen curtains and soft white walls</td><td>Value</td><td>Linen curtains and soft white walls</td><td>Linen curtains and soft white walls (kept in line with: warm oak, linen, soft white walls)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>31</td><td>2026-01-01T00:00:30.000Z</td><td>Style</td>
+<td>Plain white wall tiles</td><td>Value</td><td>Plain white wall tiles</td><td>Plain white wall tiles (kept in line with: warm oak, linen, soft white walls)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>32</td><td>2026-01-01T00:00:31.000Z</td><td>Style</td>
+<td></td><td>Value</td><td></td><td> (kept in line with: warm oak, linen, soft white walls)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>33</td><td>2026-01-01T00:00:32.000Z</td><td>Style</td>
+<td></td><td>Value</td><td></td><td> (kept in line with: warm oak, linen, soft white walls)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>34</td><td>2026-01-01T00:00:33.000Z</td><td>Style</td>
+<td></td><td>Value</td><td></td><td> (kept in line with: warm oak, linen, soft white walls)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>35</td><td>2026-01-01T00:00:34.000Z</td><td>Style</td>
+<td></td><td>Value</td><td></td><td> (kept in line with: warm oak, linen, soft white walls)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>36</td><td>2026-01-01T00:00:35.000Z</td><td>Style</td>
+<td></td><td>Value</td><td></td><td> (kept in line with: cold steel, dark slate)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>37</td><td>2026-01-01T00:00:36.000Z</td><td>Style</td>
+<td></td><td>Value</td><td></td><td> (kept in line with: cold steel, dark slate)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>38</td><td>2026-01-01T00:00:37.000Z</td><td>Style</td>
+<td></td><td>Value</td><td></td><td> (kept in line with: warm oak, linen, soft white walls)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>39</td><td>2026-01-01T00:00:38.000Z</td><td>Style</td>
+<td></td><td>Value</td><td></td><td> (kept in line with: warm oak, linen, soft white walls)</td><td>Rule-based</td><td>scripted answer</td></tr>
+<tr><td>40</td><td>2026-01-01T00:00:39.000Z</td><td>Reviewer</td>
+<td>The clash report</td><td>Value</td><td>Not reviewed yet</td><td>9 findings found, using these checks: A door or window on furniture, A room style against a Locked item, Furniture on furniture, An object outside its room, A door that opens into furniture, A light with no switch, A room with no window light, Items out of date after an earlier change, Items kept as they are, Locked items that need your look.</td><td>Rule-based</td><td>scripted answer</td></tr>
 </table>
 <p class="statement">SAMPLE PROJECT</p>
 <p class="statement">Plans are drafts for professional review. They are not verified engineering.</p>

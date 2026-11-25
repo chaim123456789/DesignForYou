@@ -70,6 +70,7 @@ export function createRun(project, options = {}) {
   const keptAsIs = [];
   const needsLook = new Set();
   const answers = [];
+  const history = []; // every step with its proposals and the answers, for the screen and the viewer (design-team D4, D5)
   const seenProposalIds = new Set();
   let current = null; // { agent, kind, proposals: Map, staleIds, proposedItems, ... }
   let failure = null;
@@ -168,8 +169,13 @@ export function createRun(project, options = {}) {
     }
     for (const p of proposals) {
       seenProposalIds.add(p.id);
-      log({ agent: step.agent, event: 'proposed', item: p.itemId, proposal: p.id, source: p.source, ruleId: p.ruleId });
+      log({
+        agent: step.agent, event: 'proposed', item: p.itemId, proposal: p.id, source: p.source, ruleId: p.ruleId,
+        ...(p.ai ? { costUsd: p.ai.costUsd, aiLabel: p.ai.label } : {}),
+      });
+      if (p.aiNote) log({ agent: step.agent, event: 'note', item: p.itemId, reason: p.aiNote });
     }
+    history.push({ agent: step.agent, kind: step.kind, staleItemIds: [...staleIds], proposals: proposals.map((p) => ({ proposal: p, answer: null })) });
     current = {
       agent: step.agent, kind: step.kind, applied: 0, staleIds, proposedItems: new Set(proposals.map((p) => p.itemId)),
       proposals: new Map(proposals.map((p) => [p.id, p])),
@@ -245,6 +251,8 @@ export function createRun(project, options = {}) {
     }
     current.proposals.delete(proposalId);
     answers.push({ proposalId, choice, by: approvedBy, ...result });
+    const recorded = history[history.length - 1].proposals.find((x) => x.proposal.id === proposalId);
+    if (recorded) recorded.answer = { choice, by: approvedBy, ...result };
     if (current.proposals.size === 0) {
       const step = current;
       finishStep();
@@ -262,6 +270,7 @@ export function createRun(project, options = {}) {
     get keptAsIs() { return keptAsIs.slice(); },
     get needsLook() { return [...needsLook]; },
     get answers() { return answers.slice(); },
+    get steps() { return history.map((h) => ({ ...h, staleItemIds: h.staleItemIds.slice(), proposals: h.proposals.map((x) => ({ proposal: x.proposal, answer: x.answer ? { ...x.answer } : null })) })); },
     get ripplePasses() { return ripplePasses; },
     approvedBy,
   };

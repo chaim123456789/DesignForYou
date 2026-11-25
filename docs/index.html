@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'; img-src 'self' blob:">
   <title>Start - DesignForYou</title>
-  <link rel="stylesheet" href="styles.css?v=build-place-4">
+  <link rel="stylesheet" href="styles.css?v=build-team-4">
 </head>
 <body>
   <header id="top-bar" class="label-bar">
@@ -352,6 +352,18 @@
         <h2 id="run-heading">Run the design team</h2>
         <p id="run-reason" class="setup-needs"></p>
         <button type="button" id="run-design-team" class="action-button run-button" aria-describedby="run-reason" disabled>Run the design team</button>
+        <div id="run-extra"></div>
+      </div>
+
+      <div id="team-run" class="panel team-run" role="group" aria-labelledby="heading-team-agent" hidden>
+        <p id="team-progress" class="hint"></p>
+        <h2 id="heading-team-agent" tabindex="-1"></h2>
+        <ol id="team-agents" class="team-agents" aria-label="The eight agents, in order"></ol>
+        <p id="team-agent-note" class="hint"></p>
+        <p id="team-ai-note" class="hint" hidden></p>
+        <ol id="team-proposals" class="team-proposals"></ol>
+        <p id="team-nothing" hidden>This agent had nothing to propose. Nothing was changed.</p>
+        <p id="team-rechecked" class="hint" hidden></p>
       </div>
     </div>
 
@@ -386,12 +398,19 @@
       </ul>
       <p id="legend-labels">Block names show when you point at or select a block, and always for clashes; tick "Show all labels" to see every name.</p>
       <p id="legend-shapes">Doors and windows are thin panels; furniture is solid; style items are flat patches</p>
+      <p id="legend-team">Lights are small squares under the ceiling; switches and sockets are small blocks on the walls; a rug is a thin mat on the floor</p>
+    </section>
+
+    <section id="team-panel" class="team-panel-viewer" aria-labelledby="team-panel-heading" hidden>
+      <h2 id="team-panel-heading">The design team</h2>
+      <p id="team-panel-sentence"></p>
+      <ol id="team-panel-list"></ol>
     </section>
 
     <section id="history" aria-label="Version history">
       <h2>History</h2>
-      <label for="version-slider">Version: <output id="version-number" for="version-slider">7 of 7</output></label>
-      <input type="range" id="version-slider" min="0" max="7" step="1" value="7" disabled>
+      <label for="version-slider">Version: <output id="version-number" for="version-slider">40 of 40</output></label>
+      <input type="range" id="version-slider" min="0" max="40" step="1" value="40" disabled>
       <p id="caption">Loading the sample.</p>
     </section>
 
@@ -442,6 +461,7 @@
       </div>
 
       <p id="result-fixed-rules" class="setup-needs"></p>
+      <p id="result-team-sentence" class="setup-needs" hidden></p>
       <button type="button" id="result-start-again" class="nav-button">Start again</button>
     </div>
     </div>
@@ -463,7 +483,7 @@
   </footer>
 
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-  <script type="module" src="viewer.js?v=build-place-4"></script>
-  <script type="module" src="intake/screens.js?v=build-place-4"></script>
+  <script type="module" src="viewer.js?v=build-team-4"></script>
+  <script type="module" src="intake/screens.js?v=build-team-4"></script>
 </body>
 </html>
