@@ -352,6 +352,18 @@
         <h2 id="run-heading">Run the design team</h2>
         <p id="run-reason" class="setup-needs"></p>
         <button type="button" id="run-design-team" class="action-button run-button" aria-describedby="run-reason" disabled>Run the design team</button>
+        <div id="run-extra"></div>
+      </div>
+
+      <div id="team-run" class="panel team-run" role="group" aria-labelledby="heading-team-agent" hidden>
+        <p id="team-progress" class="hint"></p>
+        <h2 id="heading-team-agent" tabindex="-1"></h2>
+        <ol id="team-agents" class="team-agents" aria-label="The eight agents, in order"></ol>
+        <p id="team-agent-note" class="hint"></p>
+        <p id="team-ai-note" class="hint" hidden></p>
+        <ol id="team-proposals" class="team-proposals"></ol>
+        <p id="team-nothing" hidden>This agent had nothing to propose. Nothing was changed.</p>
+        <p id="team-rechecked" class="hint" hidden></p>
       </div>
     </div>
 
@@ -442,6 +454,7 @@
       </div>
 
       <p id="result-fixed-rules" class="setup-needs"></p>
+      <p id="result-team-sentence" class="setup-needs" hidden></p>
       <button type="button" id="result-start-again" class="nav-button">Start again</button>
     </div>
     </div>

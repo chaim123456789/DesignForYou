@@ -11,6 +11,15 @@ const ADDRESS_FORMAT = /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i;
 export const NOT_CHECKED = 'not checked';
 const CHECKED_FORMAT = /^read \d{4}-\d{2}-\d{2}$/;
 
+// In a browser there are no file tools. The page hands in every knowledge file as data (see docs/team/data.js), once, and the
+// loaders below read from that table. The same checks run on it, so a bad file is rejected the same way (design-team D4).
+const preload = { files: null };
+export function usePreloadedKnowledge(files) {
+  if (files === null || typeof files !== 'object' || Array.isArray(files)) throw new Error('Preloaded knowledge must be an object of files, by path.');
+  preload.files = files;
+}
+export function clearPreloadedKnowledge() { preload.files = null; }
+
 function nodeTools() {
   if (typeof process === 'undefined' || typeof process.getBuiltinModule !== 'function') {
     throw new Error('Reading knowledge files needs Node.js. In a browser, pass the data directly.');
@@ -44,6 +53,13 @@ function knowledgeDir() {
 
 // The licences a source may use.
 export function loadAllowedLicences(file) {
+  if (preload.files !== null && file === undefined && preload.files['allowed-licences.json']) {
+    const data = preload.files['allowed-licences.json'];
+    if (!data || !Array.isArray(data.licences) || data.licences.length === 0 || data.licences.some((l) => typeof l !== 'string')) {
+      throw new Error('The allowed licences file needs a list called "licences".');
+    }
+    return Object.freeze([...data.licences]);
+  }
   const { path } = nodeTools();
   const data = readJson(file === undefined ? path.join(knowledgeDir(), 'allowed-licences.json') : file, 'allowed licences');
   if (!data || !Array.isArray(data.licences) || data.licences.length === 0 || data.licences.some((l) => typeof l !== 'string')) {
@@ -109,6 +125,11 @@ export function validateKnowledge(data, allowedLicences, fileName = 'A knowledge
 
 // Read and check one knowledge file by its path under src/knowledge/, for example "shared/room-types.json" (Node only).
 export function loadKnowledge(relativePath, options = {}) {
+  if (preload.files !== null && options.baseDir === undefined) {
+    if (!(relativePath in preload.files)) throw new Error(`The knowledge file is missing: ${relativePath}`);
+    const licences = options.allowedLicences === undefined ? loadAllowedLicences() : options.allowedLicences;
+    return validateKnowledge(structuredClone(preload.files[relativePath]), licences, relativePath);
+  }
   const { path } = nodeTools();
   const base = options.baseDir === undefined ? knowledgeDir() : options.baseDir;
   const licences = options.allowedLicences === undefined ? loadAllowedLicences(path.join(base, 'allowed-licences.json')) : options.allowedLicences;

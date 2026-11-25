@@ -7,13 +7,30 @@
 // tag) and hands them in. Pressing the button sends nothing anywhere: the design team runs in this page.
 // Everything the visitor typed goes on the page with textContent, never as page code.
 //
+// Two buttons start a run. "Run the design team" runs the four-agent pipeline in one go, as it always did. "Step through the eight
+// agents" (when the page has loaded the design team, see team-screen.js) asks the visitor to answer each agent's proposals before the next
+// agent starts. If the design team code could not be loaded, only the first button is shown and the red message says why.
+//
 // Every part is its own protected step (attempt and guarded come from screens.js).
 
 export function setUpReviewScreen(tools) {
-  const { el, attempt, guarded, announce, getState, api, taste, onShow, onReset, runDesignTeam, showResult } = tools;
+  const { el, attempt, guarded, announce, getState, api, taste, onShow, onReset, runDesignTeam, showResult, startTeam } = tools;
 
   const refs = {};
   for (const id of ['review-list', 'run-design-team', 'run-reason', 'run-failure', 'run-failure-text']) refs[id] = el(id);
+  // The step-by-step button is made here, next to the run button, and only when the design team code has loaded.
+  attempt('Step through the eight agents button', () => {
+    if (!startTeam) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = 'run-team-steps';
+    button.className = 'action-button run-button';
+    button.setAttribute('aria-describedby', 'run-reason');
+    button.disabled = true;
+    button.textContent = 'Step through the eight agents, and confirm each suggestion';
+    el('run-extra').append(button);
+    refs['run-team-steps'] = button;
+  });
 
   const make = (tag, className, text) => {
     const node = document.createElement(tag);
@@ -79,15 +96,23 @@ export function setUpReviewScreen(tools) {
     refs['run-failure-text'].textContent = '';
   }
 
+  const teamRunning = () => typeof tools.teamIsRunning === 'function' && tools.teamIsRunning();
+
   function updateButton() {
     const missing = missingParts(getState());
-    refs['run-design-team'].disabled = missing.length > 0;
+    const busy = teamRunning();
+    refs['run-design-team'].disabled = missing.length > 0 || busy;
+    if (refs['run-team-steps']) refs['run-team-steps'].disabled = missing.length > 0 || busy;
     refs['run-reason'].textContent = missing.length > 0
       ? `Still needed before you can run the design team: ${joinWords(missing)}. Use Back to add it.`
-      : 'You can run the design team now. Nothing is sent anywhere. It runs in this page.';
+      : busy
+        ? 'The eight agents are working. Answer each agent\'s proposals below.'
+        : 'You can run the design team now. Nothing is sent anywhere. It runs in this page.';
   }
 
   function refresh() {
+    // Coming back to this screen ends a run that was waiting for answers: what was entered may have changed.
+    attempt('Ending an unfinished team run', () => { if (tools.stopTeam) tools.stopTeam(); });
     attempt('Review list', () => refs['review-list'].replaceChildren(...reviewLines(getState()).map((line) => make('li', 'entry', line))));
     attempt('Run button', updateButton);
     attempt('Clearing an old failure message', hideFailure);
@@ -127,6 +152,28 @@ export function setUpReviewScreen(tools) {
     }
   }
 
+  // The step-by-step run: it goes on after this click, answer by answer. Both buttons stay off until it ends.
+  async function runSteps() {
+    const state = getState();
+    if (!startTeam || running || teamRunning() || missingParts(state).length > 0) { updateButton(); return; }
+    hideFailure();
+    const done = () => attempt('Run button', updateButton);
+    try {
+      startTeam(state, {
+        finished: async (result) => { try { await showResult(result); } finally { done(); } },
+        failed: (failedAgent, reason) => { showFailure(failedAgent, reason); done(); },
+      });
+    } catch (error) {
+      showFailure(null, error && error.message ? error.message : String(error));
+      throw error; // also shown in the red message at the top of the page
+    } finally {
+      done();
+    }
+  }
+
+  attempt('Step through the eight agents button handler', () => {
+    if (refs['run-team-steps']) refs['run-team-steps'].addEventListener('click', guarded('Step through the eight agents button', runSteps));
+  });
   attempt('Run button handler', () => {
     refs['run-design-team'].addEventListener('click', guarded('Run the design team button', run));
   });

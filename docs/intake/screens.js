@@ -56,6 +56,8 @@ const REVIEW_SCREEN_FILE = `./review-screen.js?v=${PAGE_VERSION}`;
 const RESULT_SCREEN_FILE = `./result-screen.js?v=${PAGE_VERSION}`;
 const BUILD_BRAIN_FILE = `./build-brain.js?v=${PAGE_VERSION}`;
 const REPORT_FILE = `./report.js?v=${PAGE_VERSION}`;
+const TEAM_RUN_FILE = `./team-run.js?v=${PAGE_VERSION}`;
+const TEAM_SCREEN_FILE = `./team-screen.js?v=${PAGE_VERSION}`;
 const RUN_DATA_FILE = `./run-data.js?v=${PAGE_VERSION}`;
 const SUMMARY_VIEW_FILE = `./summary-view.js?v=${PAGE_VERSION}`;
 const MAKE_SUMMARY_FILE = `../engine/summary/make-summary.js?v=${PAGE_VERSION}`;
@@ -306,12 +308,32 @@ async function loadReviewScreen(data) {
   const { setUpReviewScreen } = await import(REVIEW_SCREEN_FILE);
   const { runDesignTeam } = await import(BUILD_BRAIN_FILE);
   const taste = await import(TASTE_FILE);
+  const showResult = (run) => {
+    if (!resultApi) throw new Error('The result screen could not be loaded. See the red message at the top of the page.');
+    return resultApi.showOwnResult(run);
+  };
+  // The eight-agent design team. Its code is its own protected step: if it cannot load, the red message appears and the button
+  // runs the old four-agent pipeline as before.
+  let teamScreen = null;
+  let teamCallbacks = null;
+  const teamCode = await attempt('Design team code', () => import(TEAM_RUN_FILE));
+  const teamScreenCode = teamCode === FAILED ? FAILED : await attempt('Design team screen code', () => import(TEAM_SCREEN_FILE));
+  if (teamCode !== FAILED && teamScreenCode !== FAILED) {
+    attempt('Design team screen', () => {
+      teamScreen = teamScreenCode.setUpTeamScreen({
+        el, attempt, guarded, announce, team: teamCode,
+        onFinished: (result) => teamCallbacks.finished(result),
+        onFailed: (agent, reason) => teamCallbacks.failed(agent, reason),
+      });
+    });
+  }
   setUpReviewScreen({
-    el, attempt, guarded, announce, getState: () => appState, onShow, onReset, taste, runDesignTeam,
-    showResult: (run) => {
-      if (!resultApi) throw new Error('The result screen could not be loaded. See the red message at the top of the page.');
-      return resultApi.showOwnResult(run);
-    },
+    el, attempt, guarded, announce, getState: () => appState, onShow, onReset, taste, runDesignTeam, showResult,
+    ...(teamScreen ? {
+      startTeam: (state, callbacks) => { teamCallbacks = callbacks; teamScreen.start(state); },
+      stopTeam: () => teamScreen.stop(),
+      teamIsRunning: () => teamScreen.isRunning(),
+    } : {}),
     ...data,
   });
 }
