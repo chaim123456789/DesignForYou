@@ -181,3 +181,13 @@ test('design-team B3: the floors and ceilings knowledge files pass the provenanc
   assert.doesNotMatch(text, /'(light|electrical|layout|decor|style|clash)'/);
   assert.deepEqual(JSON.parse(readFileSync(new URL('../src/agents/floors-ceilings/agent.json', import.meta.url), 'utf8')), { name: 'Floors and ceilings', enabled: true });
 });
+
+test('design-team B3: even if the knowledge file listed a dry surface for a wet room, the agent offers wet-safe ones only', () => {
+  const k = loadFloorsCeilingsKnowledge();
+  const dirty = {
+    ...k, surfaces: k.surfaces.map((r) => (r.when.roomType === 'bathroom' ? { ...r, then: { surfaces: [{ name: 'carpet', wetSafe: false }, { name: 'vinyl', wetSafe: true }] } } : r)),
+  };
+  const t = earlier({ rooms: [{ name: 'Bathroom', width: 2.5, depth: 2.5 }] });
+  const p = forItem(makeFloorsCeilingsAgent(dirty)(view(t.project), ctx), t.slots.floors[R1]);
+  assert.deepEqual(p.options.slice(0, -1).map((o) => o.newValue.surface), ['vinyl']);
+});

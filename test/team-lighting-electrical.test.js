@@ -198,3 +198,12 @@ test('design-team B4: the lighting and electrical knowledge files pass the prove
   assert.doesNotMatch(text, /'(layout|decor|style|clash)'/);
   assert.deepEqual(JSON.parse(readFileSync(new URL('../src/agents/lighting-electrical/agent.json', import.meta.url), 'utf8')), { name: 'Lighting and electrical', enabled: true });
 });
+
+test('design-team B4: even if the knowledge file allowed sockets in a whole-room wet zone, the agent proposes none (its own check)', () => {
+  const k = loadLightingElectricalKnowledge();
+  const lax = { ...k, wet: k.wet.map((r) => (r.when.roomType === 'bathroom' ? { ...r, then: { zone: 'whole-room', socketsAllowed: true } } : r)) };
+  const t = earlier(living);
+  const p = forItem(makeLightingElectricalAgent(lax)(view(t.project), ctx), t.slots.electrical[R2]);
+  assert.deepEqual(p.options[0].newValue.sockets, []);
+  assert.equal(p.options[0].newValue.wetZones.length, 1);
+});
