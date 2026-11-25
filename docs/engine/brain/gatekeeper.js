@@ -1,7 +1,7 @@
 // The gatekeeper: the only way to change an item after it is created.
 // Every change goes through changeItem or changeStatus. Refusals go to the
 // run log and write no version. Accepted changes write exactly one version.
-import { getItem, appendVersion, STATUSES } from './brain.js';
+import { getItem, appendVersion, STATUSES, checkBasis, checkApprovedBy } from './brain.js';
 
 export const USER = 'user';
 
@@ -25,7 +25,9 @@ export function createGatekeeper(project, options = {}) {
   //   1. Locked: refused, even for the owner.
   //   2. Not the owner: refused. (The user is not an owner, so a user cannot change values.)
   //   3. Otherwise accepted, and a version is written.
-  function changeItem(who, itemId, newValue) {
+  // details (optional): { basis, approvedBy }. They are checked only after the two refusals above,
+  // and are written to the version (and the basis to the item). Without details nothing changes.
+  function changeItem(who, itemId, newValue, details = {}) {
     const item = mustFindItem(project, itemId);
 
     if (item.status === 'Locked') {
@@ -38,9 +40,13 @@ export function createGatekeeper(project, options = {}) {
       throw new Error('A change needs a new value.');
     }
 
+    const basis = details.basis === undefined ? undefined : checkBasis(project, details.basis, item.id);
+    const approvedBy = details.approvedBy === undefined ? undefined : checkApprovedBy(details.approvedBy);
+
     const oldValue = item.value;
     item.value = structuredClone(newValue);
-    const version = appendVersion(project, { who, itemId: item.id, field: 'value', oldValue, newValue, time: timeNow() });
+    if (basis !== undefined) item.basis = structuredClone(basis);
+    const version = appendVersion(project, { who, itemId: item.id, field: 'value', oldValue, newValue, time: timeNow(), approvedBy, basis });
     return { accepted: true, version };
   }
 

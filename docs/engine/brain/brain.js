@@ -132,9 +132,7 @@ export function findRoom(project, roomId) {
 // ---------------------------------------------------------------------------
 
 export const STATUSES = Object.freeze(['Locked', 'Unsure']);
-export const OWNERS = Object.freeze(['Style', 'Layout', 'Builder', 'Reviewer']);
-
-// Which agent owns which kind of item (R4.5).
+// The old four-agent path (kept for the existing sample and its tests).
 export const KIND_OWNER = Object.freeze({
   style: 'Style',
   layout: 'Layout',
@@ -143,12 +141,81 @@ export const KIND_OWNER = Object.freeze({
   clash: 'Reviewer',
 });
 
+// The design team path (design-team spec, R2.2): which agent owns which kind of item.
+// "layout" stays the kind name for furniture, so old projects still load.
+export const TEAM_KIND_OWNER = Object.freeze({
+  wall: 'Walls',
+  door: 'Doors and windows',
+  window: 'Doors and windows',
+  floor: 'Floors and ceilings',
+  ceiling: 'Floors and ceilings',
+  light: 'Lighting and electrical',
+  electrical: 'Lighting and electrical',
+  layout: 'Furniture',
+  decor: 'Decor',
+  style: 'Style',
+  clash: 'Reviewer',
+});
+
+// Every agent name that may own an item: the old four and the design team's eight (derived, not typed again here).
+export const OWNERS = Object.freeze([...new Set([...Object.values(KIND_OWNER), ...Object.values(TEAM_KIND_OWNER)])]);
+
+// Who may own a kind: the old owner (existing projects) or the design team's owner. An item still has exactly one owner.
+function ownersForKind(kind) {
+  const owners = [KIND_OWNER[kind], TEAM_KIND_OWNER[kind]].filter((o, i, all) => o !== undefined && all.indexOf(o) === i);
+  if (owners.length === 0) {
+    const kinds = [...new Set([...Object.keys(KIND_OWNER), ...Object.keys(TEAM_KIND_OWNER)])];
+    throw new Error(`Unknown kind "${kind}". Kinds are: ${kinds.join(', ')}.`);
+  }
+  return owners;
+}
+
+// The old path's owner of a kind (unchanged).
 export function ownerForKind(kind) {
   const owner = KIND_OWNER[kind];
   if (!owner) {
     throw new Error(`Unknown kind "${kind}". Kinds are: ${Object.keys(KIND_OWNER).join(', ')}.`);
   }
   return owner;
+}
+
+// The design team's owner of a kind (R2.2).
+export function teamOwnerForKind(kind) {
+  const owner = TEAM_KIND_OWNER[kind];
+  if (!owner) {
+    throw new Error(`Unknown kind "${kind}". Kinds are: ${Object.keys(TEAM_KIND_OWNER).join(', ')}.`);
+  }
+  return owner;
+}
+
+// ---------------------------------------------------------------------------
+// Optional fields for the design team: basis, source, approvedBy.
+//   basis      : [{ itemId, version }] the earlier items this one was worked out from
+//   source     : 'rule' or 'ai' (where the value came from)
+//   approvedBy : 'user' or 'scripted answer' (who said yes to the change)
+// They are only stored when given, so old items and versions look exactly as before.
+// ---------------------------------------------------------------------------
+export const SOURCES = Object.freeze(['rule', 'ai']);
+export const APPROVERS = Object.freeze(['user', 'scripted answer']);
+
+export function checkBasis(project, basis, ownItemId) {
+  if (!Array.isArray(basis)) throw new Error('A basis must be a list of { itemId, version }.');
+  for (const b of basis) {
+    if (!b || typeof b !== 'object' || typeof b.itemId !== 'string' || !Number.isInteger(b.version) || b.version < 0) {
+      throw new Error('Each basis entry needs an itemId and a version (a whole number, 0 or more).');
+    }
+    if (b.itemId === ownItemId) throw new Error(`An item cannot be based on itself ("${b.itemId}").`);
+    if (!project.items.some((i) => i.id === b.itemId)) throw new Error(`The basis names item "${b.itemId}", which does not exist.`);
+    if (b.version > project.versions.length) throw new Error(`The basis names version ${b.version}, which does not exist yet.`);
+  }
+  return basis.map((b) => ({ itemId: b.itemId, version: b.version }));
+}
+
+export function checkApprovedBy(approvedBy) {
+  if (!APPROVERS.includes(approvedBy)) {
+    throw new Error(`approvedBy "${approvedBy}" is not allowed. Use: ${APPROVERS.join(' or ')}.`);
+  }
+  return approvedBy;
 }
 
 function requireProject(project, what) {
@@ -163,7 +230,7 @@ function requireProject(project, what) {
 export function createItem(project, data) {
   requireProject(project, 'An item');
   const d = data || {};
-  const expectedOwner = ownerForKind(d.kind);
+  const allowedOwners = ownersForKind(d.kind);
 
   if (d.owner === undefined || d.owner === null || d.owner === '') {
     throw new Error('An item needs an owner. No owner was given.');
@@ -174,8 +241,9 @@ export function createItem(project, data) {
   if (!OWNERS.includes(d.owner)) {
     throw new Error(`Owner "${d.owner}" is not an agent. Owners are: ${OWNERS.join(', ')}.`);
   }
-  if (d.owner !== expectedOwner) {
-    throw new Error(`A ${d.kind} item is owned by ${expectedOwner}, not ${d.owner}.`);
+  if (!allowedOwners.includes(d.owner)) {
+    const more = allowedOwners.length > 1 ? ` (in the design team it is ${allowedOwners.slice(1).join(' or ')})` : '';
+    throw new Error(`A ${d.kind} item is owned by ${allowedOwners[0]}, not ${d.owner}${more}.`);
   }
 
   const status = d.status === undefined ? 'Unsure' : d.status;
@@ -188,15 +256,22 @@ export function createItem(project, data) {
   if (d.room !== undefined && !findRoom(project, d.room)) {
     throw new Error(`Room "${d.room}" does not exist.`);
   }
+  const id = `item-${project.items.length + 1}`;
+  const basis = d.basis === undefined ? undefined : checkBasis(project, d.basis, id);
+  if (d.source !== undefined && !SOURCES.includes(d.source)) {
+    throw new Error(`Source "${d.source}" is not allowed. Use rule or ai.`);
+  }
 
   const item = {
-    id: `item-${project.items.length + 1}`,
+    id,
     kind: d.kind,
     value: structuredClone(d.value),
     status,
     owner: d.owner,
   };
   if (d.room !== undefined) item.room = d.room;
+  if (basis !== undefined) item.basis = basis;
+  if (d.source !== undefined) item.source = d.source;
 
   project.items.push(item);
   // Remember the starting state so past versions can be replayed (Task 7).
@@ -204,6 +279,7 @@ export function createItem(project, data) {
     value: structuredClone(item.value),
     status,
     createdAtVersion: project.versions.length,
+    ...(basis !== undefined ? { basis: structuredClone(basis) } : {}),
   };
   return item;
 }
@@ -218,7 +294,7 @@ export function getItem(project, itemId) {
 // ---------------------------------------------------------------------------
 
 // Add the next version. Only the gatekeeper should call this.
-// entry: { who, itemId, field ('value' or 'status'), oldValue, newValue, time? }
+// entry: { who, itemId, field ('value' or 'status'), oldValue, newValue, time?, approvedBy?, basis? }
 export function appendVersion(project, entry) {
   requireProject(project, 'A version');
   const version = Object.freeze({
@@ -229,6 +305,8 @@ export function appendVersion(project, entry) {
     field: entry.field || 'value',
     oldValue: structuredClone(entry.oldValue),
     newValue: structuredClone(entry.newValue),
+    ...(entry.approvedBy !== undefined ? { approvedBy: entry.approvedBy } : {}),
+    ...(entry.basis !== undefined ? { basis: structuredClone(entry.basis) } : {}),
   });
   project.versions.push(version);
   return version;
@@ -258,13 +336,19 @@ export function getBrainAtVersion(project, number) {
     .map((item) => {
       const start = project.itemStarts[item.id];
       const past = { ...structuredClone(item), value: structuredClone(start.value), status: start.status };
+      // The basis, like the value, is shown as it was at the start; versions below put later bases back.
+      if (start.basis !== undefined) past.basis = structuredClone(start.basis);
+      else delete past.basis;
       return past;
     });
   const byId = new Map(items.map((i) => [i.id, i]));
 
   for (const v of project.versions.slice(0, number)) {
     const item = byId.get(v.item);
-    if (item) item[v.field] = structuredClone(v.newValue);
+    if (item) {
+      item[v.field] = structuredClone(v.newValue);
+      if (v.basis !== undefined) item.basis = structuredClone(v.basis);
+    }
   }
   return { name: project.name, version: number, items };
 }
