@@ -1,6 +1,6 @@
 # Requirements: Design team
 
-Status: draft, waiting for the owner's approval. No app code is written in this step, and nothing is installed.
+Status: approved by the owner on 2026-11-25, with the two decisions listed under "Owner decisions" below. Group A is built first.
 
 ## Problem in plain words
 Today four agents (Style, Layout, Builder, Reviewer) run in a fixed order. Layout and Builder only check and mark; they choose and move nothing. The product vision (`.kiro/steering/vision.md`) asks for a real design team: eight specialists that work in dependency order, ask the user to confirm, suggest options, and re-check each other's work when something earlier changes. This spec defines that team.
@@ -157,6 +157,6 @@ Acceptance criteria:
 3. No installs and no new dependencies. `package.json` changes only to add scripts, and only with the owner's yes.
 4. Every output says plans are drafts for professional review and are not verified engineering.
 
-## Questions for the owner
-1. Where should a real paid AI call run later? A page on GitHub Pages cannot hold a key safely. The options are a small server function or a tool on the owner's own computer. This spec only builds the gate, so you can answer later. Do you want it to stay a later decision?
-2. Is it right that this spec leaves out the home page, portfolio, item picker and library, and builds only the team?
+## Owner decisions (2026-11-25)
+1. The paid AI call is decided later. This spec builds only the gate, the cap (default zero) and the stand-in. No real model, no server and no key are chosen or built here.
+2. The home page, portfolio, item picker and library are separate later specs. This spec builds only the team.
