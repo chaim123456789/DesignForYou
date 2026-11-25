@@ -56,3 +56,14 @@ export function buildLater(spec) {
   if (!r.ok) throw new Error(`The first four agents failed: ${r.failure && r.failure.reason}`);
   return t;
 }
+
+// Say "still fine" for every item of the later agents, as a re-check would, so the next change shows only what it makes stale.
+import { createGatekeeper } from '../src/brain/gatekeeper.js';
+export function settle(project) {
+  const gate = createGatekeeper(project, { now: NOW });
+  for (const item of project.items) {
+    if (item.basis && ['Furniture', 'Decor', 'Style', 'Reviewer'].includes(item.owner)) {
+      gate.refreshBasis(item.owner, item.id, item.basis.map((b) => ({ itemId: b.itemId, version: project.versions.length })));
+    }
+  }
+}
