@@ -9,6 +9,8 @@
 //                High confidence: a recommended first option, optionally more, then Custom.
 //                Low confidence: exactly two real options, then Custom.
 //                At most 4 options in total, and Custom is always last.
+//   ai         : only when source is 'ai': { task, costUsd, label } (the task name, what it cost, and the stand-in label)
+//   aiNote     : optional text on a rule-based proposal that says why AI was not used (design-team D2)
 //   request    : only when the proposal asks for an EARLIER agent's item to change: { itemId, owner }
 import { SOURCES } from './brain/brain.js';
 
@@ -59,6 +61,14 @@ export function checkProposal(p, context) {
     fail(`with low confidence it must show exactly two real options plus Custom. It shows ${real.length}.`);
   }
 
+  if (p.source === 'ai') {
+    const a = p.ai;
+    if (a === null || typeof a !== 'object' || !isText(a.task) || typeof a.costUsd !== 'number' || !(a.costUsd >= 0)) fail('an AI proposal needs "ai" with the task name and the cost in dollars.');
+  } else if (p.ai !== undefined) {
+    fail('only an AI proposal may carry "ai".');
+  }
+  if (p.aiNote !== undefined && (!isText(p.aiNote) || p.aiNote.length > MAX_WHY_LENGTH || p.source !== 'rule')) fail('"aiNote" must be short text on a rule-based proposal.');
+
   if (p.request !== undefined) {
     const r = p.request;
     if (r === null || typeof r !== 'object' || !isText(r.itemId) || !isText(r.owner)) fail('a request needs "itemId" and "owner".');
@@ -97,6 +107,8 @@ export function buildProposal(fields, context) {
     options: [...real, { id: CUSTOM_OPTION_ID, label: 'Custom' }],
   };
   if (f.request !== undefined) proposal.request = f.request;
+  if (f.ai !== undefined) proposal.ai = f.ai;
+  if (f.aiNote !== undefined) proposal.aiNote = f.aiNote;
   checkProposal(proposal, context);
   return deepFreeze(structuredClone(proposal));
 }

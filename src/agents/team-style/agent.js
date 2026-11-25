@@ -45,8 +45,12 @@ export function conflictsFor(tag, others, k) {
   return found;
 }
 
-export function makeTeamStyleAgent(knowledge = loadStyleKnowledge()) {
+// options.gate: the AI gate (src/ai/gate.js). When two options are close, the agent asks it for a taste judgement (task judge-taste).
+// Cap zero, a refusal or a failure: the agent keeps its rule-based result and adds "AI was not used: ..." to the proposal.
+// Without a gate nothing is asked and nothing is said. The agent never calls a model itself.
+export function makeTeamStyleAgent(knowledge = loadStyleKnowledge(), options = {}) {
   const k = knowledge;
+  const gate = options.gate;
   const familyOfTag = (tag) => (tag ? k.families.find((f) => f.then.tags.includes(tag)) : undefined);
   const familyOfSurface = (surface) => (surface ? k.families.find((f) => f.then.materials.includes(surface)) : undefined);
   const familyOfWords = (refs) => {
@@ -107,13 +111,33 @@ export function makeTeamStyleAgent(knowledge = loadStyleKnowledge()) {
         const sources = [own ? 'its own tag' : null, surface ? 'the floor' : null, words ? 'the room\'s inspiration' : null].filter(Boolean);
         why = `${name}: ${sources.join(', ')} point to two families (${candidates.map((f) => f.when.family).join(' and ')}). That is a matter of taste.`;
       }
+      // Two close options are a matter of taste: ask the gate. Anything but a good answer leaves the rule-based result as it is.
+      let ai;
+      let aiNote;
+      if (gate && options.length === 2) {
+        const asked = gate.ask('judge-taste', { options: options.map((o) => ({ id: o.id, tag: o.newValue.tag })) });
+        const at = asked.ok ? options.findIndex((o) => o.id === asked.answer.choice) : -1;
+        if (asked.ok && at >= 0) {
+          if (at > 0) options.reverse();
+          ai = { task: asked.task, costUsd: asked.costUsd, label: asked.label };
+        } else {
+          aiNote = `AI was not used: ${asked.ok ? 'the answer did not pick one of the two options.' : asked.reason}`.slice(0, 200);
+        }
+      }
       const clash = options[0].conflicts.length > 0 ? ` ${options[0].conflicts[0].pair.join(' against ')} is a conflict pair.` : '';
       const clean = options.map(({ conflicts, ...o }) => o);
       if (clean.some((o) => sameValue(o.newValue, item.value))) continue;
-      proposals.push(buildProposal({
+      const fields = {
         id: proposalId('style', item.id, ruleId, mode), agent: STYLE, itemId: item.id, why: `${why}${clash}`.slice(0, 200), source: 'rule', ruleId,
         confidence: clean.length === 2 ? 'low' : 'high', options: clean,
-      }, { items: seen }));
+      };
+      if (ai) {
+        const said = `${ai.label}. AI judged taste and put "${clean[0].label}" first. Cost $${ai.costUsd}.`;
+        Object.assign(fields, { source: 'ai', ruleId: ai.task, ai, why: said.slice(0, 200) });
+      } else if (aiNote) {
+        fields.aiNote = aiNote;
+      }
+      proposals.push(buildProposal(fields, { items: seen }));
     }
     return proposals;
   }
