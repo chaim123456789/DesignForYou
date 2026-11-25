@@ -1,0 +1,20 @@
+{
+  "provenance": {
+    "title": "Common layout patterns",
+    "covers": "Simple placement habits for a room: where the head of a bed should not be, and which pieces are normally pushed against a wall. Common habits, our own words.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "pattern-bed-head", "when": {"type": "bed"}, "then": {"avoidUnderWindow": true}, "note": "Typical guideline, check local rules. A bed should not have its head under a window. A bed against a wall that has a window along it counts as under the window."},
+    {"id": "pattern-against-wall", "when": {"types": "wardrobe, bath, kitchen unit"}, "then": {"types": ["wardrobe", "bath", "kitchen unit"]}, "note": "Typical guideline, check local rules. These pieces are normally placed against a wall, so a new spot for them is looked for along the walls."}
+  ]
+}

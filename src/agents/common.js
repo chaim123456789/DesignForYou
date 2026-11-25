@@ -115,3 +115,27 @@ export function placeOnWall(size, side, start, along, thickness) {
 export function overlaps(a, b) {
   return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.depth && b.y < a.y + a.depth;
 }
+
+// ---- Added in Group C (Furniture, Decor, Style, Reviewer): small shape helpers, still plain functions.
+
+// The free square a door needs inside the room when it swings in. along: from alongWall().
+export function swingSquareOf(side, along, size) {
+  const w = along.width;
+  if (side === 'north') return { x: along.start, y: 0, width: w, depth: w };
+  if (side === 'south') return { x: along.start, y: mm(size.depth - w), width: w, depth: w };
+  if (side === 'west') return { x: 0, y: along.start, width: w, depth: w };
+  return { x: mm(size.width - w), y: along.start, width: w, depth: w };
+}
+
+// The empty space between two rectangles: 0 when they touch or overlap, otherwise the larger of the two gaps across and down.
+export function gapBetween(a, b) {
+  const across = Math.max(a.x - (b.x + b.width), b.x - (a.x + a.width), 0);
+  const down = Math.max(a.y - (b.y + b.depth), b.y - (a.y + a.depth), 0);
+  return mm(Math.max(across, down));
+}
+
+// A rectangle grown by `by` metres on every side.
+export const inflate = (r, by) => ({ x: mm(r.x - by), y: mm(r.y - by), width: mm(r.width + 2 * by), depth: mm(r.depth + 2 * by) });
+
+// Is the rectangle inside 0..width and 0..depth of a room? (A millimetre of slack, so touching a wall is inside.)
+export const insideRoom = (r, size) => r.x >= -0.001 && r.y >= -0.001 && r.x + r.width <= size.width + 0.001 && r.y + r.depth <= size.depth + 0.001;
