@@ -140,16 +140,32 @@ test('design-team C1: a wardrobe needs free space in front of it, and a piece ag
   assert.ok(!(after.x < 1.2 && after.x + after.width > 0 && after.y < 1.4 && after.y + after.depth > 0.6), 'the new place leaves the wardrobe its front space');
 });
 
-test('design-team C1: a tall piece may not cover a socket', () => {
-  const t0 = buildLater({ rooms: [{ name: 'Bedroom', width: 4, depth: 4 }], openings: [door(R1, 3, 0)], furniture: [] });
-  const elec = t0.project.items.find((i) => i.kind === 'electrical');
-  assert.ok(elec.value.sockets.length > 0, 'the Lighting agent proposed sockets');
-  const s = elec.value.sockets.find((x) => x.side === 'west') || elec.value.sockets[0];
-  const sock = s.position;
-  const t = buildLater({ rooms: [{ name: 'Bedroom', width: 4, depth: 4 }], openings: [door(R1, 3, 0)], furniture: [piece(R1, 'wardrobe', 'Wardrobe', Math.max(0, sock.x - 0.2), Math.max(0, sock.y - 0.2), 1.2, 0.6)] });
+test('design-team C1: a tall piece may not cover a socket when too few sockets would stay free', () => {
+  const rooms = [{ name: 'Bedroom', width: 2.4, depth: 3 }];
+  const t0 = buildLater({ rooms, openings: [door(R1, 1.4, 0)], furniture: [] });
+  const sockets = t0.project.items.find((i) => i.kind === 'electrical').value.sockets;
+  assert.equal(sockets.length, 2, 'the Lighting agent proposed two sockets for this small room');
+  const sock = sockets[0].position;
+  const over = (x, y) => piece(R1, 'wardrobe', 'Wardrobe', Math.min(1.8, Math.max(0, x)), Math.min(2.4, Math.max(0, y)), 0.6, 0.6);
+  const t = buildLater({ rooms, openings: [door(R1, 1.4, 0)], furniture: [over(sock.x - 0.2, sock.y - 0.2)] });
   const p = forItem(agent(view(t.project), ctx), t.later.furniture[0]);
-  assert.ok(p, 'the wardrobe covers a socket');
-  assert.ok(['clear-socket-reach', 'size-wardrobe', 'clear-walkway', 'clear-door-swing', 'clear-search'].includes(p.ruleId));
+  assert.ok(p, 'the wardrobe covers one of only two sockets');
+  assert.equal(p.ruleId, 'clear-socket-reach');
+  assert.match(p.why, /covers a socket/);
+  // the new place leaves both sockets uncovered
+  const to = p.options[0].newValue.position;
+  assert.ok(!sockets.some((s) => s.position.x < to.x + to.width + 0.1 && to.x < s.position.x + s.position.width + 0.1 && s.position.y < to.y + to.depth + 0.1 && to.y < s.position.y + s.position.depth + 0.1));
+});
+
+test('design-team C1: in a roomy room, covering one socket is fine while enough others stay free', () => {
+  const rooms = [{ name: 'Living Room', width: 6, depth: 5 }];
+  const t0 = buildLater({ rooms, openings: [door(R1, 1, 0)], furniture: [] });
+  const sockets = t0.project.items.find((i) => i.kind === 'electrical').value.sockets;
+  assert.ok(sockets.length >= 3);
+  const sock = sockets.find((s) => s.side === 'south').position;
+  const t = buildLater({ rooms, openings: [door(R1, 1, 0)], furniture: [piece(R1, 'wardrobe', 'Wardrobe', sock.x - 0.2, sock.y - 0.55, 0.6, 0.6)] });
+  const p = forItem(agent(view(t.project), ctx), t.later.furniture[0]);
+  assert.ok(!p || p.ruleId !== 'clear-socket-reach');
 });
 
 test('design-team C1: a Locked piece is never proposed for a change, and the gatekeeper would refuse it anyway', () => {

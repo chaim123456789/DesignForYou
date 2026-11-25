@@ -48,7 +48,8 @@ export function makeFurnitureAgent(knowledge = loadFurnitureKnowledge()) {
   const walkway = ruleById(k.clear, 'clear-walkway').then.minGap;
   const search = ruleById(k.clear, 'clear-search').then;
   const crowded = ruleById(k.clear, 'clear-crowded').then;
-  const socketReach = ruleById(k.clear, 'clear-socket-reach').then.reach;
+  const socketRule = ruleById(k.clear, 'clear-socket-reach').then;
+  const socketReach = socketRule.reach;
   const bedRule = ruleById(k.patterns, 'pattern-bed-head').then;
   const againstWall = ruleById(k.patterns, 'pattern-against-wall').then.types;
   const sizeRuleFor = (type) => k.sizes.find((r) => r.when.type === type) || ruleById(k.sizes, 'size-other');
@@ -134,8 +135,14 @@ export function makeFurnitureAgent(knowledge = loadFurnitureKnowledge()) {
           const blocked = !insideRoom(zone, size) || others.some((o) => o.binding && overlaps(zone, o.rect));
           if (blocked) found.push({ rule: sizeRuleFor(typeOf(p)).id, text: `The ${name} has less than ${metres(rule(p).front)} of free space in front of it in the ${roomName}.` });
         }
-        if (rule(p).tall && sockets.some((s) => overlaps(inflate(rect, socketReach), s))) {
-          found.push({ rule: 'clear-socket-reach', text: `The ${name} covers a socket in the ${roomName}.` });
+        if (rule(p).tall && sockets.length > 0) {
+          // A tall piece may cover a socket only while enough sockets stay free: not covered by it, and not by another tall piece.
+          const covered = (s, r) => overlaps(inflate(r, socketReach), s);
+          const tallOthers = others.filter((o) => rule(o.piece).tall).map((o) => o.rect);
+          const free = sockets.filter((s) => !covered(s, rect) && !tallOthers.some((r) => covered(s, r))).length;
+          if (sockets.some((s) => covered(s, rect)) && free < Math.min(socketRule.minFree, sockets.length)) {
+            found.push({ rule: 'clear-socket-reach', text: `The ${name} covers a socket in the ${roomName}, and too few sockets would stay free.` });
+          }
         }
         return found;
       };

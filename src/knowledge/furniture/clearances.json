@@ -24,6 +24,6 @@
     {"id": "clear-door-swing", "when": {"door": "swings in"}, "then": {"swing": "square as wide as the door"}, "note": "Typical guideline, check local rules. A door that opens into the room keeps a free square as wide as the door."},
     {"id": "clear-search", "when": {"search": "new spot"}, "then": {"step": 0.1, "farApart": 0.5}, "note": "Typical guideline, check local rules. Metres. Step used when looking for a free spot. The second choice is at least this far from the first."},
     {"id": "clear-crowded", "when": {"room": "too small"}, "then": {"step": 0.5, "touch": 0.05}, "note": "Typical guideline, check local rules. Metres. How much bigger to make a room that cannot hold its furniture. Touch: how near a wall counts as against it."},
-    {"id": "clear-socket-reach", "when": {"socket": "reachable"}, "then": {"reach": 0.1}, "note": "Typical guideline, check local rules. Metres. A tall piece may not cover a socket or stand closer to it than this."}
+  {"id": "clear-socket-reach", "when": {"socket": "reachable"}, "then": {"reach": 0.1, "minFree": 2}, "note": "Typical guideline, check local rules. Metres. A tall piece may not cover a socket if that leaves fewer than the minimum number of sockets in the room free."}
   ]
 }

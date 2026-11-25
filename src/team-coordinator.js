@@ -101,9 +101,19 @@ export function createRun(project, options = {}) {
     if (wasKind === 'first' && step.applied > 0) {
       const { agents: plan, errors } = agentsToRecheck(project, registry);
       if (errors.length > 0) { fail(step.agent, errors[0].message); return; }
+      // Items a re-check cannot help: a Locked item flagged "needs your look", an item the user skipped, and every item that is stale
+      // only because of those (found step by step). Looking at them again would change nothing, so they do not add a ripple step.
+      const unfixable = new Set([...needsLook, ...keptAsIs.map((k) => k.itemId)]);
+      const nowStale = findStale(project, registry).stale;
+      for (let grew = true; grew;) {
+        grew = false;
+        for (const st of nowStale) {
+          if (!unfixable.has(st.itemId) && st.because.every((b) => unfixable.has(b.itemId))) { unfixable.add(st.itemId); grew = true; }
+        }
+      }
       // An item the user skipped ("kept as is") is not asked about again in this run. It stays stale and is reported.
       const skipped = new Set(keptAsIs.map((k) => k.itemId));
-      const redo = plan.filter((a) => a.recheck && ranBefore.has(a.agent) && enabled.get(a.agent) && a.itemIds.some((id) => !skipped.has(id)));
+      const redo = plan.filter((a) => a.recheck && ranBefore.has(a.agent) && enabled.get(a.agent) && a.itemIds.some((id) => !skipped.has(id) && !unfixable.has(id)));
       if (redo.length > 0) {
         ripplePasses += 1;
         for (const a of plan) {
@@ -133,11 +143,19 @@ export function createRun(project, options = {}) {
       proposals = agent(view, { mode: step.kind, staleItemIds: [...staleIds] });
       if (!Array.isArray(proposals)) throw new Error('An agent must return a list of proposals.');
       const context = { items: view.items, order: registry.order };
-      for (const p of proposals) {
+      const inThisStep = new Set();
+      proposals = proposals.map((p) => {
         checkProposal(p, context);
         if (p.agent !== step.agent) throw new Error(`Proposal "${p.id}" says it is from ${p.agent}, but ${step.agent} is running.`);
-        if (seenProposalIds.has(p.id)) throw new Error(`Proposal id "${p.id}" was already used in this run.`);
-      }
+        // Two proposals with one id in the same step is a bug in the agent. The same id in a LATER step is normal: an agent that
+        // looks at the same item and rule again after another change. That proposal gets a numbered id, so every answer is unique.
+        if (inThisStep.has(p.id)) throw new Error(`Proposal id "${p.id}" was already used in this run.`);
+        inThisStep.add(p.id);
+        if (!seenProposalIds.has(p.id)) return p;
+        let n = 2;
+        while (seenProposalIds.has(`${p.id}#${n}`)) n += 1;
+        return Object.freeze({ ...p, id: `${p.id}#${n}` });
+      });
     } catch (error) {
       return fail(step.agent, error && error.message ? error.message : String(error));
     }

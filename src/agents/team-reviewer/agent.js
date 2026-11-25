@@ -60,7 +60,9 @@ export function makeTeamReviewerAgent(options = {}) {
     if (!editable(reportItem) || !inScope(reportItem, context)) return [];
 
     // The four checks of the first Reviewer, run as they are.
-    const first = createReviewerAgent({ ...(options.reviewerOptions || {}), styleConflicts: conflicts, reportItemId: reportItem.id })(view)[0].newValue;
+    // They compare against room sizes, so they get the size Walls decided (the first Reviewer only knew the size the user entered).
+    const decided = { ...view, floors: view.floors.map((f) => ({ ...f, rooms: f.rooms.map((r) => { const z = sizeOf(r, wallItemOf(view, r.id)); return z ? { ...r, width: z.width, depth: z.depth } : r; }) })) };
+    const first = createReviewerAgent({ ...(options.reviewerOptions || {}), styleConflicts: conflicts, reportItemId: reportItem.id })(decided)[0].newValue;
     const lines = first.clashes.map((c) => ({ ...c, checkId: OLD_TYPE_TO_CHECK[c.type], tag: sourceTag('rule') }));
 
     const rooms = roomsOf(view);
