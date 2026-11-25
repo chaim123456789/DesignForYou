@@ -11,6 +11,7 @@ import { STYLE_CONFLICTS } from '../docs/intake/limits.js';
 import { buildBrain, runProject, runDesignTeam } from '../docs/intake/build-brain.js';
 import { runSample, readSampleData } from '../src/sample/run-sample.js';
 import { makeSampleRun } from '../src/viewer/make-sample-run.js';
+import { runTeamSample, makeTeamSampleRun } from '../src/sample/run-team-sample.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
@@ -214,7 +215,8 @@ test('Task 4b: inputs that cannot make a Brain (no floor) give a plain failure a
 });
 
 test('Task 4b: the sample run output is unchanged (matches docs/sample-run.json exactly)', () => {
-  const { project } = runSample();
+  // D6: the sample file now comes from the eight-agent design-team sample (runTeamSample), not the old four-agent runSample.
+  const { project, team } = runTeamSample();
   const expected = readFileSync(path.join(root, 'docs/sample-run.json'), 'utf8');
-  assert.equal(JSON.stringify(makeSampleRun(project), null, 2) + '\n', expected);
+  assert.equal(JSON.stringify(makeTeamSampleRun({ project, team }), null, 2) + '\n', expected);
 });

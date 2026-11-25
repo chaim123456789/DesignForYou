@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
 import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
-import { buildScene } from '../docs/scene-data.js';
+import { buildScene, shapeParts, describeItem } from '../docs/scene-data.js';
 
 installImportHooks();
 
@@ -44,7 +44,8 @@ function drawn(page) {
 const expected = (version) => {
   const boxes = buildScene(run, version);
   return {
-    itemIds: boxes.filter((b) => b.itemId !== undefined).map((b) => b.itemId).sort(),
+    // D6: one id per drawn mesh. The design-team sample's typed furniture is drawn as several parts, each with the item's id.
+    itemIds: boxes.filter((b) => b.itemId !== undefined).flatMap((b) => Array(Math.max(1, shapeParts(b).length)).fill(b.itemId)).sort(),
     outlines: boxes.filter((b) => b.itemId !== undefined && b.clash).length,
   };
 };
@@ -52,8 +53,9 @@ const clashLines = (page) => page.el('clash-list').children.length;
 const clashLabels = (page) => page.labels().filter((l) => /clash-label/.test(l.className));
 
 test('Task 8: the page slider runs from 0 to the number of versions and the page starts at the latest version', async () => {
-  assert.match(html, /<input type="range" id="version-slider" min="0" max="7" step="1" value="7"/);
-  assert.equal(LAST, 7);
+  // D6: the design-team sample has 40 versions (old value 7).
+  assert.match(html, /<input type="range" id="version-slider" min="0" max="40" step="1" value="40"/);
+  assert.equal(LAST, 40);
   await withPage((page) => {
     const slider = page.el('version-slider');
     assert.equal(slider.min, '0');
@@ -68,7 +70,7 @@ test('Task 8: the page slider runs from 0 to the number of versions and the page
 test('Task 8: slider at version 0 shows no clashes in the 3D drawing, the labels and the clash list; at the last version it shows both', async () => {
   await withPage((page) => {
     // Latest version first: both clashes.
-    assert.equal(clashLines(page), 2, 'the clash list must show both clashes at the last version');
+    assert.equal(clashLines(page), 9, 'the clash list must show all nine findings at the last version'); // D6: old value 2
     assert.ok(expected(LAST).outlines >= 2);
     assert.equal(drawn(page).outlines, expected(LAST).outlines, 'red outlines at the last version');
     assert.equal(clashLabels(page).length, expected(LAST).outlines);
@@ -81,7 +83,7 @@ test('Task 8: slider at version 0 shows no clashes in the 3D drawing, the labels
     // And back to the latest: both again.
     moveSlider(page, LAST);
     assert.equal(drawn(page).outlines, expected(LAST).outlines);
-    assert.equal(clashLines(page), 2);
+    assert.equal(clashLines(page), 9); // D6: old value 2
     assert.equal(clashLabels(page).length, expected(LAST).outlines);
     assert.equal(page.el('caption').textContent, run.versions[LAST - 1].sentence);
     assert.deepEqual(page.problemLines(), []);
@@ -115,11 +117,13 @@ test('Task 8: moving the slider replaces the blocks instead of stacking them (no
 
 test('Task 8: an open details panel is refreshed for the version shown, not left with another version\'s data', async () => {
   await withPage(async (page) => {
-    // Open a style note through the clash-free route: a click on its flat tile.
+    // Open a style note by a click on its flat tile.
+    // D6: in the design-team sample a note keeps its name, so the tile chosen is one whose details differ between version 0 and the
+    // latest version by its clash lines (old: a tile whose name differs). The checks below are the same, on the whole details text.
     const THREE = await import('three');
-    const nameOf = (version, id) => run.snapshots.find((x) => x.version === version).items.find((i) => i.id === id).name;
-    const tile = buildScene(run, LAST).find((b) => /\(style\)$/.test(b.label || '') && nameOf(0, b.itemId) !== nameOf(LAST, b.itemId));
-    assert.ok(tile, 'no style tile whose note reads differently at version 0');
+    const detailsAt = (version, id) => { const d = describeItem(run, version, id); return [d.name, ...d.clashes].join(' | '); };
+    const tile = buildScene(run, LAST).find((b) => b.type === 'style-marker' && detailsAt(0, b.itemId) !== detailsAt(LAST, b.itemId));
+    assert.ok(tile, 'no style tile whose details read differently at version 0');
     const camera = page.controls.object;
     camera.updateMatrixWorld();
     const v = new THREE.Vector3(tile.x + tile.width / 2, tile.y + tile.height / 2, tile.z + tile.depth / 2).project(camera);
@@ -127,14 +131,16 @@ test('Task 8: an open details panel is refreshed for the version shown, not left
     page.canvas.dispatch('pointerdown', { ...at, button: 0, pointerId: 1 });
     page.canvas.dispatch('pointerup', { ...at, button: 0, pointerId: 1 });
     const itemId = tile.itemId;
-    const nameAt = (version) => run.snapshots.find((s) => s.version === version).items.find((i) => i.id === itemId).name;
-    assert.match(page.el('details-text').textContent, new RegExp(`Name: ${nameAt(LAST).replace(/[()]/g, '\\$&')}`));
+    const linesAt = (version) => { const d = describeItem(run, version, itemId); return [`Name: ${d.name}`, ...d.clashes]; };
+    const latestOnly = linesAt(LAST).filter((l) => !linesAt(0).includes(l));
+    assert.ok(latestOnly.length > 0);
+    for (const l of linesAt(LAST)) assert.ok(page.el('details-text').textContent.includes(l), `the panel shows: ${l}`);
     const other = 0;
     moveSlider(page, other);
-    assert.ok(page.el('details-text').textContent.includes(`Name: ${nameAt(other)}`), 'the panel still shows another version\'s name');
-    assert.ok(!page.el('details-text').textContent.includes(nameAt(LAST)), 'the panel still shows the latest wording');
+    for (const l of linesAt(other)) assert.ok(page.el('details-text').textContent.includes(l), 'the panel still shows another version\'s details');
+    for (const l of latestOnly) assert.ok(!page.el('details-text').textContent.includes(l), 'the panel still shows the latest wording');
     moveSlider(page, LAST);
-    assert.ok(page.el('details-text').textContent.includes(`Name: ${nameAt(LAST)}`));
+    for (const l of linesAt(LAST)) assert.ok(page.el('details-text').textContent.includes(l));
   });
 });
 

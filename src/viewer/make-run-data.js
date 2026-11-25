@@ -31,7 +31,7 @@ function marksOf(item) {
 // The plain name shown for an item (no ids).
 function itemName(item) {
   const v = item.value || {};
-  if (item.kind === 'style') return v.detail || v.name; // a design-team style note may have no detail yet
+  if (item.kind === 'style') return typeof v.name === 'string' && v.name !== '' ? v.name : v.detail; // a design-team style note has its own name
   if (item.kind === 'clash') return 'Review report';
   return v.name;
 }

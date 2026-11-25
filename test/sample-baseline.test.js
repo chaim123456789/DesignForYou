@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { runSample } from '../src/sample/run-sample.js';
 import { makeSampleRun } from '../src/viewer/make-sample-run.js';
+import { runTeamSample, makeTeamSampleRun } from '../src/sample/run-team-sample.js';
 import { getLabels } from '../src/label.js';
 
 const SAVED_CLASH_REPORT = {
@@ -96,8 +97,9 @@ test('place-items Task 1: the sample labels are exactly the saved ones', () => {
 });
 
 test('place-items Task 1: docs/sample-run.json equals a fresh export', () => {
-  const { project } = runSample();
-  const fresh = JSON.stringify(makeSampleRun(project), null, 2) + '\n';
+  // D6: the export now runs the design-team sample.
+  const { project, team } = runTeamSample();
+  const fresh = JSON.stringify(makeTeamSampleRun({ project, team }), null, 2) + '\n';
   const onDisk = readFileSync(new URL('../docs/sample-run.json', import.meta.url), 'utf8');
   assert.equal(onDisk, fresh);
 });

@@ -24,7 +24,7 @@
 - No personal data in any file.
 
 ## HACKATHON MODE
-- The old four-agent pipeline (Style, Layout, Builder, Reviewer) stays only for the existing sample until the owner approves the swap to the new team.
+- The owner approved the swap on 2026-11-25 (design-team D6): the sample now runs through the eight-agent team with scripted answers. The old four-agent pipeline (Style, Layout, Builder, Reviewer) is kept in the code, unused by the sample, and still runs behind the one-go "Run the design team" button. Deleting it needs the owner's yes.
 - The demo starts in **Sample mode**: a pre-run example project goes through the same pipeline as a real one, and is clearly labelled as a sample.
 - Live AI mode is out of scope for the demo.
 - SketchUp is only a short video clip. It is not part of the app.

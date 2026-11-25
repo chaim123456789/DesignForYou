@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { registerHooks } from '../test-helpers/register-hooks.js';
 import { installImportHooks } from '../test-helpers/hooks.js';
 import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
-import { buildScene } from '../docs/scene-data.js';
+import { buildScene, shapeParts } from '../docs/scene-data.js';
 import { FIXED_SENTENCE } from '../docs/intake/report.js';
 import { summaryNodes, bodyOf } from '../docs/intake/summary-view.js';
 import { buildRunLayout, VIEWER_NUMBERS } from '../docs/intake/run-data.js';
@@ -149,7 +149,8 @@ async function runIt(page) {
 
 const drawnKeys = (page) => page.scene.children.find((c) => c.type === 'Group').children
   .filter((o) => o.userData && o.userData.boxKey).map((o) => o.userData.boxKey).sort();
-const sampleKeys = () => buildScene(sample, SAMPLE_LAST).map((b) => b.key).sort();
+// D6: one key per drawn mesh. The design-team sample's typed furniture is drawn as several parts, each with the box's key.
+const sampleKeys = () => buildScene(sample, SAMPLE_LAST).flatMap((b) => Array(Math.max(1, shapeParts(b).length)).fill(b.key)).sort();
 const labelsOf = (page, cls) => page.document.querySelectorAll(cls);
 
 // ---- Review and run screen ---------------------------------------------------------------------

@@ -8,6 +8,7 @@ import { sourceTag, describeTeamRun } from '../label.js';
 
 const plainName = (project, id) => {
   const item = project.items.find((i) => i.id === id);
+  if (item && item.kind === 'clash') return 'The review report';
   return item && item.value && typeof item.value.name === 'string' ? item.value.name : 'an item';
 };
 
@@ -43,7 +44,7 @@ export function makeTeamData(project, steps, registry) {
       }),
     }));
     const notes = log.filter((e) => e.agent === name && ['re-check', 'not-affected', 'skipped', 'needs-look', 'left-stale'].includes(e.event) && !(e.event === 'skipped' && started > 0))
-      .map((e) => ({ event: e.event, text: e.reason || '' }));
+      .map((e) => ({ event: e.event, text: String(e.reason || '').replace(/"?\b(item-\d+)\b"?/g, (_, id) => `"${plainName(project, id)}"`) }));
     const proposalCount = passes.reduce((n, p) => n + p.proposals.length, 0);
     const rechecked = passes.some((p) => p.kind === 're-check');
     const status = skipped ? 'Switched off' : started === 0 ? 'Did not run' : rechecked ? 'Re-checked' : 'Ran';

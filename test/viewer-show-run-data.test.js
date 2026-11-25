@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { installImportHooks } from '../test-helpers/hooks.js';
 import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
-import { buildScene } from '../docs/scene-data.js';
+import { buildScene, shapeParts } from '../docs/scene-data.js';
 import * as stateApi from '../docs/intake/state.js';
 import { runDesignTeam } from '../docs/intake/build-brain.js';
 import { makeRunData } from '../docs/engine/viewer/make-run-data.js';
@@ -71,7 +71,8 @@ function drawing(page) {
 }
 const outlines = (page) => page.scene.children.find((c) => c.type === 'Group').children
   .filter((o) => o.material && o.material.side === 1 && o.material.color.getHex() === 0xcc0000).length;
-const expectedKeys = (run, version) => buildScene(run, version).map((b) => b.key).sort();
+// D6: one key per drawn mesh. The design-team sample's typed furniture is drawn as several parts, each with the box's key.
+const expectedKeys = (run, version) => buildScene(run, version).flatMap((b) => Array(Math.max(1, shapeParts(b).length)).fill(b.key)).sort();
 const keysOf = (page) => drawing(page).map((d) => d[0]).sort();
 const floorButtons = (page) => ['floor-all', 'floor-ground', 'floor-upper'].map((id) => page.el(id));
 

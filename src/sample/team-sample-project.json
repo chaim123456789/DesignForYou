@@ -1,0 +1,35 @@
+{
+  "name": "Sample Two-Storey Home",
+  "isSample": true,
+  "notes": "Made-up example data for the eight-agent design team. Sizes are in metres. A position is a rectangle measured from the top-left corner of its room: x and y are the corner, width runs across, depth runs down. Items point to rooms by room name. Room sizes are the viewer's fixed sizes.",
+  "inspiration": ["warm oak", "linen", "soft white walls"],
+  "floors": [
+    { "name": "Ground Floor", "rooms": [ { "name": "Kitchen", "width": 5.0, "depth": 4.0 }, { "name": "Living Room", "width": 6.0, "depth": 4.0 } ] },
+    { "name": "Upper Floor", "rooms": [ { "name": "Bedroom", "width": 4.0, "depth": 4.0, "override": ["cold steel", "dark slate"] }, { "name": "Bathroom", "width": 3.0, "depth": 3.0 } ] }
+  ],
+  "styleItems": [
+    { "status": "Locked", "room": "Kitchen", "value": { "name": "Oak floor in the kitchen", "tag": "warm oak", "detail": "Oak floor in the kitchen" } },
+    { "status": "Locked", "room": "Bedroom", "value": { "name": "Oak bed frame stays as it is", "tag": "warm oak", "detail": "Oak bed frame stays as it is" } },
+    { "status": "Unsure", "room": "Living Room", "value": { "name": "Linen curtains and soft white walls", "tag": "linen", "detail": "Linen curtains and soft white walls" } },
+    { "status": "Unsure", "room": "Bathroom", "value": { "name": "Plain white wall tiles", "tag": "white plaster", "detail": "Plain white wall tiles" } }
+  ],
+  "openings": [
+    { "kind": "door", "room": "Living Room", "name": "Garden door", "position": { "x": 1.5, "y": 3.9, "width": 0.9, "depth": 0.1 } },
+    { "kind": "door", "room": "Bedroom", "name": "Bedroom door", "position": { "x": 0.2, "y": 0.0, "width": 0.9, "depth": 0.1 } },
+    { "kind": "door", "room": "Kitchen", "name": "Kitchen door", "position": { "x": 3.8, "y": 0.0, "width": 0.9, "depth": 0.1 } },
+    { "kind": "door", "room": "Bathroom", "name": "Bathroom door", "position": { "x": 0.2, "y": 0.0, "width": 0.8, "depth": 0.1 } },
+    { "kind": "window", "room": "Kitchen", "name": "Kitchen window", "position": { "x": 2.0, "y": 0.0, "width": 1.2, "depth": 0.1 } }
+  ],
+  "furniture": [
+    { "room": "Living Room", "type": "sofa", "name": "Sofa", "position": { "x": 1.0, "y": 3.0, "width": 2.0, "depth": 0.9 } },
+    { "room": "Living Room", "type": "table", "name": "Coffee table", "position": { "x": 1.4, "y": 1.8, "width": 1.2, "depth": 0.6 } },
+    { "room": "Kitchen", "type": "kitchen unit", "name": "Kitchen units", "position": { "x": 0.0, "y": 3.4, "width": 5.2, "depth": 0.6 } },
+    { "room": "Bedroom", "type": "bed", "name": "Oak bed", "status": "Locked", "position": { "x": 1.2, "y": 1.6, "width": 1.6, "depth": 2.1 } },
+    { "room": "Bedroom", "type": "wardrobe", "name": "Wardrobe", "position": { "x": 2.8, "y": 0.2, "width": 1.0, "depth": 0.6 } },
+    { "room": "Bathroom", "type": "bath", "name": "Bath", "position": { "x": 0.0, "y": 2.2, "width": 1.7, "depth": 0.7 } }
+  ],
+  "script": {
+    "about": "Every proposal is answered by a scripted answer: the first option. One suggestion is skipped on purpose, to show 'kept as is': moving the sofa away from the garden door.",
+    "skip": { "agent": "Furniture", "itemName": "Sofa" }
+  }
+}

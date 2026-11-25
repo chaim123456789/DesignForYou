@@ -47,6 +47,6 @@ Plans are drafts for professional review. They are never claimed as verified eng
 ## HACKATHON MODE
 - Event: Kiroween, Frankenstein category.
 - The browser viewer is what judges use.
-- Demo plan: one pre-run sample project, clearly labelled as a sample, shown end to end through the design team in the browser.
+- Demo plan: one pre-run sample project, clearly labelled as a sample, shown end to end through the eight-agent design team in the browser, with scripted answers that are labelled as such.
 - SketchUp and Revit connections come through MCP in the Kiro desktop app. They are shown in a short video clip and are not part of the browser app.
 - Judging rules and deadlines: record them here once known.

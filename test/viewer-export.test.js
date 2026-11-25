@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runSample } from '../src/sample/run-sample.js';
 import { makeSampleRun } from '../src/viewer/make-sample-run.js';
+import { runTeamSample, makeTeamSampleRun } from '../src/sample/run-team-sample.js';
 import { getBrainAtVersion } from '../src/brain/brain.js';
 
 import { readdirSync, statSync } from 'node:fs';
@@ -79,8 +80,10 @@ test('Task 2: two exports give identical text', () => {
 });
 
 test('Task 2: the exported file parses and matches makeSampleRun(runSample().project)', () => {
+  // D6: the exported file is now made from the design-team sample (runTeamSample), with its team part.
   const text = readFileSync(exportedPath, 'utf8');
-  assert.deepEqual(JSON.parse(text), makeSampleRun(runSample().project));
+  const { project, team } = runTeamSample();
+  assert.deepEqual(JSON.parse(text), makeTeamSampleRun({ project, team }));
 });
 
 test('Task 2: the exported file has no email, phone number, street word or web address', () => {

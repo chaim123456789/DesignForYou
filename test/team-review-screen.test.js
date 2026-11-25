@@ -333,7 +333,7 @@ test('D4: if the design team code cannot load, the red message names the step, t
     await withPage(async (page) => {
       assert.equal(page.el('intake-error-message').hidden, false, 'the red message is shown');
       assert.match(page.el('intake-error-message').textContent, /Step "Design team code" failed/);
-      assert.match(page.el('intake-script-status').textContent, /Page script build-[a-z]+-4 \(screens\): finished setting up\./);
+      assert.match(page.el('intake-script-status').textContent, /Page script build-team-4 \(screens\): finished setting up\./);
       fill(page);
       assert.equal(stepButton(page), undefined, 'no step-by-step button without its code');
       assert.equal(page.el('run-design-team').disabled, false);

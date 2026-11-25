@@ -9,7 +9,7 @@
 // is set up in its own protected step (see attempt below). If one step fails, a
 // red message with the error text appears at the top of the page and the other
 // steps still run.
-const PAGE_VERSION = 'build-place-4';
+const PAGE_VERSION = 'build-team-4';
 // The files this page loads carry the version in their address, so a browser
 // cannot mix an old copy of one file with a new copy of another.
 const SCENE_DATA_FILE = `./scene-data.js?v=${PAGE_VERSION}`;
@@ -414,6 +414,7 @@ function drawScene(version) {
 
 // A click or tap on the drawing: open the nearest item under the pointer, or close the panel
 // when the click lands on empty space or on a room.
+const SMALL_MARKS = Object.freeze(['light-marker', 'switch', 'socket', 'rug']);
 function itemUnder(event) {
   const { THREE, renderer, camera, group } = view;
   const rect = renderer.domElement.getBoundingClientRect();
@@ -426,7 +427,11 @@ function itemUnder(event) {
   if (!group) return undefined;
   const items = group.children.filter((obj) => obj.userData && obj.userData.itemId !== undefined);
   const hits = raycaster.intersectObjects(items, false);
-  return hits.length > 0 ? hits[0].object.userData.itemId : undefined;
+  // The design team's small marks (lights, switches, sockets, rugs) never hide a door, window or piece of furniture behind them:
+  // a click picks the nearest block that is not a mark, and a mark only when nothing else is under the mouse.
+  const solid = hits.find((h) => !SMALL_MARKS.includes(h.object.userData.type));
+  const hit = solid || hits[0];
+  return hit ? hit.object.userData.itemId : undefined;
 }
 
 function pickAt(event) {

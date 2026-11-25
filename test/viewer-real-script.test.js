@@ -110,7 +110,8 @@ test('fix-viewer-1: normal run: no problem message, no missing ids, labels, deta
     // Labels: one per block, one per room, one per floor, all with real text and a placed position.
     const labels = page.labels();
     const boxes = buildScene(run, LAST);
-    const expected = boxes.filter((b) => b.itemId !== undefined).length + boxes.filter((b) => b.type === 'room').length + run.floors.length;
+    // D6: the design-team sample's small marks (lights, switches, sockets, rugs) carry no text label (noLabel).
+    const expected = boxes.filter((b) => b.itemId !== undefined && !b.noLabel).length + boxes.filter((b) => b.type === 'room').length + run.floors.length;
     assert.equal(labels.length, expected);
     for (const l of labels) {
       assert.ok(l.textContent.length > 0);
@@ -120,7 +121,7 @@ test('fix-viewer-1: normal run: no problem message, no missing ids, labels, deta
       assert.match(String(l.style.top), /px$/);
     }
     const texts = labels.map((l) => l.textContent);
-    for (const b of boxes.filter((x) => x.itemId !== undefined)) assert.ok(texts.includes(b.label), `no label "${b.label}"`);
+    for (const b of boxes.filter((x) => x.itemId !== undefined && !x.noLabel)) assert.ok(texts.includes(b.label), `no label "${b.label}"`);
 
     // Click a block: the details panel changes to that item.
     assert.match(detailsText(page), /Click a block/);
@@ -298,10 +299,10 @@ test('fix-viewer-1: when the sample file cannot be read, the red message says so
 test('fix-viewer-1: the page says which script version ran, so a stale cached copy can be spotted', async () => {
   assert.match(html, /id="script-status">Page script: not started yet/);
   await withPage(() => {}, async (page) => {
-    assert.match(page.el('script-status').textContent, /Page script build-place-4: finished/);
+    assert.match(page.el('script-status').textContent, /Page script build-team-4: finished/);
   });
-  assert.match(html, /styles\.css\?v=build-place-4/);
-  assert.match(html, /viewer\.js\?v=build-place-4/);
+  assert.match(html, /styles\.css\?v=build-team-4/);
+  assert.match(html, /viewer\.js\?v=build-team-4/);
   assert.match(js, /scene-data\.js\?v=\$\{PAGE_VERSION\}/);
 });
 

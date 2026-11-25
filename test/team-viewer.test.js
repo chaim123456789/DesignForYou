@@ -65,22 +65,27 @@ test('D5: the new kinds are drawn as simple shapes: lights under the ceiling, sw
   for (const b of of('light-marker')) { assert.equal(b.height, 0.05); assert.ok(Math.abs(b.y + b.height - (b.floorOrder - 1) * 3 - 2.6) < 1e-9, 'just under the ceiling'); }
   for (const b of of('rug')) assert.equal(b.height, 0.02);
   for (const b of of('switch')) assert.ok(Math.abs(b.y - (b.floorOrder - 1) * 3 - 1.2) < 1e-9, 'a switch at 1.2 m');
-  // One label per item: only the first mark of an item carries a label.
-  const lightsOfLiving = boxes.filter((b) => b.type === 'light-marker' && b.floorOrder === 1);
-  assert.equal(lightsOfLiving.filter((b) => !b.noLabel).length, 1);
+  // The small marks carry no text label (there are too many); clicking one still shows its item's details.
+  const marks = [...of('light-marker'), ...of('switch'), ...of('socket'), ...of('rug')];
+  for (const b of marks) if (!b.clash) assert.equal(b.noLabel, true, 'a mark of an item not in a clash has no label');
+  for (const id of new Set(marks.map((b) => b.itemId))) {
+    const labelled = marks.filter((b) => b.itemId === id && !b.noLabel).length;
+    assert.ok(labelled <= 1, 'at most one label per item');
+  }
   const ids = new Set(boxes.map((b) => b.key));
   assert.equal(ids.size, boxes.length, 'every box has its own key');
   const lightItem = data.snapshots[last].items.find((i) => i.kind === 'light');
   assert.equal(describeItem(data, last, lightItem.id).kind, 'Lights');
 });
 
-test('D5: the old sample still draws exactly as before (same fingerprint of all versions), and its run file has no team part', () => {
+test('D5 / D6: the sample run file (now the design-team sample) has the team part and the marks, and draws the same as the place-items fingerprint', () => {
   const run = JSON.parse(readFileSync(new URL('../docs/sample-run.json', import.meta.url), 'utf8'));
   const all = run.snapshots.map((s) => buildScene(run, s.version));
-  // The same fingerprint the place-items Task 7 test checks: the sample's boxes did not change.
-  assert.equal(createHash('sha256').update(JSON.stringify(all)).digest('hex'), 'd04a5af0a926b294531b3619f7f105050f8f32e5d4402d0e1e27527842e58f42');
-  assert.equal('team' in run, false);
-  for (const s of run.snapshots) for (const i of s.items) assert.equal('marks' in i, false);
+  // The same fingerprint the place-items Task 7 test checks (D6 value for the design-team sample).
+  assert.equal(createHash('sha256').update(JSON.stringify(all)).digest('hex'), 'f1e6e3906fedd2dcc2fa9e9a15898b77292ee99c8c0ed9a8c3b6aa768a62ebaf');
+  assert.deepEqual(run.team.agents.map((a) => a.name), ORDER);
+  assert.ok(run.snapshots[run.versions.length].items.some((i) => i.kind === 'light' && i.marks.length > 0));
+  assert.equal(run.sample, true);
 });
 
 // ---- The panel on the stand-in page -----------------------------------------------------------------
@@ -101,10 +106,10 @@ async function withViewer(body) {
 }
 const walk = (node, out = []) => { out.push(node); node.children.forEach((c) => walk(c, out)); return out; };
 
-test('D5 / R11.3: the team panel shows the eight agents in order, what each did, re-checks and the tags; the sample hides it', async () => {
+test('D5 / R11.3: the team panel shows the eight agents in order, what each did, re-checks and the tags; data without a team part hides it', async () => {
   const { data } = teamRunData();
   await withViewer(async (page) => {
-    assert.equal(page.el('team-panel').hidden, true, 'the sample has no team panel');
+    assert.equal(page.el('team-panel').hidden, false, 'D6: the design-team sample shows the team panel');
     assert.equal(await globalThis.designForYouViewer.showRunData(data, { kind: 'own' }), true);
     assert.equal(page.el('team-panel').hidden, false);
     const items = page.el('team-panel-list').children;
@@ -124,11 +129,15 @@ test('D5 / R11.3: the team panel shows the eight agents in order, what each did,
     assert.match(page.el('team-panel-sentence').textContent, /scripted answer/);
     assert.equal(page.el('team-panel').getAttribute('aria-labelledby'), 'team-panel-heading');
     assert.deepEqual(page.problemLines(), []);
-    // Back to the sample: the panel is hidden again and emptied.
-    const sample = JSON.parse(readDoc('sample-run.json'));
-    await globalThis.designForYouViewer.showRunData(sample);
+    // Run data without a team part (for example the old four-agent pipeline's): the panel is hidden again and emptied.
+    const { team, ...plain } = JSON.parse(readDoc('sample-run.json'));
+    assert.ok(team);
+    await globalThis.designForYouViewer.showRunData(plain);
     assert.equal(page.el('team-panel').hidden, true);
     assert.equal(page.el('team-panel-list').children.length, 0);
+    // And the sample with its team part shows it again.
+    await globalThis.designForYouViewer.showRunData(JSON.parse(readDoc('sample-run.json')));
+    assert.equal(page.el('team-panel-list').children.length, 8);
   });
 });
 

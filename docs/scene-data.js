@@ -437,7 +437,7 @@ export function buildScene(sampleRun, version) {
 
     if (Array.isArray(item.marks) && (item.kind === 'light' || item.kind === 'electrical' || item.kind === 'decor')) {
       item.marks.forEach((m, n) => {
-        const shared = { ...base, key: `item:${item.id}:${m.role}${n + 1}`, mark: m.role, noLabel: n > 0 };
+        const shared = { ...base, key: `item:${item.id}:${m.role}${n + 1}`, mark: m.role, noLabel: !(base.clash && n === 0) }; // small marks carry no text label (too many), except the first mark of an item in a clash
         if (m.role === 'light') {
           boxes.push({
             ...shared, type: 'light-marker',

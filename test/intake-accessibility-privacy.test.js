@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, statSync } from 'node:fs';
 import { installImportHooks } from '../test-helpers/hooks.js';
 import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
-import { buildScene } from '../docs/scene-data.js';
+import { buildScene, shapeParts } from '../docs/scene-data.js';
 import { FIXED_SENTENCE } from '../docs/intake/report.js';
 import * as stateApi from '../docs/intake/state.js';
 import { runDesignTeam } from '../docs/intake/build-brain.js';
@@ -136,7 +136,8 @@ test('Task 12 accessibility: the sample result shows the fixed sentence once, as
     assert.ok(page.document.querySelectorAll('.label-own').every((p) => p.hidden === true));
     assert.equal(page.el('heading-result').textContent, 'Sample two-storey home');
     const drawn = page.scene.children.find((c) => c.type === 'Group').children.filter((o) => o.userData && o.userData.boxKey).map((o) => o.userData.boxKey).sort();
-    assert.deepEqual(drawn, buildScene(sample, SAMPLE_LAST).map((b) => b.key).sort());
+    // D6: the design-team sample has furniture with a type, which is drawn as several parts, each with the box's key.
+    assert.deepEqual(drawn, buildScene(sample, SAMPLE_LAST).flatMap((b) => Array(Math.max(1, shapeParts(b).length)).fill(b.key)).sort());
     assert.deepEqual(page.log.filter((l) => l.startsWith('fetch:')), ['fetch:sample-run.json']);
     assert.deepEqual(page.problemLines(), []);
     assert.equal(page.el('intake-error-message').hidden, true);

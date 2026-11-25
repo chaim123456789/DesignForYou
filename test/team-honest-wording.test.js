@@ -146,7 +146,7 @@ test('D3: images are still said to be not looked at while AI is off, and the old
   assert.equal(typeof buildReport, 'function');
 });
 
-test('D3: a run of the old four-agent pipeline has no design-team wording, so the sample stays as it was', async () => {
+test('D3: a run of the old four-agent pipeline has no design-team wording, so its output is unchanged', async () => {
   const { runSample } = await import('../src/sample/run-sample.js');
   const sample = runSample();
   const project = sample.project || sample;
