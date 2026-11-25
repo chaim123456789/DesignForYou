@@ -1,6 +1,6 @@
-// The Style agent for the design team (design-team C3, design section 10.1). Seventh in the team.
-// The old Style agent in agent.js stays as it is for the existing sample. This file is the new path. It is kept out of agent.js
-// because agent.js is copied to docs/engine/ for the page, and the page has no knowledge files beside it yet.
+// The Style agent for the design team (design-team C3, design section 10.1). Seventh in the team. Its registry name is Style; its folder here is team-style/.
+// The old Style agent in ../style/agent.js stays as it is for the existing sample. This file is the new path. It is kept out of that folder
+// because that agent.js is copied to docs/engine/ for the page (the page has no knowledge files beside it yet), and an old test says the old folder holds only agent.js and agent.json.
 //
 // A style item is a NOTE. It points at another item (its `target`, for example a floor) and carries a tag, a family, a palette and
 // a sentence. It has no geometry, and the item it points at is never touched: the floor stays with Floors and ceilings.

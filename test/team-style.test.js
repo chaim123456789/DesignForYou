@@ -9,7 +9,7 @@ import { createGatekeeper } from '../src/brain/gatekeeper.js';
 import { setProjectInspiration, setRoomOverride } from '../src/brain/inspiration.js';
 import { createRun } from '../src/team-coordinator.js';
 import { findStale } from '../src/ripple.js';
-import { makeTeamStyleAgent, loadStyleKnowledge, conflictsFor, conflictPairs, STYLE } from '../src/agents/style/team-agent.js';
+import { makeTeamStyleAgent, loadStyleKnowledge, conflictsFor, conflictPairs, STYLE } from '../src/agents/team-style/agent.js';
 import { styleAgent } from '../src/agents/style/agent.js';
 import { buildLater, view, off, registry, settle, NOW } from '../test-helpers/team-project.js';
 
