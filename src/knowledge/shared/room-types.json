@@ -1,24 +1,25 @@
 {
   "provenance": {
     "title": "Room types",
-    "covers": "The room types the design team knows by name, and whether each is a wet room (water used, so it needs a wet-safe surface and careful socket placement).",
+    "covers": "The room types the design team knows by name, and whether each is a wet room (water used). The wet or dry choice is our own common-sense list, not taken from the source.",
     "writtenBy": "own words",
     "date": "2026-11-25",
     "sources": [
       {
-        "name": "Approved Document F: Ventilation (UK government guidance, which groups kitchens, bathrooms, utility rooms and toilets as the rooms that make moisture)",
+        "name": "Approved Document F: Ventilation (UK government). Listed as a place to check against. It was not opened.",
         "url": "gov.uk/government/publications/ventilation-approved-document-f",
-        "licence": "Open Government Licence v3.0"
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
       }
     ]
   },
   "rules": [
-    { "id": "room-kitchen", "when": { "roomType": "kitchen" }, "then": { "wet": true }, "note": "Typical guideline, check local rules. A kitchen uses water." },
-    { "id": "room-bathroom", "when": { "roomType": "bathroom" }, "then": { "wet": true }, "note": "Typical guideline, check local rules. A bathroom uses water." },
-    { "id": "room-toilet", "when": { "roomType": "toilet" }, "then": { "wet": true }, "note": "Typical guideline, check local rules. A toilet room has a basin or a toilet." },
-    { "id": "room-utility", "when": { "roomType": "utility" }, "then": { "wet": true }, "note": "Typical guideline, check local rules. A utility room often holds a washing machine." },
-    { "id": "room-living", "when": { "roomType": "living room" }, "then": { "wet": false }, "note": "Typical guideline, check local rules." },
-    { "id": "room-bedroom", "when": { "roomType": "bedroom" }, "then": { "wet": false }, "note": "Typical guideline, check local rules." },
-    { "id": "room-hall", "when": { "roomType": "hall" }, "then": { "wet": false }, "note": "Typical guideline, check local rules." }
+    {"id": "room-kitchen", "when": {"roomType": "kitchen"}, "then": {"wet": true}, "note": "Typical guideline, check local rules. A kitchen uses water."},
+    {"id": "room-bathroom", "when": {"roomType": "bathroom"}, "then": {"wet": true}, "note": "Typical guideline, check local rules. A bathroom uses water."},
+    {"id": "room-toilet", "when": {"roomType": "toilet"}, "then": {"wet": true}, "note": "Typical guideline, check local rules. A toilet room has a basin or a toilet."},
+    {"id": "room-utility", "when": {"roomType": "utility"}, "then": {"wet": true}, "note": "Typical guideline, check local rules. A utility room often holds a washing machine."},
+    {"id": "room-living", "when": {"roomType": "living room"}, "then": {"wet": false}, "note": "Typical guideline, check local rules."},
+    {"id": "room-bedroom", "when": {"roomType": "bedroom"}, "then": {"wet": false}, "note": "Typical guideline, check local rules."},
+    {"id": "room-hall", "when": {"roomType": "hall"}, "then": {"wet": false}, "note": "Typical guideline, check local rules."}
   ]
 }
