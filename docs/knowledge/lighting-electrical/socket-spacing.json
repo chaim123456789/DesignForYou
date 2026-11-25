@@ -1,0 +1,25 @@
+{
+  "provenance": {
+    "title": "Socket spacing",
+    "covers": "How many sockets a stretch of free wall gets, how far from doors, windows and corners, and how high. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      },
+      {
+        "name": "Approved Document P: Electrical safety, dwellings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/electrical-safety-approved-document-p",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "sockets-spacing", "when": {"socket": "wall"}, "then": {"maxSpacing": 3.6, "minUsableWall": 0.8, "clearFromOpening": 0.3, "clearFromCorner": 0.3, "height": 0.45, "faceWidth": 0.08, "faceDepth": 0.05, "openingReach": 0.05}, "note": "Typical guideline, check local rules. Metres. One socket for each stretch of free wall up to the spacing, with gaps kept clear of doors, windows and corners."}
+  ]
+}

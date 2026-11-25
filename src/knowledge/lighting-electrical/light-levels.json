@@ -1,0 +1,27 @@
+{
+  "provenance": {
+    "title": "Light levels",
+    "covers": "How bright each room type should be and how many ceiling lights that takes. Common rules of thumb from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document L: Conservation of fuel and power (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/conservation-of-fuel-and-power-approved-document-l",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "lights-lux-living-room", "when": {"roomType": "living room"}, "then": {"lux": 150}, "note": "Typical guideline, check local rules. Lux: the light level aimed for in the room."},
+    {"id": "lights-lux-kitchen", "when": {"roomType": "kitchen"}, "then": {"lux": 300}, "note": "Typical guideline, check local rules. Lux: the light level aimed for in the room."},
+    {"id": "lights-lux-bathroom", "when": {"roomType": "bathroom"}, "then": {"lux": 200}, "note": "Typical guideline, check local rules. Lux: the light level aimed for in the room."},
+    {"id": "lights-lux-bedroom", "when": {"roomType": "bedroom"}, "then": {"lux": 100}, "note": "Typical guideline, check local rules. Lux: the light level aimed for in the room."},
+    {"id": "lights-lux-hall", "when": {"roomType": "hall"}, "then": {"lux": 100}, "note": "Typical guideline, check local rules. Lux: the light level aimed for in the room."},
+    {"id": "lights-lux-toilet", "when": {"roomType": "toilet"}, "then": {"lux": 100}, "note": "Typical guideline, check local rules. Lux: the light level aimed for in the room."},
+    {"id": "lights-lux-utility", "when": {"roomType": "utility"}, "then": {"lux": 200}, "note": "Typical guideline, check local rules. Lux: the light level aimed for in the room."},
+    {"id": "lights-lux-other", "when": {"roomType": "other"}, "then": {"lux": 100}, "note": "Typical guideline, check local rules. Lux: the light level aimed for in the room."},
+    {"id": "lights-fixture", "when": {"fixture": "ceiling light"}, "then": {"lumens": 800, "utilisation": 0.5, "pendantMinCeiling": 2.4}, "note": "Typical guideline, check local rules. Lumens of one ceiling light, the share of light that reaches the room, and the lowest ceiling (metres) where a hanging light is fine."}
+  ]
+}
