@@ -60,7 +60,7 @@ test('Task 3: Locked and Unsure boxes get different colour names', () => {
 });
 
 test('Task 3: clash boxes are marked for the Garden door, the Sofa and the oak bed frame marker at the latest version', () => {
-  // D6: the design-team sample's Reviewer also reports items out of date and the Locked bed that needs a look (old value: the first three only... see the log).
+  // D6: the design-team sample's Reviewer also reports items out of date and the Locked bed that needs a look (old value: Garden door, Oak bed frame stays as it is, Sofa).
   assert.deepEqual(clashedNames(LATEST), ['Decor of Living Room', 'Garden door', 'Oak bed', 'Oak bed frame stays as it is', 'Sofa', 'Style of the decor in Bedroom', 'Style of the decor in Living Room']);
 });
 
