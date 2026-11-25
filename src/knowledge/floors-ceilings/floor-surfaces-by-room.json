@@ -1,0 +1,26 @@
+{
+  "provenance": {
+    "title": "Floor surfaces by room type",
+    "covers": "Usual floor surfaces for each room type, in order of preference, and which are safe in wet rooms. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document C: Resistance to moisture (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/site-preparation-and-resistance-to-contaminates-and-moisture-approved-document-c",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "floors-surface-kitchen", "when": {"roomType": "kitchen"}, "then": {"surfaces": [{"name": "ceramic tile", "wetSafe": true}, {"name": "vinyl", "wetSafe": true}, {"name": "oak floorboards", "wetSafe": false}]}, "note": "Typical guideline, check local rules. Surfaces in order of preference. wetSafe says if the surface is safe where water is used."},
+    {"id": "floors-surface-bathroom", "when": {"roomType": "bathroom"}, "then": {"surfaces": [{"name": "ceramic tile", "wetSafe": true}, {"name": "vinyl", "wetSafe": true}]}, "note": "Typical guideline, check local rules. Surfaces in order of preference. wetSafe says if the surface is safe where water is used."},
+    {"id": "floors-surface-toilet", "when": {"roomType": "toilet"}, "then": {"surfaces": [{"name": "vinyl", "wetSafe": true}, {"name": "ceramic tile", "wetSafe": true}]}, "note": "Typical guideline, check local rules. Surfaces in order of preference. wetSafe says if the surface is safe where water is used."},
+    {"id": "floors-surface-utility", "when": {"roomType": "utility"}, "then": {"surfaces": [{"name": "ceramic tile", "wetSafe": true}, {"name": "vinyl", "wetSafe": true}]}, "note": "Typical guideline, check local rules. Surfaces in order of preference. wetSafe says if the surface is safe where water is used."},
+    {"id": "floors-surface-living-room", "when": {"roomType": "living room"}, "then": {"surfaces": [{"name": "oak floorboards", "wetSafe": false}, {"name": "carpet", "wetSafe": false}, {"name": "ceramic tile", "wetSafe": true}]}, "note": "Typical guideline, check local rules. Surfaces in order of preference. wetSafe says if the surface is safe where water is used."},
+    {"id": "floors-surface-bedroom", "when": {"roomType": "bedroom"}, "then": {"surfaces": [{"name": "carpet", "wetSafe": false}, {"name": "oak floorboards", "wetSafe": false}]}, "note": "Typical guideline, check local rules. Surfaces in order of preference. wetSafe says if the surface is safe where water is used."},
+    {"id": "floors-surface-hall", "when": {"roomType": "hall"}, "then": {"surfaces": [{"name": "ceramic tile", "wetSafe": true}, {"name": "oak floorboards", "wetSafe": false}]}, "note": "Typical guideline, check local rules. Surfaces in order of preference. wetSafe says if the surface is safe where water is used."},
+    {"id": "floors-surface-other", "when": {"roomType": "other"}, "then": {"surfaces": [{"name": "oak floorboards", "wetSafe": false}, {"name": "carpet", "wetSafe": false}]}, "note": "Typical guideline, check local rules. Surfaces in order of preference. wetSafe says if the surface is safe where water is used."}
+  ]
+}
