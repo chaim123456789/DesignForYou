@@ -17,7 +17,7 @@ export function setUpResultScreen(tools) {
   const refs = {};
   for (const id of ['heading-result', 'own-result', 'own-viewer-note', 'own-summary', 'own-brief', 'own-images-count',
     'own-profile-message', 'own-profile-sentences', 'own-profile-tags', 'own-mood-empty', 'own-mood-board',
-    'own-report', 'own-report-clash', 'result-fixed-rules', 'sample-fixed-rules', 'sample-text-alternative', 'result-start-again',
+    'own-report', 'own-report-clash', 'result-fixed-rules', 'result-team-sentence', 'sample-fixed-rules', 'sample-text-alternative', 'result-start-again',
     'how-to-use', 'view-controls', 'scene-area', 'col-side']) {
     refs[id] = el(id);
   }
@@ -114,7 +114,8 @@ export function setUpResultScreen(tools) {
 
   function fillReport(state, run) {
     attempt('Result: what the design team did', () => {
-      const built = report.buildReport(state, run);
+      // A run of the eight-agent team has its own report, where every line carries its Rule-based or AI tag.
+      const built = run.team && typeof report.buildTeamReport === 'function' ? report.buildTeamReport(state, run) : report.buildReport(state, run);
       if (!built) throw new Error('There is no report because the run did not finish.');
       refs['own-report'].replaceChildren(...built.lists.flatMap((list) => {
         const heading = make('h3', '', list.heading);
@@ -128,8 +129,14 @@ export function setUpResultScreen(tools) {
   }
 
   // The one fixed sentence comes from report.js, so the page cannot hold a different copy of it.
-  function fillFixedSentence() {
+  function fillFixedSentence(run) {
     attempt('Result: the fixed sentence', () => { refs['result-fixed-rules'].textContent = report.FIXED_SENTENCE; });
+    // The design team's sentence (which parts are rules, which can use AI, and that AI is off), and "scripted answer" when it applies.
+    attempt('Result: the design team sentence', () => {
+      const sentences = run && run.team ? run.team.sentences : [];
+      refs['result-team-sentence'].textContent = sentences.join(' ');
+      refs['result-team-sentence'].hidden = sentences.length === 0;
+    });
   }
   // The sample result shows the same sentence as one line under "Back to start", outside the viewer's own parts.
   // It is filled in as soon as this screen's code has loaded, so the sample needs no run first.
@@ -142,7 +149,7 @@ export function setUpResultScreen(tools) {
     const state = getState();
     const project = run.project;
     let data = null;
-    succeeded('Preparing the 3D view', () => { data = runData.buildOwnRunData(project, state); });
+    succeeded('Preparing the 3D view', () => { data = runData.buildOwnRunData(project, state, run.team); });
     const viewer = getViewer();
     let viewerOk = false;
     if (data && viewer) {
@@ -160,7 +167,7 @@ export function setUpResultScreen(tools) {
     fillBrief(state, project);
     fillProfile(state);
     fillReport(state, run);
-    fillFixedSentence();
+    fillFixedSentence(run);
     attempt('Showing the result screen', () => show('result'));
     announce('Your result is ready.');
     return true;
@@ -195,6 +202,8 @@ export function setUpResultScreen(tools) {
       refs['own-mood-board'].replaceChildren();
       refs['own-report'].replaceChildren();
       refs['own-report-clash'].textContent = '';
+      refs['result-team-sentence'].textContent = '';
+      refs['result-team-sentence'].hidden = true;
       setKind('sample');
       setViewerVisible(true);
       const viewer = getViewer();

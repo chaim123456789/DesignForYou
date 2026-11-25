@@ -329,7 +329,7 @@ function addLabels(boxes) {
     view.labels.push({ element, point: [b.x + b.width / 2, y, b.z + b.depth / 2], ...extra });
   };
   for (const b of boxes) {
-    if (b.itemId === undefined) continue;
+    if (b.itemId === undefined || b.noLabel) continue; // one label per item, also when it is drawn as several small marks
     add(b, b.label, `${b.type}-label${b.clash ? ' clash-label' : ''}`, b.y + b.height, { itemId: b.itemId, clash: Boolean(b.clash) });
   }
   for (const b of boxes) {
@@ -620,6 +620,52 @@ function render(version) {
   attempt('Details panel', () => { if (openItemId !== null) showDetails(openItemId); });
 }
 
+// ---- The design team panel (design-team D5) ---------------------------------------------------
+
+// The eight agents in order, what each did, which were re-checked and why, and every proposal with its tag (Rule-based or AI),
+// its rule and the answer. Only run data with a "team" part has this; for any other the panel stays hidden. All text goes in
+// with textContent.
+function fillTeamPanel(run) {
+  const section = el('team-panel');
+  const list = el('team-panel-list');
+  const team = run && run.team;
+  if (!team || !Array.isArray(team.agents)) {
+    list.replaceChildren();
+    el('team-panel-sentence').textContent = '';
+    section.hidden = true;
+    return;
+  }
+  const make = (tag, text, className) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  el('team-panel-sentence').textContent = (team.sentences || []).join(' ');
+  list.replaceChildren(...team.agents.map((agent) => {
+    const li = make('li');
+    li.append(make('h3', `${agent.number}. ${agent.name}: ${agent.status}`));
+    li.append(make('p', agent.summary));
+    for (const note of agent.notes || []) {
+      const word = { 're-check': 'Re-checked', 'not-affected': 'Not affected', skipped: 'Switched off', 'needs-look': 'Needs your look', 'left-stale': 'Left out of date' }[note.event] || note.event;
+      li.append(make('p', `${word}: ${note.text.replace(/"?\bitem-\d+\b"?/g, 'an item')}`));
+    }
+    const proposals = make('ul');
+    for (const pass of agent.passes || []) {
+      for (const p of pass.proposals) {
+        const row = make('li');
+        row.append(make('span', p.tag, p.tag === 'AI' ? 'source-tag source-tag-ai' : 'source-tag'));
+        const ai = p.ai ? ` AI task ${p.ai.task}, cost $${p.ai.costUsd} (${p.ai.label}).` : '';
+        row.append(document.createTextNode(` ${p.item} (${pass.kind}). Rule: ${p.rule}. ${p.why}${ai} Choices: ${p.options.join(', ')}, Skip. Answer: ${p.answer}${p.answeredBy ? ` (${p.answeredBy})` : ''}.`));
+        proposals.append(row);
+      }
+    }
+    if (proposals.children.length > 0) li.append(proposals);
+    return li;
+  }));
+  section.hidden = false;
+}
+
 // ---- Showing run data -----------------------------------------------------------------------
 
 // The floor buttons are named after the floors of the run data being shown. A button for a floor
@@ -662,6 +708,7 @@ async function showRunData(run, { kind } = {}) {
     el('scene-area').setAttribute('aria-label', kind === 'own' ? '3D view of your project' : '3D view of the sample home');
   });
   attempt('Floor button names', () => nameFloorButtons(run));
+  attempt('Design team panel', () => fillTeamPanel(run));
   if (!controlsReady) {
     controlsReady = true;
     // The page controls come first and do not depend on 3D, so they work even if 3D fails.

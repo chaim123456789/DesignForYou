@@ -344,3 +344,22 @@ test('D4: if the design team code cannot load, the red message names the step, t
     delete globalThis.__breakTeam;
   }
 });
+
+test('D4 / D5: the result of a step-by-step run shows the team panel, the design team sentence and a report where every line has a tag', async () => {
+  await withPage(async (page) => {
+    fill(page);
+    stepButton(page).click();
+    await runToEnd(page);
+    await waitFor(() => page.el('screen-result').hidden === false, 'the result screen');
+    assert.equal(page.el('team-panel').hidden, false, 'the viewer shows the team panel');
+    assert.equal(page.el('team-panel-list').children.length, 8);
+    assert.equal(page.el('result-team-sentence').hidden, false);
+    assert.match(page.el('result-team-sentence').textContent, /Two jobs can use AI: reading a photo and judging taste\. AI is off/);
+    assert.doesNotMatch(page.el('result-team-sentence').textContent, /scripted answer/, 'a person answered, so no "scripted answer"');
+    const lines = walk(page.el('own-report')).filter((n) => n.className === 'report-line').map((n) => n.textContent);
+    assert.ok(lines.length >= 3);
+    for (const line of lines) assert.match(line, /^(Rule-based|AI): /, line);
+    assert.ok(page.el('result-fixed-rules').textContent.length > 0, 'the old fixed sentence stays while AI is off');
+    assert.equal(page.el('heading-result').textContent, 'YOUR PROJECT: My home');
+  });
+});

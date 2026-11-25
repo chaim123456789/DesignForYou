@@ -11,7 +11,17 @@ const KIND_WORDS = {
   door: 'Door',
   window: 'Window',
   clash: 'Review report',
+  wall: 'Walls',
+  floor: 'Floor',
+  ceiling: 'Ceiling',
+  light: 'Lights',
+  electrical: 'Switches and sockets',
+  decor: 'Decor',
 };
+
+// The design team's small things (design-team D5), drawn as simple shapes: a light is a small flat marker under the ceiling,
+// a switch or a socket is a small block on its wall at its height, a rug is a thin mat on the floor. Sizes in metres.
+const MARK = Object.freeze({ lightSize: 0.3, lightThickness: 0.05, pointSize: 0.08, rugThickness: 0.02, defaultHeight: 0.45 });
 
 const MARKER_GAP = 0.1;
 const PANEL_THICKNESS = 0.1; // metres. Doors and windows are drawn as thin panels this thick.
@@ -425,6 +435,30 @@ export function buildScene(sampleRun, version) {
       clash: clashed.has(item.id),
     };
 
+    if (Array.isArray(item.marks) && (item.kind === 'light' || item.kind === 'electrical' || item.kind === 'decor')) {
+      item.marks.forEach((m, n) => {
+        const shared = { ...base, key: `item:${item.id}:${m.role}${n + 1}`, mark: m.role, noLabel: n > 0 };
+        if (m.role === 'light') {
+          boxes.push({
+            ...shared, type: 'light-marker',
+            x: room.x + m.x - MARK.lightSize / 2, y: floor.elevation + L.wallHeight - MARK.lightThickness, z: room.z + m.y - MARK.lightSize / 2,
+            width: MARK.lightSize, height: MARK.lightThickness, depth: MARK.lightSize,
+          });
+        } else if (m.role === 'rug') {
+          boxes.push({
+            ...shared, type: 'rug',
+            x: room.x + m.x, y: floor.elevation, z: room.z + m.y, width: m.width, height: MARK.rugThickness, depth: m.depth,
+          });
+        } else {
+          boxes.push({
+            ...shared, type: m.role,
+            x: room.x + m.x, y: floor.elevation + (typeof m.height === 'number' ? m.height : MARK.defaultHeight), z: room.z + m.y,
+            width: Math.max(m.width || 0, MARK.pointSize), height: MARK.pointSize, depth: Math.max(m.depth || 0, MARK.pointSize),
+          });
+        }
+      });
+      continue;
+    }
     if (item.kind === 'style') {
       const n = markersInRoom.get(room.id) || 0;
       markersInRoom.set(room.id, n + 1);
