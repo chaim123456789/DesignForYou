@@ -1,0 +1,19 @@
+{
+  "provenance": {
+    "title": "Switch placement",
+    "covers": "Where a light switch goes next to a door and how high. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "switch-by-door", "when": {"switch": "door"}, "then": {"offset": 0.15, "height": 1.2, "faceWidth": 0.08, "faceDepth": 0.05}, "note": "Typical guideline, check local rules. Metres. A light switch sits beside the door on the wall, a little way from the frame, at hand height."}
+  ]
+}

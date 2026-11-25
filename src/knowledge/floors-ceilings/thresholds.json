@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "title": "Thresholds under doors",
+    "covers": "What goes under a door where the floor surface changes. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "thresholds-surface-change", "when": {"change": "surface"}, "then": {"type": "threshold strip", "maxHeight": 0.015}, "note": "Typical guideline, check local rules. Metres. A strip under the door where two floor surfaces meet. Keep it low so it is easy to cross."},
+    {"id": "thresholds-door-reach", "when": {"door": "joins-rooms"}, "then": {"reach": 0.05}, "note": "Typical guideline, check local rules. Metres. A door whose edge is this close to the end of its room is taken to join it to the next room."},
+    {"id": "thresholds-wet-dry", "when": {"change": "wet-dry"}, "then": {"type": "water bar", "maxHeight": 0.015}, "note": "Typical guideline, check local rules. Metres. Where a wet-safe surface meets a dry one, a bar keeps water from creeping under the dry floor."}
+  ]
+}

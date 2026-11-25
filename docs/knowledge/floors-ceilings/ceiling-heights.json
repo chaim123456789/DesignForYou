@@ -1,0 +1,26 @@
+{
+  "provenance": {
+    "title": "Ceiling heights",
+    "covers": "The lowest ceiling usually accepted for each room type, for each room type. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Technical housing standards: nationally described space standard (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/technical-housing-standards-nationally-described-space-standard",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "ceilings-min-living-room", "when": {"roomType": "living room"}, "then": {"minHeight": 2.3}, "note": "Typical guideline, check local rules. Metres. A ceiling lower than this is flagged."},
+    {"id": "ceilings-min-bedroom", "when": {"roomType": "bedroom"}, "then": {"minHeight": 2.3}, "note": "Typical guideline, check local rules. Metres. A ceiling lower than this is flagged."},
+    {"id": "ceilings-min-kitchen", "when": {"roomType": "kitchen"}, "then": {"minHeight": 2.3}, "note": "Typical guideline, check local rules. Metres. A ceiling lower than this is flagged."},
+    {"id": "ceilings-min-hall", "when": {"roomType": "hall"}, "then": {"minHeight": 2.1}, "note": "Typical guideline, check local rules. Metres. A ceiling lower than this is flagged."},
+    {"id": "ceilings-min-bathroom", "when": {"roomType": "bathroom"}, "then": {"minHeight": 2.1}, "note": "Typical guideline, check local rules. Metres. A ceiling lower than this is flagged."},
+    {"id": "ceilings-min-toilet", "when": {"roomType": "toilet"}, "then": {"minHeight": 2.1}, "note": "Typical guideline, check local rules. Metres. A ceiling lower than this is flagged."},
+    {"id": "ceilings-min-utility", "when": {"roomType": "utility"}, "then": {"minHeight": 2.1}, "note": "Typical guideline, check local rules. Metres. A ceiling lower than this is flagged."},
+    {"id": "ceilings-min-other", "when": {"roomType": "other"}, "then": {"minHeight": 2.3}, "note": "Typical guideline, check local rules. Metres. A ceiling lower than this is flagged."}
+  ]
+}

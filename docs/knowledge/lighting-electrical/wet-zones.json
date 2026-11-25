@@ -1,0 +1,23 @@
+{
+  "provenance": {
+    "title": "Wet zones",
+    "covers": "Which rooms are wet zones where ordinary sockets are not allowed. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document P: Electrical safety, dwellings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/electrical-safety-approved-document-p",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "wetzone-bathroom", "when": {"roomType": "bathroom"}, "then": {"zone": "whole-room", "socketsAllowed": false}, "note": "Typical guideline, check local rules. The whole room counts as a wet zone. No ordinary sockets. A professional decides about a shaver socket."},
+    {"id": "wetzone-toilet", "when": {"roomType": "toilet"}, "then": {"zone": "whole-room", "socketsAllowed": false}, "note": "Typical guideline, check local rules. The whole room counts as a wet zone. No ordinary sockets."},
+    {"id": "wetzone-kitchen", "when": {"roomType": "kitchen"}, "then": {"zone": "water-points-not-known", "socketsAllowed": true}, "note": "Typical guideline, check local rules. Sinks are not placed yet, so no wet zone can be drawn. Re-check once water points are known."},
+    {"id": "wetzone-utility", "when": {"roomType": "utility"}, "then": {"zone": "water-points-not-known", "socketsAllowed": true}, "note": "Typical guideline, check local rules. Machines and taps are not placed yet. Re-check once water points are known."},
+    {"id": "wetzone-other", "when": {"roomType": "other"}, "then": {"zone": "none", "socketsAllowed": true}, "note": "Typical guideline, check local rules. A dry room has no wet zone."}
+  ]
+}

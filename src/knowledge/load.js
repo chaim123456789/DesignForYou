@@ -7,6 +7,9 @@ export const RULE_NOTE_START = 'typical guideline, check local rules';
 const DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
 // A web address written without the http start, for example gov.uk/some/page.
 const ADDRESS_FORMAT = /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i;
+// Every source says whether anyone read it: "not checked", or "read" with the date, like "read 2026-11-25".
+export const NOT_CHECKED = 'not checked';
+const CHECKED_FORMAT = /^read \d{4}-\d{2}-\d{2}$/;
 
 function nodeTools() {
   if (typeof process === 'undefined' || typeof process.getBuiltinModule !== 'function') {
@@ -73,6 +76,9 @@ export function validateKnowledge(data, allowedLicences, fileName = 'A knowledge
     if (s === null || typeof s !== 'object') fail(`source ${i + 1} must be an object with name, url and licence.`);
     if (typeof s.name !== 'string' || s.name.trim() === '') fail(`source ${i + 1} has no name.`);
     if (typeof s.url !== 'string' || !ADDRESS_FORMAT.test(s.url)) fail(`source ${i + 1} ("${s.name}") needs a web address written without the http start, like gov.uk/page.`);
+    if (s.checked !== NOT_CHECKED && !(typeof s.checked === 'string' && CHECKED_FORMAT.test(s.checked))) {
+      fail(`source ${i + 1} ("${s.name}") needs "checked" to say "${NOT_CHECKED}" or "read" with a date, like "read 2026-11-25".`);
+    }
     if (!allowedLicences.includes(s.licence)) {
       fail(`source ${i + 1} ("${s.name}") has the licence "${s.licence}", which is not allowed. Allowed: ${allowedLicences.join(', ')}.`);
     }

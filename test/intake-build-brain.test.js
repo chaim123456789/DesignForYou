@@ -156,7 +156,12 @@ const mentions = (text) => OPTIONAL_FIELD_WORDS.test(text);
 
 test('Task 4b: no agent file mentions brief, styleProfile, imageCount or images', () => {
   const files = allAgentFiles();
-  assert.equal(files.length, 8);
+  // The four old agents in src/ and in docs/engine/ (8 files), plus every design-team agent that has its own folder in
+  // src/agents/ (build-team-2: the count grows by one per new agent, and each new agent file is scanned too).
+  const oldFolders = ['style', 'layout', 'builder', 'reviewer'];
+  const teamFolders = readdirSync(path.join(root, 'src/agents')).filter((n) => !oldFolders.includes(n)
+    && statSync(path.join(root, 'src/agents', n)).isDirectory() && readdirSync(path.join(root, 'src/agents', n)).includes('agent.js'));
+  assert.equal(files.length, 8 + teamFolders.length);
   const hits = files.filter((f) => mentions(readFileSync(f, 'utf8'))).map((f) => path.relative(root, f));
   assert.deepEqual(hits, []);
 });

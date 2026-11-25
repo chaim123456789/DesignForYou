@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "title": "Corner distance and door swing",
+    "covers": "Gap to corners and the free space a door needs to open. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "doors-corner-distance", "when": {"opening": "door"}, "then": {"minCorner": 0.1}, "note": "Typical guideline, check local rules. Metres. Smallest gap between a door frame and a room corner."},
+    {"id": "windows-corner-distance", "when": {"opening": "window"}, "then": {"minCorner": 0.2}, "note": "Typical guideline, check local rules. Metres. Smallest gap between a window and a room corner."},
+    {"id": "doors-swing", "when": {"opening": "door"}, "then": {"swing": "in", "slideStep": 0.1}, "note": "Typical guideline, check local rules. A door opens into the room and needs a free square as wide as the door. Step in metres for trying other places."}
+  ]
+}

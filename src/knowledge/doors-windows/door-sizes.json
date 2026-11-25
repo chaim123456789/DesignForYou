@@ -1,0 +1,21 @@
+{
+  "provenance": {
+    "title": "Door sizes",
+    "covers": "Common door widths and heights, and how close to a wall an opening must be to count as on it. Written from general knowledge in our own words, not copied from the sources.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document M: Access to and use of buildings (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/access-to-and-use-of-buildings-approved-document-m",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "doors-width-internal", "when": {"opening": "door", "use": "internal"}, "then": {"width": 0.8, "height": 2.0}, "note": "Typical guideline, check local rules. Metres. A common width for a door between rooms."},
+    {"id": "doors-width-external", "when": {"opening": "door", "use": "external"}, "then": {"width": 0.9, "height": 2.0}, "note": "Typical guideline, check local rules. Metres. A common width for a door to the outside."},
+    {"id": "doors-on-wall-tolerance", "when": {"opening": "any"}, "then": {"tolerance": 0.05, "ambiguousWithin": 0.3}, "note": "Typical guideline, check local rules. Metres. How close to a wall counts as on it, and when two walls are about equally near."}
+  ]
+}

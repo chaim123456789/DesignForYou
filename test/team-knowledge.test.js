@@ -137,3 +137,26 @@ test('design-team A3: the engine code file list is unchanged (12 files, no knowl
   assert.ok(!files.some((f) => f.includes('knowledge')));
   assert.equal(typeof copyEngine, 'function');
 });
+
+// ---- Step 0 (build-team-2): every source says whether it was read --------------------------------
+
+test('design-team step 0: a source with no "checked" line, or a bad one, is rejected with its own message', () => {
+  for (const bad of [undefined, '', 'yes', 'checked', 'read yesterday', true]) {
+    const d = good(); if (bad === undefined) delete d.provenance.sources[0].checked; else d.provenance.sources[0].checked = bad;
+    assert.throws(() => check(d), /needs "checked" to say "not checked" or "read" with a date/, String(bad));
+  }
+  for (const ok of ['not checked', 'read 2026-11-25']) {
+    const d = good(); d.provenance.sources[0].checked = ok;
+    assert.doesNotThrow(() => check(d), ok);
+  }
+});
+
+test('design-team step 0: the room types file marks its source "not checked" and claims nothing from it', () => {
+  const k = loadKnowledge('shared/room-types.json');
+  assert.equal(k.provenance.sources.length, 1);
+  assert.equal(k.provenance.sources[0].checked, 'not checked');
+  assert.match(k.provenance.sources[0].name, /not opened/i);
+  assert.match(k.provenance.covers, /not taken from the source/);
+  const text = JSON.stringify(k.provenance);
+  assert.doesNotMatch(text, /which groups/i);
+});
