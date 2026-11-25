@@ -1,0 +1,27 @@
+{
+  "provenance": {
+    "title": "Windows and daylight",
+    "covers": "How much window each room type usually has, and common window sizes. The daylight shares are common rules of thumb, not taken from the sources, which are about ventilation.",
+    "writtenBy": "own words",
+    "date": "2026-11-25",
+    "sources": [
+      {
+        "name": "Approved Document F: Ventilation (UK government). Listed as a place to check against. It was not opened.",
+        "url": "gov.uk/government/publications/ventilation-approved-document-f",
+        "licence": "Open Government Licence v3.0",
+        "checked": "not checked"
+      }
+    ]
+  },
+  "rules": [
+    {"id": "windows-daylight-living-room", "when": {"roomType": "living room"}, "then": {"daylightShare": 0.1}, "note": "Typical guideline, check local rules. Window area as a share of floor area."},
+    {"id": "windows-daylight-bedroom", "when": {"roomType": "bedroom"}, "then": {"daylightShare": 0.1}, "note": "Typical guideline, check local rules. Window area as a share of floor area."},
+    {"id": "windows-daylight-kitchen", "when": {"roomType": "kitchen"}, "then": {"daylightShare": 0.1}, "note": "Typical guideline, check local rules. Window area as a share of floor area."},
+    {"id": "windows-daylight-utility", "when": {"roomType": "utility"}, "then": {"daylightShare": 0.05}, "note": "Typical guideline, check local rules. Window area as a share of floor area."},
+    {"id": "windows-daylight-hall", "when": {"roomType": "hall"}, "then": {"daylightShare": 0.0}, "note": "Typical guideline, check local rules. Window area as a share of floor area. 0 means a window is optional (a bathroom may have a small or frosted one)."},
+    {"id": "windows-daylight-bathroom", "when": {"roomType": "bathroom"}, "then": {"daylightShare": 0.0}, "note": "Typical guideline, check local rules. Window area as a share of floor area. 0 means a window is optional (a bathroom may have a small or frosted one)."},
+    {"id": "windows-daylight-toilet", "when": {"roomType": "toilet"}, "then": {"daylightShare": 0.0}, "note": "Typical guideline, check local rules. Window area as a share of floor area. 0 means a window is optional (a bathroom may have a small or frosted one)."},
+    {"id": "windows-daylight-other", "when": {"roomType": "other"}, "then": {"daylightShare": 0.1}, "note": "Typical guideline, check local rules. Window area as a share of floor area."},
+    {"id": "windows-default", "when": {"opening": "window"}, "then": {"height": 1.2, "sill": 0.9, "minWidth": 0.6, "maxWidth": 2.4, "depth": 0.1}, "note": "Typical guideline, check local rules. Metres. Height, height of the sill above the floor, smallest and largest width, and depth across the wall."}
+  ]
+}

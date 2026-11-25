@@ -77,7 +77,7 @@ export function makeWallsAgent(knowledge = loadWallsKnowledge()) {
         if (options.some((o) => sameValue(o.newValue, item.value))) return;
         proposals.push(buildProposal({
           id: proposalId('walls', item.id, ruleId, mode), agent: WALLS, itemId: item.id, why, source: 'rule', ruleId, confidence, options,
-        }, { items: view.items }));
+        }, { items: view.items.filter((i) => i.kind === 'wall') }));
       };
 
       const entered = sizeOf(room, null);
