@@ -13,7 +13,7 @@ import { loadKnowledge } from '../../knowledge/load.js';
 import { createReviewerAgent } from '../reviewer/agent.js';
 import { loadRegistry } from '../registry.js';
 import { findStale } from '../../ripple.js';
-import { sourceTag, getLabels } from '../../label.js';
+import { sourceTag } from '../../label.js';
 import { conflictPairs, loadStyleKnowledge } from '../team-style/agent.js';
 import {
   roomsOf, roomTypeOf, ruleById, editable, inScope, sameValue, proposalId, sizeOf, wallItemOf, openingSide, alongWall, swingSquareOf, overlaps,
@@ -43,7 +43,7 @@ const OLD_TYPE_TO_CHECK = Object.freeze({
 const fill = (sentence, parts) => sentence.replace(/\{(\w+)\}/g, (_, key) => parts[key]);
 
 // options.registry: the loaded registry (default: read registry.json, Node only).
-// options.styleKnowledge, options.knowledge: for tests. options.reviewerOptions: passed to the old Reviewer (for example the sample label).
+// options.styleKnowledge, options.knowledge: for tests. options.reviewerOptions: passed to the old Reviewer (the sample label option).
 export function makeTeamReviewerAgent(options = {}) {
   const k = options.knowledge || loadReviewerKnowledge();
   const registry = options.registry || loadRegistry();
@@ -113,7 +113,7 @@ export function makeTeamReviewerAgent(options = {}) {
 
     const numbered = lines.map((l, index) => ({ number: index + 1, ...l }));
     const checksUsed = k.checks.filter((c) => !c.when.report || c.when.report !== 'summary').map((c) => c.then.name);
-    const labels = getLabels({ isSample: Boolean((options.reviewerOptions && options.reviewerOptions.isSample) || view.isSample) });
+    const labels = first.labels; // the first Reviewer adds the sample label (when asked) and the draft statement
     const summary = numbered.length === 0
       ? `${NO_CLASHES_PREFIX} ${checksUsed.join(', ')}.`
       : `${numbered.length} ${numbered.length === 1 ? 'finding' : 'findings'} found, using these checks: ${checksUsed.join(', ')}.`;
