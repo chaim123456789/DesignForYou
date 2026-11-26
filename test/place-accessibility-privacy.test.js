@@ -7,14 +7,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles, themeVariables, recordingStorage, installStorage } from '../test-helpers/fake-page.js';
 import { PLAN_STYLES, drawPlan } from '../docs/intake/place-plan.js';
 import * as geometry from '../docs/intake/place-geometry.js';
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 const plain = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
-const placeCss = plain(css.slice(css.indexOf('/* ---- Place furniture, doors and windows')));
+// Look-and-feel L1: the stylesheet is no longer cut into labelled sections, so the place styles are the rules about the plan, the placed objects and the button rows.
+const placeCss = [...plain(css).matchAll(/(?<=^|\})\s*([^{}@]+)\{([^}]*)\}/g)].filter((m) => /\.plan|\.placed|\.button-row/.test(m[1])).map((m) => `${m[1].trim()} {${m[2]}}`).join('\n');
 const placeBlock = html.slice(html.indexOf('<div id="screen-place"'), html.indexOf('<div id="screen-review"'));
 
 // The new page files. Their text is searched for storage, network and outside addresses.
@@ -82,7 +83,7 @@ test('Place Task 13: every control on the place screen uses a shared style that 
     } else if (tag === 'button') assert.match(attrs, /class="action-button"/, `${id} uses .action-button`);
     else assert.match(attrs, /class="text-input"/, `${id} uses .text-input`);
   }
-  assert.match(css, /\.choice-button, \.nav-button, \.action-button \{[^}]*min-height: 2\.75rem;[^}]*min-width: 2\.75rem;/);
+  assert.match(css, /\.choice-button, \.nav-button, \.action-button, [^{]*\{[^}]*min-height: 2\.75rem;[^}]*min-width: 2\.75rem;/);
   assert.match(css, /\.text-input \{[^}]*min-height: 2\.75rem;/);
   assert.match(css, /\.choice-label \{[^}]*min-height: 2\.75rem;/);
   // The buttons in a row have a gap between them.
@@ -115,7 +116,7 @@ test('Place Task 13: the buttons the page script makes (Select, Edit, Remove) ar
 });
 
 test('Place Task 13: the plan text is at least 16 px at 320 px wide, for small and large rooms (computed from the stylesheet)', async () => {
-  // The plan's width at a 320 px screen: the screen, minus the page padding and the panel's padding and border.
+  // The plan's width at a 320 px screen: the screen, minus the project area's padding on a phone, the panel's padding and its border.
   const rem = 16;
   const pad = (selectorPattern) => {
     const m = selectorPattern.exec(plain(css));
@@ -123,7 +124,8 @@ test('Place Task 13: the plan text is at least 16 px at 320 px wide, for small a
     const values = m[1].trim().split(/\s+/).map((v) => Number(v.replace('rem', '')) * rem);
     return values.length === 1 ? values[0] * 2 : values[1] * 2; // left + right
   };
-  const pagePad = pad(/#page \{[^}]*?padding:\s*([^;]+);/);
+  // Look-and-feel L1: the padding at the edge is the project area's (on a phone, from the max-width: 48rem rule).
+  const pagePad = pad(/\.project-scroll, \.page-scroll \{[^}]*?padding:\s*([^;]+);/);
   const panelPad = pad(/\.panel \{[^}]*?padding:\s*([^;]+);/);
   const panelBorder = 2; // 1 px each side
   const available = 320 - pagePad - panelPad - panelBorder;
@@ -145,28 +147,35 @@ test('Place Task 13: the plan text is at least 16 px at 320 px wide, for small a
 
 // ==== Contrast of the plan's own colours ==============================================================
 
-test('Place Task 13: the plan colours reach the contrast limits, and Locked and Unsure differ by line style and words, not colour alone', () => {
+// Look-and-feel L1: the plan's colours moved from place-plan.js into theme.css (--plan-*), for the dark and the light theme. Both are checked.
+test('Place Task 13: the plan colours reach the contrast limits in both themes, and Locked and Unsure differ by line style and words, not colour alone', () => {
   const { Locked, Unsure } = PLAN_STYLES;
-  const white = '#ffffff';
-  const rows = [
-    ['Label text on the room (white)', '#111111', white, 4.5],
-    ['Label text on a Locked object', '#111111', Locked.fill, 4.5],
-    ['Label text on an Unsure object', '#111111', Unsure.fill, 4.5],
-    ['Locked outline on the room', Locked.stroke, white, 3],
-    ['Unsure outline on the room', Unsure.stroke, white, 3],
-    ['Locked outline on its own fill', Locked.stroke, Locked.fill, 3],
-    ['Unsure outline on its own fill', Unsure.stroke, Unsure.fill, 3],
-    ['Selected-object ring on the room', '#111111', white, 3],
-    ['Room outline on the page panel', '#222222', white, 3],
-    ['Plan border (stylesheet) on a panel', '#7d858c', white, 3],
-  ];
-  for (const [name, fg, bg, min] of rows) {
-    const r = ratio(fg, bg);
-    console.log(`  ${r.toFixed(2).padStart(5)} to 1  (needs ${min})  ${fg} on ${bg}  ${name}`);
-    assert.ok(r >= min, `${name}: ${r.toFixed(2)} is below ${min}`);
+  for (const theme of ['dark', 'light']) {
+    const v = themeVariables(theme);
+    const room = v['--plan-room-fill'];
+    const ink = v['--plan-ink'];
+    const rows = [
+      ['Label text on the room', ink, room, 4.5],
+      ['Label text on a Locked object', ink, v['--plan-locked-fill'], 4.5],
+      ['Label text on an Unsure object', ink, v['--plan-unsure-fill'], 4.5],
+      ['Locked outline on the room', v['--plan-locked-line'], room, 3],
+      ['Unsure outline on the room', v['--plan-unsure-line'], room, 3],
+      ['Locked outline on its own fill', v['--plan-locked-line'], v['--plan-locked-fill'], 3],
+      ['Unsure outline on its own fill', v['--plan-unsure-line'], v['--plan-unsure-fill'], 3],
+      ['Selected-object ring on the room', ink, room, 3],
+      ['Room outline on the page panel', v['--plan-room-line'], v['--surface'], 3],
+      ['Plan border (stylesheet) on a panel', v['--line-control'], v['--surface'], 3],
+    ];
+    for (const [name, fg, bg, min] of rows) {
+      const r = ratio(fg, bg);
+      console.log(`  ${theme} ${r.toFixed(2).padStart(5)} to 1  (needs ${min})  ${fg} on ${bg}  ${name}`);
+      assert.ok(r >= min, `${theme}: ${name}: ${r.toFixed(2)} is below ${min}`);
+    }
   }
-  // The stylesheet's .plan border is the colour tested above.
-  assert.match(placeCss, /\.plan \{[^}]*border: 1px solid #7d858c;/);
+  // The stylesheet's .plan border is the control-line colour tested above.
+  assert.match(placeCss, /\.plan \{[^}]*border: 1px solid #6b7480;/);
+  // The plan's own parts take their colours from classes in the stylesheet, not from attributes in the drawing.
+  assert.match(placeCss, /\.plan-locked \{ fill: #1d2b45; stroke: #8ab4f8; \}/);
   // Not by colour alone: different dash, different thickness.
   assert.equal(Locked.dash, 'none');
   assert.notEqual(Unsure.dash, 'none');
@@ -174,9 +183,10 @@ test('Place Task 13: the plan colours reach the contrast limits, and Locked and 
 });
 
 test('Place Task 13: the plan colour check fails when a plan colour is made too light (planted change in a copy)', () => {
-  const lightened = { ...PLAN_STYLES.Unsure, stroke: '#f0c080' };
-  assert.ok(ratio(lightened.stroke, '#ffffff') < 3, 'the planted colour is below the limit, so the check would catch it');
-  assert.ok(ratio(PLAN_STYLES.Unsure.stroke, '#ffffff') >= 3, 'the real colour passes');
+  const light = themeVariables('light');
+  const lightened = '#f0c080';
+  assert.ok(ratio(lightened, light['--plan-room-fill']) < 3, 'the planted colour is below the limit, so the check would catch it');
+  assert.ok(ratio(light['--plan-unsure-line'], light['--plan-room-fill']) >= 3, 'the real colour passes');
 });
 
 // ==== 320 px layout ===================================================================================
@@ -264,9 +274,13 @@ test('Place Task 13: the content security rule is exactly the one set in Task 6 
 
 test('Place Task 13: using the place screen (add, select, nudge, turn, remove) touches no storage, cookie or network', async () => {
   const touched = [];
-  const trapped = ['localStorage', 'sessionStorage', 'indexedDB', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'Worker'];
+  // Look-and-feel L5: localStorage is allowed for the agent settings and the theme only (docs/workspace/store.js). It is not trapped here; a recording
+  // stand-in shows that placing objects writes nothing to it.
+  const trapped = ['sessionStorage', 'indexedDB', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'Worker'];
   const saved = Object.fromEntries(trapped.map((n) => [n, Object.getOwnPropertyDescriptor(globalThis, n)]));
   for (const name of trapped) Object.defineProperty(globalThis, name, { configurable: true, get() { touched.push(name); throw new Error(`${name} must not be used`); } });
+  const recorder = recordingStorage();
+  const restoreStorage = installStorage(recorder.storage);
   try {
     await withOwn(async (page) => {
       Object.defineProperty(page.document, 'cookie', { configurable: true, get() { touched.push('cookie read'); return ''; }, set() { touched.push('cookie write'); } });
@@ -281,7 +295,9 @@ test('Place Task 13: using the place screen (add, select, nudge, turn, remove) t
       assert.deepEqual(page.problemLines(), []);
     });
   } finally {
+    restoreStorage();
     for (const n of trapped) { if (saved[n]) Object.defineProperty(globalThis, n, saved[n]); else delete globalThis[n]; }
   }
   assert.deepEqual(touched, []);
+  assert.deepEqual(recorder.writes, [], 'placing objects keeps nothing in the browser');
 });

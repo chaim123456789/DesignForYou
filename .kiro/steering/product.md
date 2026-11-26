@@ -26,7 +26,7 @@ Specialist agents work in dependency order on one shared **Project Brain** (the 
 7. Style
 8. Reviewer
 
-A **Coordinator** runs them in that order. A change to earlier work (for example moving a wall) triggers a re-check of everything that depends on it. Agents always ask the user to confirm. They suggest options, and they show two options when they are unsure.
+A **Coordinator** runs them in that order. A change to earlier work (for example moving a wall) triggers a re-check of everything that depends on it. Agents ask the user to confirm. They suggest options, and they show two options when they are unsure. By default every proposal waits for the user; the user may choose, in the agent settings, to be asked less ("Recommended" or "Do it and tell me"). A proposal confirmed that way is marked auto-confirmed, a proposal with two options is always put to the user, and Locked items are never overwritten.
 
 ## Rules
 - One owner per item. Each agent owns separate files and items, so agents never edit the same thing.

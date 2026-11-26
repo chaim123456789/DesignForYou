@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { registerHooks } from '../test-helpers/register-hooks.js';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles, shownByDefault, drawnPartCount } from '../test-helpers/fake-page.js';
 import { buildScene, shapeParts } from '../docs/scene-data.js';
 import { FIXED_SENTENCE } from '../docs/intake/report.js';
 import { summaryNodes, bodyOf } from '../docs/intake/summary-view.js';
@@ -31,7 +31,7 @@ registerHooks({
 });
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 const sample = JSON.parse(readDoc('sample-run.json'));
 const SAMPLE_LAST = sample.versions.length;
 const HOSTILE = '<img src=x onerror=alert(1)>';
@@ -150,7 +150,8 @@ async function runIt(page) {
 const drawnKeys = (page) => page.scene.children.find((c) => c.type === 'Group').children
   .filter((o) => o.userData && o.userData.boxKey).map((o) => o.userData.boxKey).sort();
 // D6: one key per drawn mesh. The design-team sample's typed furniture is drawn as several parts, each with the box's key.
-const sampleKeys = () => buildScene(sample, SAMPLE_LAST).flatMap((b) => Array(Math.max(1, shapeParts(b).length)).fill(b.key)).sort();
+// Look-and-feel L6: only the layers that are on by default are drawn, and a round table has a top and one pedestal.
+const sampleKeys = () => buildScene(sample, SAMPLE_LAST).filter(shownByDefault).flatMap((b) => Array(drawnPartCount(b)).fill(b.key)).sort();
 const labelsOf = (page, cls) => page.document.querySelectorAll(cls);
 
 // ---- Review and run screen ---------------------------------------------------------------------
@@ -610,14 +611,14 @@ test('Task 12: summaryNodes accepts the real summary of a finished visitor proje
 // ---- Sizes and keyboard (what a test can check; how it feels on a phone is a pending owner check) ----
 
 test('Task 12: the new styles keep text at 16 px or more and controls at 44 px, nothing has a positive tab order, and new screens have no placeholder', () => {
-  const fresh = css.slice(css.indexOf('/* ---- Items screen (build-intake-3) ---- */'));
+  const fresh = css;
   assert.ok(fresh.length > 500);
   for (const m of fresh.matchAll(/font-size:\s*([\d.]+)(px|rem|em)/g)) {
     const px = m[2] === 'px' ? Number(m[1]) : Number(m[1]) * 16;
     assert.ok(px >= 16, `font-size ${m[0]} is under 16 px`);
   }
   // Buttons and choices: the shared rules give at least 2.75rem (44 px).
-  assert.match(css, /\.choice-button, \.nav-button, \.action-button \{[^}]*min-height: 2\.75rem;[^}]*min-width: 2\.75rem;/);
+  assert.match(css, /\.choice-button, \.nav-button, \.action-button, [^{]*\{[^}]*min-height: 2\.75rem;[^}]*min-width: 2\.75rem;/);
   assert.match(css, /\.text-input \{[^}]*min-height: 2\.75rem;/);
   assert.match(css, /\.choice-label \{[^}]*min-height: 2\.75rem;/);
   for (const id of ['run-design-team', 'result-start-again']) {

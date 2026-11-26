@@ -212,40 +212,47 @@ test('Task 7b step 6: the starting camera looks from the front and above, at a m
   assert.ok(cam.position[1] > upperY, 'the camera is above the upper floor level, so it sees down onto both floors');
 });
 
-test('Task 7b step 6: the page has a "Reset view" button, wired to the starting camera, and the canvas is 70% of the screen height', () => {
+// Look-and-feel L3: the 3D view fills its stage, which grows to take all the room the workspace has (it used to be 70% of the screen height).
+test('Task 7b step 6: the page has a "Reset view" button, wired to the starting camera, and the 3D view fills its stage', () => {
   const html = read('index.html');
-  assert.match(html, /<button type="button" id="reset-view">Reset view<\/button>/);
+  assert.match(html, /<button type="button" id="reset-view" class="ribbon-button">Reset view<\/button>/);
   const js = read('viewer.js');
   assert.match(js, /el\('reset-view'\)\.addEventListener\('click', guarded\('Reset view button', resetView\)\)/);
   assert.match(js, /function resetView\(\)[\s\S]*frameHome\(view\.boxes\)/);
-  assert.match(read('styles.css'), /#scene-area \{[^}]*height: 70vh;/);
+  assert.match(read('styles.css'), /#scene-area \{[^}]*position: absolute; inset: 0;/);
+  assert.match(read('styles.css'), /\.stage \{[^}]*flex: 1 1 auto;/);
 });
 
+// Look-and-feel L1: the page no longer scrolls (each area scrolls inside itself), the width limit is the theme's --page-max (1400 px), and the
+// font sizes come from the theme (at least 1rem). The label bars are still the page's top and bottom siblings of <main>.
 test('Task 7b step 7: the page has margins, a 1400 px maximum width and readable fonts, and the two label bars stay outside the scrolling area', () => {
   const css = read('styles.css');
+  const theme = read('theme.css');
   const rule = (selector) => {
     const m = css.match(new RegExp(`(?:^|\\n)${selector.replace(/[#.]/g, "\\$&")} \\{([^}]*)\\}`));
     assert.ok(m, `no css rule for ${selector}`);
     return m[1];
   };
-  assert.match(rule('#page-inner'), /max-width: 1400px/);
-  assert.match(rule('#page-inner'), /margin: 0 auto/);
-  assert.match(rule('#page'), /padding: [\d.]+rem/, 'the page has side margins');
-  assert.match(rule('.label-bar'), /padding: [\d.]+rem max\(1rem/, 'the bars keep their text off the screen edge');
-  assert.match(rule('body'), /font-size: 1rem/);
-  assert.match(rule('#page'), /overflow-y: auto/);
-  const sizes = [...css.matchAll(/font-size: ([\d.]+)rem/g)].map((m) => Number(m[1]));
-  assert.ok(sizes.length > 0 && Math.min(...sizes) >= 0.9, `smallest font ${Math.min(...sizes)}rem`);
-  // The bars are the page's top and bottom siblings of the scrolling <main>, not inside it.
+  assert.match(theme, /--page-max: 1400px;/);
+  assert.match(rule('.label-bar'), /padding: var\(--space-1\) max\(var\(--space-4\)/, 'the bars keep their text off the screen edge');
+  assert.match(rule('.home'), /padding: var\(--space-7\) max\(var\(--space-5\), calc\(\(100% - var\(--page-max\)\) \/ 2/);
+  assert.match(rule('body'), /font-size: var\(--text-base\)/);
+  assert.match(theme, /--text-base: 1rem;/);
+  assert.match(rule('body'), /overflow: hidden/, 'the page itself does not scroll');
+  assert.match(rule('.project-scroll'), /overflow-y: auto/, 'the project area scrolls inside itself');
+  const sizes = [...css.matchAll(/font-size: ([\d.]+)rem/g), ...theme.matchAll(/--text-[\w-]+: ([\d.]+)rem/g)].map((m) => Number(m[1]));
+  assert.ok(sizes.length > 0 && Math.min(...sizes) >= 1, `smallest font ${Math.min(...sizes)}rem`);
+  // The bars are the page's top and bottom siblings of <main>, not inside it.
   const html = read('index.html');
   const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'));
-  assert.ok(!main.includes('label-bar') && !main.includes('<header') && !main.includes('<footer'));
+  assert.ok(!main.includes('label-bar'));
   assert.ok(html.indexOf('</header>') < html.indexOf('<main') && html.indexOf('</main>') < html.indexOf('<footer'));
 });
 
+// Look-and-feel L6: furniture is drawn rounded, so the line says "solid and rounded".
 test('Task 7b step 8: the legend has the line about thin panels, solid furniture and flat patches', () => {
   const html = read('index.html');
   const legend = html.slice(html.indexOf('<section id="legend"'), html.indexOf('</section>', html.indexOf('<section id="legend"')));
-  assert.ok(legend.includes('<p id="legend-shapes">Doors and windows are thin panels; furniture is solid; style items are flat patches</p>'));
+  assert.ok(legend.includes('<p id="legend-shapes">Doors and windows are thin panels; furniture is solid and rounded; style items are flat patches</p>'));
   assert.equal((legend.match(/legend-shapes/g) || []).length, 1);
 });

@@ -9,7 +9,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, shownByDefault, readDoc } from '../test-helpers/fake-page.js';
 import { buildScene, describeItem } from '../docs/scene-data.js';
 
 installImportHooks();
@@ -109,7 +109,8 @@ test('fix-viewer-1: normal run: no problem message, no missing ids, labels, deta
 
     // Labels: one per block, one per room, one per floor, all with real text and a placed position.
     const labels = page.labels();
-    const boxes = buildScene(run, LAST);
+    // Look-and-feel L6: blocks on the Lighting and Decor layers are not drawn until the layer is on, so they have no label yet.
+    const boxes = buildScene(run, LAST).filter(shownByDefault);
     // D6: the design-team sample's small marks (lights, switches, sockets, rugs) carry no text label (noLabel).
     const expected = boxes.filter((b) => b.itemId !== undefined && !b.noLabel).length + boxes.filter((b) => b.type === 'room').length + run.floors.length;
     assert.equal(labels.length, expected);
@@ -297,12 +298,13 @@ test('fix-viewer-1: when the sample file cannot be read, the red message says so
 });
 
 test('fix-viewer-1: the page says which script version ran, so a stale cached copy can be spotted', async () => {
-  assert.match(html, /id="script-status">Page script: not started yet/);
+  assert.match(html, /id="script-status" class="status-line">Page script: not started yet/);
   await withPage(() => {}, async (page) => {
-    assert.match(page.el('script-status').textContent, /Page script build-team-4: finished/);
+    assert.match(page.el('script-status').textContent, /Page script build-look-1: finished/);
   });
-  assert.match(html, /styles\.css\?v=build-team-4/);
-  assert.match(html, /viewer\.js\?v=build-team-4/);
+  assert.match(html, /styles\.css\?v=build-look-1/);
+  assert.match(html, /theme\.css\?v=build-look-1/);
+  assert.match(html, /viewer\.js\?v=build-look-1/);
   assert.match(js, /scene-data\.js\?v=\$\{PAGE_VERSION\}/);
 });
 
@@ -342,27 +344,30 @@ const rule = (selector) => {
   return m[1];
 };
 
+// Look-and-feel L3: the view controls moved into the ribbon (above the 3D view), the 3D view sits in a stage, and the four panels stay in the right-hand column.
 test('fix-viewer-1: the four panels are in the right-hand column and the canvas in the left column in the HTML', () => {
   const main = html.slice(html.indexOf('<div id="col-main">'), html.indexOf('<div id="col-side">'));
   const side = html.slice(html.indexOf('<div id="col-side">'), html.indexOf('</main>'));
   assert.match(main, /id="scene-area"/);
-  assert.match(main, /id="view-controls"/);
+  assert.match(main, /id="stage"/);
+  assert.match(html.slice(html.indexOf('<div id="ribbon"'), html.indexOf('<div id="result-tabs"')), /id="view-controls"/, 'the view controls are in the ribbon');
   for (const id of ['legend', 'history', 'clash-section', 'details-panel']) {
     assert.match(side, new RegExp(`<section id="${id}"`), `${id} must be in the right-hand column`);
     assert.doesNotMatch(main, new RegExp(`id="${id}"`));
   }
 });
 
-test('fix-viewer-1: CSS: one column by default, two columns (canvas left, panels right) on wide screens', () => {
-  assert.match(rule('#page-inner'), /flex-direction: column/);
-  const wide = css.match(/@media \(min-width: (\d+)px\) \{([\s\S]*?)\n\}/);
-  assert.ok(wide, 'no wide-screen rule');
-  assert.ok(Number(wide[1]) <= 900, 'the two-column layout must start at 900 px or narrower');
-  assert.match(wide[2], /#page-inner \{[^}]*flex-direction: row/);
-  assert.match(wide[2], /#col-main \{[^}]*flex: 1 1 0/);
-  assert.match(wide[2], /#col-side \{[^}]*flex: 0 0 \d+px/);
-  // The wide rule comes after the base rule, so it wins.
-  assert.ok(css.indexOf('@media (min-width') > css.indexOf('#page-inner {'));
+// The two columns are side by side from the start (the workspace is for wide screens); on a phone they become tabs (max-width 48rem).
+test('fix-viewer-1: CSS: two columns (canvas left, panels right), and on a phone one column with tabs', () => {
+  assert.match(rule('#page-inner'), /flex-direction: row/);
+  assert.match(rule('#col-main'), /flex: 1 1 0/);
+  assert.match(rule('#col-side'), /flex: 0 0 var\(--side-width\)/);
+  const phone = css.match(/@media \(max-width: 48rem\) \{([\s\S]*?)\n\}/);
+  assert.ok(phone, 'no phone rule');
+  assert.match(phone[1], /#page-inner \{[^}]*flex-direction: column/);
+  assert.match(phone[1], /\.screen-result\[data-result-tab="3d"\] #col-side \{ display: none; \}/);
+  // The phone rule comes after the base rule, so it wins.
+  assert.ok(css.indexOf('@media (max-width: 48rem)') > css.indexOf('#page-inner {'));
 });
 
 test('fix-viewer-1: CSS: nothing laid over the drawing can catch a click', () => {
@@ -380,8 +385,8 @@ test('fix-viewer-1: CSS: nothing laid over the drawing can catch a click', () =>
 });
 
 test('fix-viewer-1: CSS: the red message is visible when shown and hidden when not', () => {
-  assert.match(css, /#error-message\[hidden\] \{ display: none; \}/);
-  assert.match(rule('#error-message'), /background: #fde8e8/);
+  assert.match(css, /\[hidden\] \{ display: none !important; \}/);
+  assert.match(css, /#error-message, #intake-error-message \{[^}]*background: var\(--danger-bg\)/);
 });
 
 // ---- 6. Security rule still holds -----------------------------------------------------------

@@ -6,12 +6,12 @@
 // security enforcement. Those are "pending owner check" until someone looks at a real browser.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
 import { DRAFT_STATEMENT } from '../src/label.js';
 import { FIXED_SENTENCE } from '../docs/intake/report.js';
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 
 // The screens in the order Next moves through them, with the words used in the step text and the title.
 const STEPS = [
@@ -49,6 +49,8 @@ const shown = (page) => ALL_SCREEN_IDS.filter((id) => !page.el(`screen-${id}`).h
 function screenBlock(id) {
   const start = html.indexOf(`<div id="screen-${id}"`);
   assert.ok(start >= 0, `screen-${id} is not in the page`);
+  // Look-and-feel L2: the start screen is the home page and ends where the workspace begins.
+  if (id === 'start') return html.slice(start, html.indexOf('<div id="workspace"'));
   const rest = html.slice(start + 1);
   const next = rest.search(/<div id="(screen-|step-nav)/);
   return html.slice(start, next === -1 ? undefined : start + 1 + next);
@@ -73,15 +75,18 @@ test('Task 6: the start screen says what the app does, that it needs no login, t
   assert.match(block, /needs no login/);
   assert.match(block, /nothing you enter leaves your browser/);
   assert.match(block, /Nothing is saved\. If you close or reload this page, everything you entered is lost\./);
-  assert.match(block, /helps you describe a home project/);
+  // Look-and-feel L2: the home page says what the app does in its own words.
+  assert.match(block, /turns your notes and measurements into a draft of your home in 3D/);
 });
 
 test('Task 6: "Try the sample" shows the existing viewer; "Back to start" returns; the viewer markup is hidden until then', async () => {
   const result = screenBlock('result');
-  assert.match(html, /<div id="screen-result" class="screen" hidden>/);
-  for (const id of ['scene-area', 'version-slider', 'clash-list', 'details-text', 'legend', 'history', 'script-status', 'floor-all', 'reset-view']) {
+  assert.match(html, /<div id="screen-result" class="screen screen-result" data-result-tab="3d" hidden>/);
+  // Look-and-feel L1: the grey script-status line moved from the result screen to the bottom bar, where it shows on every page.
+  for (const id of ['scene-area', 'version-slider', 'clash-list', 'details-text', 'legend', 'history', 'floor-all', 'reset-view']) {
     assert.ok(result.includes(`id="${id}"`), `the viewer's ${id} is still inside the result screen`);
   }
+  assert.ok(html.slice(html.indexOf('<footer')).includes('id="script-status"'), 'the script status line is in the bottom bar');
   await withScreens(() => {}, async (page) => {
     assert.deepEqual(shown(page), ['start']);
     page.el('choose-sample').click();
@@ -264,31 +269,32 @@ test('Task 6: an unusable red box is not fatal (the error goes to the browser co
 // ---- The cache tag and the status line -----------------------------------------------------
 
 test('Task 6: the page files carry the cache tag build-intake-1, and the grey status lines name it', async () => {
-  assert.match(html, /styles\.css\?v=build-team-4/);
-  assert.match(html, /viewer\.js\?v=build-team-4/);
-  assert.match(html, /intake\/screens\.js\?v=build-team-4/);
-  assert.match(html, /id="script-status">Page script: not started yet/);
+  assert.match(html, /styles\.css\?v=build-look-1/);
+  assert.match(html, /viewer\.js\?v=build-look-1/);
+  assert.match(html, /intake\/screens\.js\?v=build-look-1/);
+  assert.match(html, /theme\.css\?v=build-look-1/);
+  assert.match(html, /id="script-status" class="status-line">Page script: not started yet/);
   assert.match(html, /id="intake-script-status" class="status-line">Screens script: not started yet/);
   for (const text of [html, readDoc('viewer.js'), readDoc('intake/screens.js')]) assert.doesNotMatch(text, /build-viewer-3/);
-  assert.match(readDoc('viewer.js'), /const PAGE_VERSION = 'build-team-4'/);
-  assert.match(readDoc('intake/screens.js'), /const PAGE_VERSION = 'build-team-4'/);
+  assert.match(readDoc('viewer.js'), /const PAGE_VERSION = 'build-look-1'/);
+  assert.match(readDoc('intake/screens.js'), /const PAGE_VERSION = 'build-look-1'/);
   await withScreens(() => {}, async (page) => {
-    assert.equal(page.el('intake-script-status').textContent, 'Page script build-team-4 (screens): finished setting up.');
+    assert.equal(page.el('intake-script-status').textContent, 'Page script build-look-1 (screens): finished setting up.');
   });
 });
 
 // ---- Size and readability (what the stylesheet says) ---------------------------------------
 
 test('Task 6: the new styles use text of at least 16 px, controls of at least 44 px, a visible focus ring, and no fixed pixel widths', () => {
-  const part = css.slice(css.indexOf('/* ---- Intake screens'));
+  const part = css;
   assert.ok(part.length > 200, 'the intake styles are in the stylesheet');
   for (const m of part.matchAll(/font-size: ([\d.]+)(rem|px)/g)) {
     const px = m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]);
     assert.ok(px >= 16, `font-size ${m[0]} is under 16 px`);
   }
-  assert.match(part, /\.choice-button, \.nav-button, \.action-button \{[^}]*min-height: 2\.75rem;[^}]*min-width: 2\.75rem;/);
-  assert.match(part, /:focus-visible \{ outline: 3px solid #0b3d91;/);
+  assert.match(part, /\.choice-button, \.nav-button, \.action-button, [^{]*\{[^}]*min-height: 2\.75rem;[^}]*min-width: 2\.75rem;/);
+  assert.match(part, /:focus-visible \{ outline: 3px solid #ffffff;/);
   assert.doesNotMatch(part.replace(/max-width: [\d.]+(rem|px)/g, ''), /(?<![-\w])width: \d+px/);
   assert.match(part, /\[hidden\] \{ display: none !important; \}/);
-  assert.match(css, /#script-status \{[^}]*font-size: 1rem;/);
+  assert.doesNotMatch(/\.status-line \{[^}]*\}/.exec(css)[0], /font-size/, 'the status lines keep the page text size (1rem)');
 });

@@ -7,7 +7,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, themeHex } from '../test-helpers/fake-page.js';
 import { buildScene, shapeParts } from '../docs/scene-data.js';
 import { createState, setProjectName, addFloor, addRoom, addPlaced } from '../docs/intake/state.js';
 import { runDesignTeam } from '../docs/intake/build-brain.js';
@@ -18,7 +18,9 @@ installImportHooks();
 let caseNumber = 40000;
 // D6: measured on the viewer with the design-team sample (old value 26 for the four-agent sample): slabs, room outlines, blocks,
 // the parts of the typed furniture, the small marks, edges and clash outlines.
-const SAMPLE_MESH_COUNT = 118;
+// Look-and-feel L6: 65 objects in the group at the start (it was 118). The Lighting and Decor layers are off, so the lights, switches, sockets and
+// the rug are not drawn, and a Locked item has an extra edge line. The count with every layer on is checked in look-3d.test.js.
+const SAMPLE_MESH_COUNT = 65;
 
 function ownRun(placeThem) {
   const s = createState();
@@ -49,7 +51,7 @@ const group = (page) => {
   return groups[0];
 };
 const meshesOf = (page, itemId) => group(page).children.filter((o) => o.isMesh && o.userData && o.userData.itemId === itemId);
-const outlines = (page) => group(page).children.filter((o) => o.material && o.material.side === 1 && o.material.color.getHex() === 0xcc0000);
+const outlines = (page) => group(page).children.filter((o) => o.material && o.material.side === 1 && o.material.color.getHex() === themeHex('--three-clash'));
 
 function pixelOf(page, point) {
   const camera = page.controls.object;
@@ -72,18 +74,29 @@ test('place-items Task 8: a typed sofa is drawn as 4 meshes, all with the same i
     assert.equal(meshes.length, 4);
     assert.deepEqual(meshes.map((m) => m.userData.part).sort(), ['arm', 'arm', 'back', 'seat']);
     assert.deepEqual([...new Set(meshes.map((m) => m.userData.boxKey))], [sofa.key]);
-    for (const m of meshes) assert.equal(m.material.color.getHex(), 0x0072b2, 'Locked is blue on every part');
+    // Look-and-feel L6: the colour of every part is the colour of the agent that owns the item (the old status colours are gone), and a
+    // Locked item has a bright edge line on every part (one line object per part).
+    const colours = [...new Set(meshes.map((m) => m.material.color.getHex()))];
+    assert.equal(colours.length, 1, 'one colour on every part');
+    const edges = group(page).children.filter((o) => o.isLineSegments && o.material.color.getHex() === themeHex('--three-locked-edge'));
+    assert.equal(edges.length, 4, 'a bright edge on each of the four parts of a Locked sofa');
+    // Rounded: the seat, back and arms are not plain boxes.
+    for (const m of meshes) assert.notEqual(m.geometry.type, 'BoxGeometry', `${m.userData.part} is rounded`);
   });
 });
 
-test('place-items Task 8: an Unsure table is orange on all five parts', async () => {
+// Look-and-feel L6: a table is round (a round top on one pedestal, 2 meshes instead of a box top and 4 legs), and an Unsure item has no edge line.
+test('place-items Task 8: an Unsure table is a round top on one pedestal, in one colour, with no Locked edge', async () => {
   const run = ownRun((s, room) => addPlaced(s, { type: 'table', name: 'Dining', room, status: 'Unsure', x: 100, y: 100, width: 140, depth: 80 }));
   const table = buildScene(run, run.snapshots.length - 1).find((b) => b.label === 'Dining');
   await withPage(async (page, viewer) => {
     await viewer.showRunData(run, { kind: 'own' });
     const meshes = meshesOf(page, table.itemId);
-    assert.equal(meshes.length, 5);
-    for (const m of meshes) assert.equal(m.material.color.getHex(), 0xc55a00);
+    assert.equal(meshes.length, 2);
+    assert.deepEqual(meshes.map((m) => m.userData.part).sort(), ['pedestal', 'top']);
+    assert.equal(meshes.find((m) => m.userData.part === 'top').geometry.type, 'CylinderGeometry', 'the top is round');
+    assert.equal(new Set(meshes.map((m) => m.material.color.getHex())).size, 1);
+    assert.equal(group(page).children.filter((o) => o.isLineSegments && o.material.color.getHex() === themeHex('--three-locked-edge')).length, 0, 'Unsure has no Locked edge');
   });
 });
 
@@ -170,11 +183,13 @@ test('place-items Task 8: a sofa turned 90 degrees has its back mesh on the righ
     assert.deepEqual(page.problemLines(), []);
     const back = meshesOf(page, sofa.itemId).find((m) => m.userData.part === 'back');
     const right = sofa.x + sofa.width;
-    assert.ok(Math.abs(back.position.x + back.geometry.parameters.width / 2 - right) < 1e-6);
+    back.geometry.computeBoundingBox();
+    const width = back.geometry.boundingBox.max.x - back.geometry.boundingBox.min.x;
+    assert.ok(Math.abs(back.position.x + width / 2 - right) < 1e-6);
   });
 });
 
-test('place-items Task 8: the sample draws exactly the same meshes as before (plain blocks, same count)', async () => {
+test('place-items Task 8: the sample draws the same plain blocks as before, with the default layers (same count every time)', async () => {
   await withPage(async (page) => {
     assert.deepEqual(page.problemLines(), []);
     const children = group(page).children;

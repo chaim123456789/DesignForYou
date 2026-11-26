@@ -2,9 +2,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { readStyles } from '../test-helpers/fake-page.js';
 
 const read = (name) => readFileSync(new URL(`../docs/${name}`, import.meta.url), 'utf8');
-const css = read('styles.css');
+// Look-and-feel L1: the sizes and colours live in docs/theme.css, so the stylesheet is read with every var(--name) replaced by its theme value.
+const css = readStyles();
 const viewer = read('viewer.js');
 const html = read('index.html');
 
@@ -17,49 +19,25 @@ const ratio = (a, b) => {
   const [x, y] = [luminance(a), luminance(b)];
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 };
-const hue = (hex) => {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-  if (d === 0) return 0;
-  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
-  return (h * 60 + 360) % 360;
-};
-const viewerColour = (src, name) => `#${new RegExp(`${name}:\\s*0x([0-9a-f]{6})`).exec(src)[1]}`;
-const swatchColour = (text, cls) => new RegExp(`\\.${cls}\\s*\\{\\s*background:\\s*(#[0-9a-fA-F]{6})`).exec(text)[1].toLowerCase();
 
-function checkUnsure(viewerSrc, cssText) {
-  const unsure = viewerColour(viewerSrc, 'unsure');
-  const locked = viewerColour(viewerSrc, 'locked');
-  const slab = viewerColour(viewerSrc, 'slab');
-  const problems = [];
-  if (ratio(unsure, '#ffffff') < 3) problems.push(`Unsure on white is ${ratio(unsure, '#ffffff').toFixed(2)} to 1`);
-  if (ratio(unsure, slab) < 3) problems.push(`Unsure on the floor slab is ${ratio(unsure, slab).toFixed(2)} to 1`);
-  const gap = Math.abs(hue(unsure) - hue(locked));
-  if (Math.min(gap, 360 - gap) < 90) problems.push('Unsure is too close to the Locked blue in hue');
-  if (swatchColour(cssText, 'swatch-unsure') !== unsure) problems.push('the legend swatch is not the viewer colour');
-  if (swatchColour(cssText, 'swatch-locked') !== locked) problems.push('the Locked swatch is not the viewer colour');
-  return problems;
-}
+// ---- Step 1: Locked and Unsure (look-and-feel L6: colour now says which agent owns an item, so status is shown by an edge line and by words) ----
 
-test('Polish 1: the Unsure orange has at least 3 to 1 against white and the 3D floor slab, differs from the Locked blue, and the legend swatch matches', () => {
-  const unsure = viewerColour(viewer, 'unsure');
-  console.log(`Unsure ${unsure}: ${ratio(unsure, '#ffffff').toFixed(2)} to 1 on white, ${ratio(unsure, viewerColour(viewer, 'slab')).toFixed(2)} to 1 on the floor slab; hue ${hue(unsure).toFixed(0)} against Locked hue ${hue(viewerColour(viewer, 'locked')).toFixed(0)}`);
-  assert.deepEqual(checkUnsure(viewer, css), []);
-  assert.ok(hue(unsure) > 15 && hue(unsure) < 40, 'it is still an orange');
-  assert.match(html, /<span class="swatch swatch-locked"[^>]*><\/span>\s*Locked/);
-  assert.match(html, /<span class="swatch swatch-unsure"[^>]*><\/span>\s*Unsure/);
+test('Polish 1: Locked and Unsure are told apart by an outline and by words, not by colour, and the legend swatches say so', () => {
+  assert.match(html, /<span class="swatch swatch-locked"[^>]*><\/span>\s*Locked: must stay as it is \(drawn with a bright outline, and its label says Locked\)/);
+  assert.match(html, /<span class="swatch swatch-unsure"[^>]*><\/span>\s*Unsure: open to change \(no outline\)/);
+  assert.match(html, /<span class="swatch swatch-clash"[^>]*><\/span>\s*Clash: a problem the Reviewer found \(red outline, and its label says Clash\)/);
+  // The Locked swatch has a thick outline and the Unsure swatch does not: the two differ in shape, not only in colour.
+  assert.match(css, /\.swatch-locked \{[^}]*border: 3px solid/);
+  assert.doesNotMatch(/\.swatch-unsure \{[^}]*\}/.exec(css)[0], /border:/);
+  // The viewer draws a bright edge on every Locked item and writes no colour of its own.
+  assert.match(viewer, /b\.status === 'Locked' \? COLOURS\.lockedEdge/);
+  assert.doesNotMatch(viewer.replace(/\/\/.*$/gm, ''), /0x[0-9a-fA-F]{6}|#[0-9a-fA-F]{6}\b/, 'no colour is written in viewer.js');
+  // The label says Locked or Clash in words (the stylesheet writes the word after the name).
+  assert.match(css, /\.scene-label\[data-locked\]::after \{ content: "Locked"/);
+  assert.match(css, /\.scene-label\[data-clash\]::after \{ content: "Clash"/);
 });
 
-test('Polish 1: the colour check fails on the old light orange, on a swatch that does not match, and on a blue-looking Unsure (planted changes in copies)', () => {
-  const old = viewer.replace(/unsure:\s*0x[0-9a-f]{6}/, 'unsure: 0xe69f00');
-  assert.ok(checkUnsure(old, css).length >= 2);
-  const mismatch = css.replace(/(\.swatch-unsure\s*\{\s*background:\s*)#[0-9a-fA-F]{6}/, '$1#e69f00');
-  assert.ok(checkUnsure(viewer, mismatch).some((p) => /swatch/.test(p)));
-  const blueish = viewer.replace(/unsure:\s*0x[0-9a-f]{6}/, 'unsure: 0x0060a0');
-  assert.ok(checkUnsure(blueish, css).some((p) => /Locked blue/.test(p)));
-});
-
-// ---- Step 2: block names in the 3D view -------------------------------------------------------
+// ---- Step 2: block names in the 3D view ---------------------------------------------------------
 
 const rootPx = 16; // the browser default; the page sets no smaller root size (checked below)
 function sizeInPx(value) {
@@ -72,6 +50,29 @@ function ruleBody(text, selector) {
   const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const m = new RegExp(`(?:^|\\})\\s*${esc}\\s*\\{([^}]*)\\}`).exec(stripped);
   return m ? m[1] : null;
+}
+// The inside of every @media block, found by counting braces.
+function mediaBlocks(text) {
+  const blocks = [];
+  for (let at = text.indexOf('@media'); at !== -1; at = text.indexOf('@media', at + 1)) {
+    const open = text.indexOf('{', at);
+    let depth = 0;
+    let end = open;
+    for (; end < text.length; end += 1) {
+      if (text[end] === '{') depth += 1;
+      if (text[end] === '}') { depth -= 1; if (depth === 0) break; }
+    }
+    blocks.push(text.slice(open + 1, end));
+  }
+  return blocks;
+}
+// The body of the first rule whose selector list contains this selector.
+function ruleHaving(text, selector) {
+  const stripped = text.replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const m of stripped.matchAll(/(?<=^|\})\s*([^{}@]+)\{([^}]*)\}/g)) {
+    if (m[1].split(',').map((x) => x.trim()).includes(selector)) return m[2];
+  }
+  return null;
 }
 function labelSizes(cssText, viewerSrc) {
   const sizes = {};
@@ -105,7 +106,7 @@ function tapProblems(cssText) {
   const stripped = cssText.replace(/\/\*[\s\S]*?\*\//g, '');
   const problems = [];
   const need = (selector, props) => {
-    const body = ruleBody(stripped, selector);
+    const body = ruleHaving(stripped, selector);
     if (body === null) { problems.push(`${selector}: no rule`); return; }
     for (const prop of props) {
       const m = new RegExp(`(?:^|[;\\s])${prop}:\\s*([^;]+);`).exec(body);
@@ -113,36 +114,47 @@ function tapProblems(cssText) {
       else if (sizeInPx(m[1]) < 44) problems.push(`${selector}: ${prop} is ${sizeInPx(m[1])} px`);
     }
   };
-  need('#view-controls button', ['min-height', 'min-width']); // the three floor buttons and "Reset view"
+  need('.floor-button', ['min-height', 'min-width']); // the three floor buttons
+  need('.ribbon-button', ['min-height', 'min-width']); // "Reset view"
   need('#show-all-labels-label', ['min-height', 'min-width']); // the "Show all labels" tap area
+  need('.layer-label', ['min-height', 'min-width']); // the six layer check boxes
   need('#clash-list button', ['min-height']); // full width, so wide enough already
-  const clash = ruleBody(stripped, '#clash-list button') || '';
+  const clash = ruleHaving(stripped, '#clash-list button') || '';
   if (!/width:\s*100%/.test(clash)) problems.push('#clash-list button is not full width');
   return problems;
 }
 
-test('Polish 3: the floor buttons, "Reset view", the "Show all labels" box and the clash list buttons are at least 44 px high and wide', () => {
+test('Polish 3: the floor buttons, "Reset view", the layer boxes, the "Show all labels" box and the clash list buttons are at least 44 px high and wide', () => {
   assert.deepEqual(tapProblems(css), []);
-  // The buttons the rules apply to are really in the page, inside #view-controls.
-  const controls = html.slice(html.indexOf('<div id="view-controls"'), html.indexOf('<div id="scene-area"'));
+  // The buttons the rules apply to are really in the page, inside #view-controls (in the ribbon).
+  const controls = html.slice(html.indexOf('<div id="view-controls"'), html.indexOf('<fieldset id="layer-controls"'));
   for (const id of ['floor-all', 'floor-ground', 'floor-upper', 'reset-view']) assert.match(controls, new RegExp(`<button[^>]*id="${id}"`));
   assert.match(controls, /<label id="show-all-labels-label"[^>]*>\s*<input type="checkbox" id="show-all-labels">/);
+  const layers = html.slice(html.indexOf('<fieldset id="layer-controls"'), html.indexOf('</fieldset>', html.indexOf('<fieldset id="layer-controls"')));
+  assert.equal((layers.match(/class="layer-label"/g) || []).length, 6, 'six layer check boxes');
   // The clash list buttons are made by viewer.js as buttons inside #clash-list.
   assert.match(html, /<ul id="clash-list"/);
   assert.match(viewer, /createElement\('button'\)/);
-  // The checkbox itself is bigger than the browser default.
-  assert.ok(sizeInPx(/width:\s*([^;]+);/.exec(ruleBody(css, '#show-all-labels'))[1]) >= 24);
+  // The checkboxes themselves are bigger than the browser default.
+  assert.ok(sizeInPx(/width:\s*([^;]+);/.exec(ruleHaving(css, '#show-all-labels'))[1]) >= 24);
+  assert.ok(sizeInPx(/width:\s*([^;]+);/.exec(ruleHaving(css, '.layer-label input'))[1]) >= 24);
   // No later rule shrinks them again.
-  assert.doesNotMatch(css, /@media[^{]*\{[^@]*(?:#view-controls button|#clash-list button)[^{]*\{[^}]*(?:min-height|height)\s*:\s*[0-3]/);
+  for (const block of mediaBlocks(css)) {
+    for (const selector of ['.floor-button', '#clash-list button', '.layer-label']) {
+      const body = ruleHaving(block, selector);
+      const m = body && /(?:^|[;\s])min-height:\s*([^;]+);/.exec(body);
+      if (m) assert.ok(sizeInPx(m[1]) >= 44, `${selector} is made smaller in a media rule`);
+    }
+  }
 });
 
 test('Polish 3: the tap-size check fails when a minimum is removed or too small (planted changes in copies)', () => {
-  const noMin = css.replace(/(#view-controls button\s*\{[^}]*?)\s*min-height:\s*2\.75rem;/, '$1');
+  const noMin = css.replace(/(\.choice-button, \.nav-button, \.action-button, \.bar-button, \.ribbon-button, \.tab-button, \.floor-button, \.phone-tab \{\s*)min-height:\s*2\.75rem;/, '$1');
   assert.notEqual(noMin, css);
-  assert.ok(tapProblems(noMin).some((p) => /#view-controls button: no min-height/.test(p)));
-  const small = css.replace(/(#clash-list button\s*\{[^}]*min-height:\s*)2\.75rem/, '$12.5rem');
+  assert.ok(tapProblems(noMin).some((p) => /\.floor-button: no min-height/.test(p)));
+  const small = css.replace(/(#clash-list button \{[^}]*min-height:\s*)2\.75rem/, '$12.5rem');
   assert.notEqual(small, css);
   assert.ok(tapProblems(small).some((p) => /#clash-list button: min-height is 40 px/.test(p)));
-  const label = css.replace(/(#show-all-labels-label\s*\{[^}]*?)min-width:\s*2\.75rem;/, '$1');
-  assert.ok(tapProblems(label).some((p) => /show-all-labels-label: no min-width/.test(p)));
+  const label = css.replace(/(\.layer-label, #show-all-labels-label \{[^}]*?)min-width:\s*2\.75rem;/, '$1');
+  assert.ok(tapProblems(label).some((p) => /min-width/.test(p)));
 });

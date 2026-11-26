@@ -10,7 +10,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, statSync } from 'node:fs';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles, themeVariables, shownByDefault, drawnPartCount, recordingStorage, installStorage } from '../test-helpers/fake-page.js';
 import { buildScene, shapeParts } from '../docs/scene-data.js';
 import { FIXED_SENTENCE } from '../docs/intake/report.js';
 import * as stateApi from '../docs/intake/state.js';
@@ -20,7 +20,7 @@ import { makeSummaryHtml } from '../docs/engine/summary/make-summary.js';
 installImportHooks();
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 const sample = JSON.parse(readDoc('sample-run.json'));
 const SAMPLE_LAST = sample.versions.length;
 let caseNumber = 40000;
@@ -137,7 +137,8 @@ test('Task 12 accessibility: the sample result shows the fixed sentence once, as
     assert.equal(page.el('heading-result').textContent, 'Sample two-storey home');
     const drawn = page.scene.children.find((c) => c.type === 'Group').children.filter((o) => o.userData && o.userData.boxKey).map((o) => o.userData.boxKey).sort();
     // D6: the design-team sample has furniture with a type, which is drawn as several parts, each with the box's key.
-    assert.deepEqual(drawn, buildScene(sample, SAMPLE_LAST).flatMap((b) => Array(Math.max(1, shapeParts(b).length)).fill(b.key)).sort());
+    // Look-and-feel L6: only the layers on by default are drawn, and a round table has a top and one pedestal.
+    assert.deepEqual(drawn, buildScene(sample, SAMPLE_LAST).filter(shownByDefault).flatMap((b) => Array(drawnPartCount(b)).fill(b.key)).sort());
     assert.deepEqual(page.log.filter((l) => l.startsWith('fetch:')), ['fetch:sample-run.json']);
     assert.deepEqual(page.problemLines(), []);
     assert.equal(page.el('intake-error-message').hidden, true);
@@ -157,14 +158,10 @@ test('Task 12 accessibility: the sample result shows the fixed sentence once, as
   });
 });
 
-// ==== Contrast, computed from the colour values in the stylesheet ================================
+// ==== Contrast, computed from the colour values in the theme ====================================
+// Look-and-feel L1: every colour is written once, in docs/theme.css, for the dark and the light theme. The pairs below are the colours the
+// stylesheet puts on top of each other (a text colour on its background, a border on its surface). Both themes are checked.
 
-const hexOf = (value) => {
-  const m = /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/.exec(value || '');
-  if (!m) return null;
-  const h = m[1].length === 3 ? [...m[1]].map((c) => c + c).join('') : m[1];
-  return `#${h.toLowerCase()}`;
-};
 const channels = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 function luminance(hex) {
   const [r, g, b] = channels(hex).map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -174,165 +171,100 @@ function ratio(a, b) {
   const [x, y] = [luminance(a), luminance(b)];
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
-// A colour with transparency, laid over a solid colour.
-function overlay(top, alpha, under) {
-  const t = channels(top);
-  const u = channels(under);
-  const mix = t.map((v, i) => Math.round(v * alpha + u[i] * (1 - alpha)));
-  return `#${mix.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
-}
 
-// The rules of a stylesheet as { selectors, body }, comments removed. Rules inside @media are included.
-function cssRules(text) {
-  const clean = text.replace(/\/\*[\s\S]*?\*\//g, '');
-  return [...clean.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selectors: m[1].split(',').map((s) => s.trim()), body: m[2] }));
-}
-// The last value written for a property in the rules whose selector list contains `selector`.
-function cssValue(rules, selector, property) {
-  let found = null;
-  for (const rule of rules) {
-    if (!rule.selectors.includes(selector)) continue;
-    const m = new RegExp(`(?:^|[;\\s])${property}\\s*:\\s*([^;]+)`).exec(rule.body);
-    if (m) found = m[1].trim();
-  }
-  assert.ok(found !== null, `the stylesheet has no "${property}" for "${selector}"`);
-  return found;
-}
-
-// Named colours of the page (hex written in styles.css; the three status colours also in docs/viewer.js).
-const viewerSource = readDoc('viewer.js');
-const viewerColour = (name) => `#${new RegExp(`${name}:\\s*0x([0-9a-f]{6})`).exec(viewerSource)[1]}`;
-
-// Each pair: where its colours come from in the stylesheet, and the smallest ratio it must reach.
-// 'text' needs 4.5 to 1. 'part' (a border, a focus ring, another part of a control) needs 3 to 1.
-function pairsFor(text) {
-  const rules = cssRules(text);
-  const v = (selector, property) => hexOf(cssValue(rules, selector, property));
-  const body = (property) => v('body', property);
-  const pageBg = body('background');
-  const panelBg = v('.panel', 'background');
-  const entryBg = v('.entry', 'background');
-  const sceneBg = v('#scene-area', 'background');
-  const labelFill = overlay('#ffffff', 0.92, sceneBg); // .scene-label is white at 92% over the 3D area
-  const T = (name, fg, bg) => ({ name, kind: 'text', min: 4.5, fg, bg });
-  const P = (name, fg, bg) => ({ name, kind: 'part', min: 3, fg, bg });
-  const focus = v(':focus-visible', 'outline');
+const AGENT_KEYS = ['walls', 'doors', 'floors', 'lighting', 'furniture', 'decor', 'style', 'reviewer'];
+// Each pair is [name, foreground variable, background variable, smallest ratio]. 'text' pairs need 4.5 to 1, 'part' pairs (a border, a focus ring) need 3.
+function themePairs() {
+  const T = (name, fg, bg) => [name, fg, bg, 4.5];
+  const P = (name, fg, bg) => [name, fg, bg, 3];
   return [
-    T('Page text on the page background', body('color'), pageBg),
-    T('Top and bottom bar text', v('.label-bar', 'color'), v('.label-bar', 'background')),
-    T('Red message text (viewer)', v('#error-message', 'color'), v('#error-message', 'background')),
-    T('Red message text (screens)', v('#intake-error-message', 'color'), v('#intake-error-message', 'background')),
-    T('Text in the "could not finish" box', v('.run-failure', 'color'), v('.run-failure', 'background')),
-    T('Grey status line (viewer) on the page', v('#script-status', 'color'), pageBg),
-    T('Grey status line (screens) on the page', v('.status-line', 'color'), pageBg),
-    T('Text in the 3D area placeholder', v('#scene-area', 'color'), sceneBg),
-    T('Hint text in a panel', v('.hint', 'color'), panelBg),
-    T('Hint text on the page', v('.hint', 'color'), pageBg),
-    T('Detail text in a list row', v('.entry-detail', 'color'), entryBg),
-    T('Error text in a panel', v('.field-error', 'color'), panelBg),
-    T('Error text on the page', v('.field-error', 'color'), pageBg),
-    T('Error text in a list row', v('.field-error', 'color'), entryBg),
-    T('Status announcement text', v('.action-status', 'color'), v('.action-status', 'background')),
-    T('Text on dark buttons (Next, Start my own project)', v('.nav-primary', 'color'), v('.nav-primary', 'background')),
-    T('Text on normal buttons', v('.action-button', 'color'), v('.action-button', 'background')),
-    T('Text on a pressed view button', v('#view-controls button[aria-pressed="true"]', 'color'), v('#view-controls button[aria-pressed="true"]', 'background')),
-    // These two buttons set no text colour. The browser's own button text colour is black in a light page (assumed, not checked).
-    T('Text on view buttons (browser black assumed)', '#000000', v('#view-controls button', 'background')),
-    T('Text on clash list buttons (browser black assumed)', '#000000', v('#clash-list button', 'background')),
-    T('Text in text boxes', v('.text-input', 'color'), v('.text-input', 'background')),
-    T('Panel text', body('color'), panelBg),
-    T('List row text', body('color'), entryBg),
-    T('Section text (viewer panels)', body('color'), v('section', 'background')),
-    T('Text in a tag', body('color'), v('.tag', 'background')),
-    T('Text in the "still needed" boxes', body('color'), v('.setup-needs', 'background')),
-    T('Locked or Unsure word in a list', v('.status-text', 'color'), panelBg),
-    T('Table heading text', body('color'), v('.summary-view th', 'background')),
-    T('Floor name label in 3D', v('.floor-label', 'color'), v('.floor-label', 'background')),
-    T('Room name label in 3D', v('.room-label', 'color'), labelFill),
-    T('Block name label in 3D', body('color'), labelFill),
-    P('Text box border on a panel', v('.text-input', 'border'), v('.text-input', 'background')),
-    P('Text box border on the page', v('.text-input', 'border'), pageBg),
-    P('Text box border when it holds a mistake', v('.text-input[aria-invalid="true"]', 'border-color'), v('.text-input', 'background')),
-    P('Button border on the page', v('.action-button', 'border'), pageBg),
-    P('Button border on a panel', v('.action-button', 'border'), panelBg),
-    P('Button border in a list row', v('.action-button', 'border'), entryBg),
-    P('View button border on the page', v('#view-controls button', 'border'), pageBg),
-    P('Clash list button border', v('#clash-list button', 'border'), v('section', 'background')),
-    P('Bar beside an error message', v('.field-error', 'border-left'), panelBg),
-    P('Tag border', v('.tag', 'border'), panelBg),
-    P('Border of a panel on the page', v('.panel', 'border'), pageBg),
-    P('Border of a list row (outside)', v('.entry', 'border'), panelBg),
-    P('Border of a list row (inside)', v('.entry', 'border'), entryBg),
-    P('Border around a group of choices', v('.choice-group', 'border'), pageBg),
-    P('Table border', v('.summary-view th', 'border'), panelBg),
-    P('Border of a table row on a narrow screen', v('.summary-view tr', 'border'), panelBg),
-    P('Table border at a heading', v('.summary-view th', 'border'), v('.summary-view th', 'background')),
-    P('Border of a mood board picture', v('.mood-image', 'border'), panelBg),
-    P('Border of the legend swatches', v('.swatch', 'border'), v('section', 'background')),
-    P('Keyboard focus ring on the page', focus, pageBg),
-    P('Keyboard focus ring in a panel', focus, panelBg),
-    P('Keyboard focus ring in a list row', focus, entryBg),
-    P('Keyboard focus ring on the status line', focus, v('.action-status', 'background')),
-    P('Keyboard focus ring over the 3D area', focus, sceneBg),
-    P('Keyboard focus ring in the "could not finish" box', focus, v('.run-failure', 'background')),
-    P('Keyboard focus ring in a "still needed" box', focus, v('.setup-needs', 'background')),
+    T('Page text on the page background', '--text', '--bg'),
+    T('Page text on a panel', '--text', '--surface'),
+    T('Page text on a list row', '--text', '--surface-2'),
+    T('Page text on a hovered control', '--text', '--surface-3'),
+    T('Muted text on the page background', '--text-muted', '--bg'),
+    T('Muted text on a panel', '--text-muted', '--surface'),
+    T('Muted text on a list row', '--text-muted', '--surface-2'),
+    T('Muted text on a hovered control', '--text-muted', '--surface-3'),
+    T('Fainter text on the page background', '--text-faint', '--bg'),
+    T('Top and bottom bar text', '--bar-text', '--bar-bg'),
+    T('Muted text on the bars', '--text-muted', '--bar-bg'),
+    T('Red message and error text on their background', '--danger', '--danger-bg'),
+    T('Error text in a panel', '--danger', '--surface'),
+    T('Error text on the page', '--danger', '--bg'),
+    T('Error text in a list row', '--danger', '--surface-2'),
+    T('Status announcement text', '--note-text', '--note-bg'),
+    T('Text on a main button (Next, Start my own project)', '--accent-ink', '--accent'),
+    T('Text on a selected rail page', '--text', '--accent-soft'),
+    T('Accent text on the page', '--accent', '--bg'),
+    T('Text in text boxes', '--text', '--surface-2'),
+    T('Block name label in 3D', '--text', '--surface'),
+    T('Muted label text in 3D', '--text-muted', '--surface'),
+    T('Muted text on the 3D background', '--text-muted', '--three-background'),
+    ...AGENT_KEYS.map((k) => T(`Letter on the ${k} badge`, '--agent-ink', `--agent-${k}`)),
+    ...AGENT_KEYS.map((k) => P(`The ${k} colour on a panel`, `--agent-${k}`, '--surface')),
+    ...AGENT_KEYS.map((k) => P(`The ${k} colour on the page`, `--agent-${k}`, '--bg')),
+    P('Text box and button border on a panel', '--line-control', '--surface'),
+    P('Text box border on a list row', '--line-control', '--surface-2'),
+    P('Button border on the page', '--line-control', '--bg'),
+    P('Keyboard focus ring on the page', '--focus', '--bg'),
+    P('Keyboard focus ring in a panel', '--focus', '--surface'),
+    P('Keyboard focus ring in a list row', '--focus', '--surface-2'),
+    P('Keyboard focus ring on the status line', '--focus', '--note-bg'),
+    P('Keyboard focus ring over the 3D area', '--focus', '--three-background'),
+    P('Keyboard focus ring in the "could not finish" box', '--focus', '--danger-bg'),
+    P('Bar beside an error message', '--danger-line', '--surface'),
+    P('Clash red on the legend background', '--three-clash', '--surface'),
+    P('Clash red on the pale floor slab in 3D', '--three-clash', '--three-slab'),
+    P('Locked edge on the floor slab in 3D', '--three-locked-edge', '--three-slab'),
+    P('Locked edge on the 3D background', '--three-locked-edge', '--three-background'),
+    P('Room outline in 3D on the 3D background', '--three-room', '--three-background'),
   ];
 }
 
-// The status colours: the page words say Locked and Unsure too, so colour is never the only sign. Their ratios are
-// still computed and printed. Known shortfalls (below 3 to 1) are listed here on purpose; the test fails if the list changes.
-function statusRows(text) {
-  const rules = cssRules(text);
-  const white = hexOf(cssValue(rules, 'section', 'background'));
-  const slab = viewerColour('slab');
-  const colours = [['Locked blue', viewerColour('locked')], ['Unsure orange', viewerColour('unsure')], ['Clash red', viewerColour('clash')]];
-  const rows = [];
-  for (const [name, hex] of colours) {
-    rows.push({ name: `${name} on the legend background`, fg: hex, bg: white, min: 3 });
-    rows.push({ name: `${name} on the pale floor slab in 3D`, fg: hex, bg: slab, min: 3 });
-  }
-  return rows;
-}
-const KNOWN_STATUS_SHORTFALLS = []; // the Unsure orange now reaches 3 to 1 (polish step 1), so no shortfall is left
-
-function checkContrast(text) {
-  const rows = [...pairsFor(text), ...statusRows(text)].map((p) => { assert.ok(p.fg && p.bg, `missing colour for: ${p.name}`); return { ...p, ratio: ratio(p.fg, p.bg) }; });
+function checkContrast(theme, variables = themeVariables(theme)) {
+  const rows = themePairs().map(([name, fg, bg, min]) => {
+    assert.ok(variables[fg] && variables[bg], `missing colour for: ${name} (${fg} on ${bg})`);
+    return { name, fg: variables[fg], bg: variables[bg], min, ratio: ratio(variables[fg], variables[bg]) };
+  });
   return { rows, failures: rows.filter((r) => r.ratio < r.min) };
 }
 
-test('Task 12 accessibility: every text colour pair reaches 4.5 to 1 and every border and focus colour reaches 3 to 1 (numbers printed)', () => {
-  const { rows, failures } = checkContrast(css);
-  console.log('Contrast, computed from the colour values in docs/styles.css (needs: text 4.5, parts 3.0):');
-  for (const r of rows) console.log(`  ${r.ratio.toFixed(2).padStart(5)} to 1  (needs ${r.min})  ${r.fg} on ${r.bg}  ${r.name}${r.ratio < r.min ? '   <-- BELOW' : ''}`);
-  assert.ok(rows.length >= 55, 'the table is not empty');
-  assert.deepEqual(failures.map((f) => f.name), KNOWN_STATUS_SHORTFALLS,
-    'no pair is below its limit; anything below is a new problem');
-});
-
-test('Task 12 accessibility: every colour written in the stylesheet is in the contrast table, or is listed as a plain decoration', () => {
-  const { rows } = checkContrast(css);
-  const checked = new Set(rows.flatMap((r) => [r.fg, r.bg]));
-  // Lines and fills that identify nothing a person needs: the viewer's panel borders, a 3D area frame, the viewer's label
-  // border (on a label that also has text), and the thin line between stacked table cells on a narrow screen.
-  const DECORATION = ['#d5d5d0', '#b8bec4', '#8a9299', '#d0d3d6', '#e69f00'];
-  const written = new Set([...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/#[0-9a-fA-F]{3,6}\b/g)].map((m) => hexOf(m[0])));
-  const unchecked = [...written].filter((hex) => !checked.has(hex) && !DECORATION.map(hexOf).includes(hex));
-  assert.deepEqual(unchecked, [], 'a colour in the stylesheet has no contrast check');
-  // The three status colours of the stylesheet's swatches are the same as the viewer's.
-  for (const [cls, name] of [['.swatch-locked', 'locked'], ['.swatch-unsure', 'unsure'], ['.swatch-clash', 'clash']]) {
-    const value = cssValue(cssRules(css), cls, cls === '.swatch-clash' ? 'border' : 'background');
-    assert.equal(hexOf(value), viewerColour(name), `${cls} equals the viewer colour`);
+test('Task 12 accessibility: every text colour pair reaches 4.5 to 1 and every border and focus colour reaches 3 to 1, in the dark and the light theme (numbers printed)', () => {
+  for (const theme of ['dark', 'light']) {
+    const { rows, failures } = checkContrast(theme);
+    console.log(`Contrast in the ${theme} theme, computed from the colour values in docs/theme.css (needs: text 4.5, parts 3.0):`);
+    for (const r of rows) console.log(`  ${r.ratio.toFixed(2).padStart(5)} to 1  (needs ${r.min})  ${r.fg} on ${r.bg}  ${r.name}${r.ratio < r.min ? '   <-- BELOW' : ''}`);
+    assert.ok(rows.length >= 55, 'the table is not empty');
+    assert.deepEqual(failures.map((f) => f.name), [], `${theme}: no pair is below its limit; anything below is a new problem`);
   }
 });
 
+test('Task 12 accessibility: the stylesheet and the page scripts write no colour of their own; every colour is in the theme file and in the contrast table', () => {
+  const plain = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.doesNotMatch(plain(readDoc('styles.css')), /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/, 'styles.css has a colour of its own');
+  assert.doesNotMatch(plain(html), /#[0-9a-fA-F]{6}\b/, 'index.html has a colour of its own');
+  // Every colour variable of the theme is in the table (a decoration-only colour is listed on purpose), in both themes.
+  const used = new Set(themePairs().flatMap(([, fg, bg]) => [fg, bg]));
+  const DECORATION = ['--bg-glow', '--line', '--three-slab-edge', '--three-door-edge', '--three-window-edge', '--three-sky', '--three-ground', '--three-neutral',
+    '--agent-neutral', '--accent-soft', '--note-line', '--plan-room-fill', '--plan-room-line', '--plan-locked-fill', '--plan-locked-line', '--plan-unsure-fill',
+    '--plan-unsure-line', '--plan-ink', '--three-locked-edge'];
+  for (const theme of ['dark', 'light']) {
+    const colours = Object.entries(themeVariables(theme)).filter(([, value]) => /^#[0-9a-fA-F]{6}$/.test(value)).map(([name]) => name);
+    const unchecked = colours.filter((name) => !used.has(name) && !DECORATION.includes(name));
+    assert.deepEqual(unchecked, [], `${theme}: a colour in the theme has no contrast check`);
+  }
+  // The legend swatch for Clash has the clash colour of the 3D view (one colour, one place).
+  assert.match(plain(readDoc('styles.css')), /\.swatch-clash \{[^}]*var\(--three-clash\)/);
+});
+
 test('Task 12 accessibility: the contrast check fails when a colour is made too light (planted change in a copy)', () => {
-  assert.equal(checkContrast(css).failures.length, KNOWN_STATUS_SHORTFALLS.length);
-  const planted = css.replace('.hint { color: #444; }', '.hint { color: #aaa; }');
-  assert.notEqual(planted, css, 'the plant changed the copy');
-  assert.ok(checkContrast(planted).failures.some((f) => f.name === 'Hint text in a panel'));
-  const plantedFocus = css.replace('outline: 3px solid #0b3d91', 'outline: 3px solid #ccd');
-  assert.notEqual(plantedFocus, css);
-  assert.ok(checkContrast(plantedFocus).failures.some((f) => f.name.startsWith('Keyboard focus ring')));
+  for (const theme of ['dark', 'light']) assert.equal(checkContrast(theme).failures.length, 0);
+  const light = themeVariables('light');
+  const planted = { ...light, '--text-muted': '#aaaaaa' };
+  assert.ok(checkContrast('light', planted).failures.some((f) => f.name === 'Muted text on a panel'));
+  const plantedFocus = { ...themeVariables('dark'), '--focus': '#16181c' };
+  assert.ok(checkContrast('dark', plantedFocus).failures.some((f) => f.name.startsWith('Keyboard focus ring')));
 });
 
 // ==== Structure: language, zoom, headings, labels, status region, tab order =====================
@@ -341,12 +273,13 @@ const screenIds = [...html.matchAll(/<div id="screen-(\w+)"/g)].map((m) => m[1])
 const blockOf = (id) => {
   const from = html.indexOf(`<div id="screen-${id}"`);
   const next = screenIds[screenIds.indexOf(id) + 1];
-  const to = next ? html.indexOf(`<div id="screen-${next}"`) : html.indexOf('<div id="step-nav"');
+  // Look-and-feel L2: the start screen is the home page and ends where the workspace begins.
+  const to = id === 'start' ? html.indexOf('<div id="workspace"') : next ? html.indexOf(`<div id="screen-${next}"`) : html.indexOf('<div id="step-nav"');
   return html.slice(from, to);
 };
 
 test('Task 12 accessibility: the page has a language, a zoomable viewport tag, a title, one main area, and every screen but Start starts hidden', () => {
-  assert.match(html, /^<!DOCTYPE html>\s*<html lang="en">/);
+  assert.match(html, /^<!DOCTYPE html>\s*<html lang="en" data-theme="dark">/);
   const viewport = /<meta name="viewport" content="([^"]*)">/.exec(html);
   assert.ok(viewport, 'a viewport tag');
   assert.equal(viewport[1], 'width=device-width, initial-scale=1');
@@ -355,7 +288,8 @@ test('Task 12 accessibility: the page has a language, a zoomable viewport tag, a
   assert.equal((html.match(/<main\b/g) || []).length, 1);
   assert.deepEqual(screenIds, ['start', 'setup', 'inspiration', 'overrides', 'brief', 'taste', 'items', 'place', 'review', 'result']);
   for (const id of screenIds) {
-    const open = new RegExp(`<div id="screen-${id}" class="screen"( hidden)?>`).exec(html);
+    // Look-and-feel: the home page and the result screen have a second class, and the result screen starts on its 3D tab.
+    const open = new RegExp(`<div id="screen-${id}" class="screen(?: home| screen-result)?"(?: data-result-tab="3d")?( hidden)?>`).exec(html);
     assert.ok(open, `screen ${id} is a plain block`);
     assert.equal(Boolean(open[1]), id !== 'start', `screen ${id} ${id === 'start' ? 'shows' : 'starts hidden'}`);
   }
@@ -502,10 +436,13 @@ test('Task 12 accessibility: the tab order follows the order on screen (controls
     items: ['item-text', 'item-room', 'item-status-locked', 'item-status-unsure', 'item-tag', 'add-item'],
     place: ['place-room', 'place-type', 'place-name', 'place-status-locked', 'place-status-unsure', 'place-x', 'place-y', 'place-width', 'place-depth', 'add-placed', 'sel-name', 'sel-x', 'sel-y', 'sel-width', 'sel-depth', 'sel-save', 'sel-status', 'nudge-left', 'nudge-right', 'nudge-up', 'nudge-down', 'sel-turn', 'sel-wall'],
     review: ['run-design-team'],
-    result: ['result-back', 'floor-all', 'floor-ground', 'floor-upper', 'reset-view', 'show-all-labels', 'version-slider', 'result-start-again'],
+    // Look-and-feel L3 and L6: the ribbon (floors, reset, labels, the six layers) and the result tabs come before the 3D view and the panels.
+    result: ['result-back', 'floor-all', 'floor-ground', 'floor-upper', 'reset-view', 'show-all-labels', 'layer-structure', 'layer-openings', 'layer-lighting', 'layer-furniture',
+      'layer-decor', 'layer-style', 'tab-3d', 'tab-details', 'tab-report', 'version-slider', 'result-start-again'],
   };
   for (const id of screenIds) assert.deepEqual(controlsIn(blockOf(id)), expected[id], `order on the ${id} screen`);
-  assert.deepEqual(controlsIn(html.slice(html.indexOf('<div id="step-nav"'))), ['back-button', 'start-again', 'next-button'], 'Back, Start again, Next come after the screens, as on screen');
+  const nav = html.indexOf('<div id="step-nav"');
+  assert.deepEqual(controlsIn(html.slice(nav, html.indexOf('</div>', nav))), ['back-button', 'start-again', 'next-button'], 'Back, Start again, Next come after the screens, as on screen');
   // The label of a control comes before the control, in the page order, on every screen.
   for (const m of html.matchAll(/<label\b[^>]*\bfor="([^"]+)"/g)) {
     const control = html.search(new RegExp(`<(?:input|select|textarea)\\b[^>]*\\sid="${m[1]}"`));
@@ -535,6 +472,7 @@ function scannedFiles() {
   return listFiles('../docs/').filter((f) => /\.(js|html|css)$/.test(f)).map((f) => ({ name: f.replace('../docs/', ''), text: readDoc(f.replace('../docs/', '')) }));
 }
 
+const plainJs = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 const PRIVACY_RULES = [
   ['browser storage', /\b(localStorage|sessionStorage|indexedDB|openDatabase|caches\.(open|match)|cookieStore)\b/],
   ['cookies', /\.cookie\b/],
@@ -543,12 +481,18 @@ const PRIVACY_RULES = [
   ['reading what is inside an image file', /\bFileReader\b|\.arrayBuffer\(|createImageBitmap|new\s+Image\s*\(/],
   ['visitor text as page code', /\binnerHTML\b|\bouterHTML\b|insertAdjacentHTML|document\.write|\beval\s*\(|new\s+Function\b/],
 ];
+// Look-and-feel L5: browser storage is allowed in ONE file, docs/workspace/store.js, for the agent settings and the theme and nothing else.
 // A web request is allowed in one place only: docs/viewer.js asks for sample-run.json.
+const STORAGE_FILE = 'workspace/store.js';
 function privacyProblems(files) {
   const problems = [];
   for (const { name, text } of files) {
     const noComments = name.endsWith('.js') ? text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1') : text;
-    for (const [what, pattern] of PRIVACY_RULES) if (pattern.test(noComments)) problems.push(`${name}: ${what}`);
+    for (const [what, pattern] of PRIVACY_RULES) {
+      // In the storage file only the word localStorage is allowed; sessionStorage, indexedDB, cookies and the rest are still searched for.
+      const searched = what === 'browser storage' && name === STORAGE_FILE ? noComments.replace(/\blocalStorage\b/g, '') : noComments;
+      if (pattern.test(searched)) problems.push(`${name}: ${what}`);
+    }
     if (name.endsWith('.js')) {
       const calls = noComments.match(/\bfetch\s*\(/g) || [];
       if (name === 'viewer.js') {
@@ -570,6 +514,12 @@ test('Task 12 privacy: no page file stores anything, sends anything, holds a web
   assert.ok(!names.some((n) => n.startsWith('vendor/')), 'the approved Three.js copy is not part of the search');
   assert.ok(files.length >= 30, `${files.length} files searched`);
   assert.deepEqual(privacyProblems(files), []);
+  assert.ok(names.includes(STORAGE_FILE), 'the one file that may use browser storage is searched too');
+  // That file keeps only the two named things, under names that start with "designforyou.", and nothing else.
+  const store = plainJs(readDoc(STORAGE_FILE));
+  assert.deepEqual([...store.matchAll(/export const (\w+_KEY) = '([^']+)'/g)].map((m) => m[2]), ['designforyou.agent-settings', 'designforyou.theme']);
+  assert.equal((store.match(/\.setItem\(/g) || []).length, 2, 'two places write: the settings and the theme');
+  assert.doesNotMatch(store, /getState|appState|\.items\b|\.floors\b|\.brief\b|\.images\b/, 'nothing of the project is read in the storage file');
   const viewer = files.find((f) => f.name === 'viewer.js').text;
   assert.match(viewer, /const SAMPLE_RUN_FILE = 'sample-run\.json'/);
   assert.equal((viewer.match(/\bfetch\(/g) || []).length, 1);
@@ -594,6 +544,9 @@ test('Task 12 privacy: a planted localStorage call, cookie, web request or web a
     ['intake/result-screen.js', 'node.innerHTML = text;', 'intake/result-screen.js: visitor text as page code'],
     ['intake/inspiration-screen.js', 'new FileReader();', 'intake/inspiration-screen.js: reading what is inside an image file'],
     ['viewer.js', "fetch('other.json');", 'viewer.js: a web request other than sample-run.json'],
+    ['workspace/shell.js', "localStorage.setItem('project', 'x');", 'workspace/shell.js: browser storage'],
+    ['workspace/agents-page.js', "sessionStorage.getItem('x');", 'workspace/agents-page.js: browser storage'],
+    ['workspace/store.js', "indexedDB.open('x');", 'workspace/store.js: browser storage'],
   ];
   for (const [name, add, expected] of cases) {
     assert.ok(privacyProblems(plant(name, add)).includes(expected), `a planted fault in ${name} is found: ${add}`);
@@ -604,9 +557,13 @@ test('Task 12 privacy: a planted localStorage call, cookie, web request or web a
 test('Task 12 privacy: using the whole app (images, notes, brief, items, run, start again) touches no storage, cookie or network, other than the sample file at page load', async () => {
   const touched = [];
   const trap = (name) => Object.defineProperty(globalThis, name, { configurable: true, get() { touched.push(name); throw new Error(`${name} must not be used`); } });
-  const trapped = ['localStorage', 'sessionStorage', 'indexedDB', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'Worker'];
+  // Look-and-feel L5: localStorage is allowed for the agent settings and the theme (see store.js). A recording stand-in shows that using the
+  // whole app writes nothing to it: only a settings or theme change would, and this visit changes neither.
+  const trapped = ['sessionStorage', 'indexedDB', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'Worker'];
   const savedDescriptors = Object.fromEntries(trapped.map((n) => [n, Object.getOwnPropertyDescriptor(globalThis, n)]));
   trapped.forEach(trap);
+  const recorder = recordingStorage();
+  const restoreStorage = installStorage(recorder.storage);
   try {
     await withAll(() => {}, async (page) => {
       Object.defineProperty(page.document, 'cookie', { configurable: true, get() { touched.push('cookie read'); return ''; }, set() { touched.push('cookie write'); } });
@@ -624,9 +581,11 @@ test('Task 12 privacy: using the whole app (images, notes, brief, items, run, st
       assert.deepEqual(page.problemLines(), []);
     });
   } finally {
+    restoreStorage();
     for (const n of trapped) { if (savedDescriptors[n]) Object.defineProperty(globalThis, n, savedDescriptors[n]); else delete globalThis[n]; }
   }
   assert.deepEqual(touched, []);
+  assert.deepEqual(recorder.writes, [], 'using the app keeps nothing in the browser');
 });
 
 test('Task 12 privacy: an image\'s file name is shown only in the visitor\'s own image list, not in the Project Brain, the summary or the result screen', async () => {

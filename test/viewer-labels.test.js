@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, shownByDefault } from '../test-helpers/fake-page.js';
 import { buildScene } from '../docs/scene-data.js';
 
 installImportHooks();
@@ -30,7 +30,8 @@ async function withPage(body) {
 const shown = (page) => page.labels().filter((l) => l.style.display !== 'none');
 const shownBlockNames = (page) => shown(page).filter((l) => !/room-label|floor-label/.test(l.className)).map((l) => l.textContent).sort();
 // D6: the design-team sample's small marks (lights, switches, sockets, rugs) carry no text label (noLabel), so they are not counted.
-const blocks = (version = LAST) => buildScene(run, version).filter((b) => b.itemId !== undefined && !b.noLabel);
+// Look-and-feel L6: the Lighting and Decor layers are off by default, so their blocks have no label until the layer is switched on.
+const blocks = (version = LAST) => buildScene(run, version).filter((b) => b.itemId !== undefined && !b.noLabel && shownByDefault(b));
 const clashNames = (version = LAST) => blocks(version).filter((b) => b.clash).map((b) => b.label).sort();
 
 async function pixelOfBlock(page, name) {

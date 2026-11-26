@@ -1,0 +1,210 @@
+/*
+  THE THEME FILE. Every colour, every font and every spacing size of the page is written here, and only here.
+  styles.css holds layout and uses these names with var(--name). To restyle the page, change this file.
+  The 3D view reads the --three-* colours from here too (see docs/workspace/theme-colours.js), so it follows the theme.
+
+  Colour rules used for the values below:
+  - Text on its background: at least 4.5 to 1 (WCAG AA). Large text and the borders of controls: at least 3 to 1.
+  - The eight agent colours come from the colour-blind-safe Okabe-Ito set (a few shades changed to fit a dark and a light page).
+    Colour is never the only signal: every agent also has a letter and a shape (see docs/workspace/agents-info.js).
+  - No outside fonts and no outside images: the font names are the ones already on the visitor's device.
+*/
+
+/* ---------------------------------------------------------------- Shared: type, space, shape, motion */
+:root {
+  --font-text: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Segoe UI Variable Display", "SF Pro Display", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --weight-display: 300;
+  --weight-text: 400;
+  --weight-strong: 600;
+  --tracking-display: -0.025em;
+  --tracking-label: 0.08em;
+
+  --text-base: 1rem;
+  --text-small: 1rem;
+  --text-lead: 1.25rem;
+  --text-h2: 1.375rem;
+  --text-h1: 2rem;
+  --text-hero: clamp(2.75rem, 7.5vw, 6.25rem);
+  --leading-text: 1.55;
+  --leading-display: 1.05;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 5rem;
+
+  --radius-sm: 0.5rem;
+  --radius: 0.875rem;
+  --radius-lg: 1.5rem;
+  --radius-pill: 999px;
+
+  --radius-xs: 0.2rem;
+  --line-width: 1px;
+  --line-width-strong: 2px;
+  --line-width-bar: 3px;
+  --line-width-edge: 4px;
+  --line-width-card: 6px;
+  --focus-width: 3px;
+  --focus-offset: 2px;
+
+  --control-height: 2.75rem;
+  --badge-size: 2rem;
+  --badge-size-large: 2.75rem;
+  --badge-size-small: 1.5rem;
+  --swatch-size: 1rem;
+  --bar-height: 3.5rem;
+  --rail-width: 4.75rem;
+  --strip-width: 15rem;
+  --side-width: 22rem;
+  --measure: 46rem;
+  --page-max: 1400px;
+
+  --dur-fast: 140ms;
+  --dur: 260ms;
+  --dur-slow: 900ms;
+  --dur-glow: 18s;
+  --stagger: 80ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* "Reduce motion": every duration becomes (almost) nothing. styles.css also switches animations off. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0.01ms;
+    --dur: 0.01ms;
+    --dur-slow: 0.01ms;
+  }
+}
+
+/* ---------------------------------------------------------------- Dark theme (the default) */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0b0c0e;
+  --bg-glow: #1a2430;
+  --surface: #14171b;
+  --surface-2: #1a1e23;
+  --surface-3: #20252b;
+  --line: #2a2f36;
+  --line-control: #6b7480;
+  --text: #eceef1;
+  --text-muted: #a3acb8;
+  --text-faint: #8c96a3;
+  --accent: #8ab4f8;
+  --accent-ink: #0b0c0e;
+  --accent-soft: #1b2a3f;
+  --focus: #ffffff;
+
+  --bar-bg: #0e1013;
+  --bar-text: #eceef1;
+
+  --danger: #ff8a80;
+  --danger-bg: #2a1214;
+  --danger-line: #ff8a80;
+  --note-bg: #14232f;
+  --note-line: #8ab4f8;
+  --note-text: #d6e6fb;
+
+  /* The eight agents: fill colour, and the letter colour on that fill. */
+  --agent-walls: #e69f00;
+  --agent-doors: #56b4e9;
+  --agent-floors: #009e73;
+  --agent-lighting: #f0e442;
+  --agent-furniture: #9a98ff;
+  --agent-decor: #cc79a7;
+  --agent-style: #9aa4b0;
+  --agent-reviewer: #f4f5f7;
+  --agent-ink: #0b0c0e;
+  --agent-neutral: #6b7480;
+
+  /* The top-down plan of a room (the "Place" step). */
+  --plan-room-fill: #14171b;
+  --plan-room-line: #8c96a3;
+  --plan-locked-fill: #1d2b45;
+  --plan-locked-line: #8ab4f8;
+  --plan-unsure-fill: #33270f;
+  --plan-unsure-line: #e8b45a;
+  --plan-ink: #eceef1;
+
+  /* The 3D view. Hex only: Three.js reads these. */
+  --three-background: #0f1317;
+  --three-slab: #20262d;
+  --three-slab-edge: #3a434d;
+  --three-room: #6f7b88;
+  --three-clash: #ff4d4d;
+  --three-door-edge: #f4e3c8;
+  --three-window-edge: #ffffff;
+  --three-locked-edge: #ffffff;
+  --three-sky: #dfe9f5;
+  --three-ground: #3b342c;
+  --three-neutral: #8a929c;
+}
+
+/* ---------------------------------------------------------------- Light theme (a toggle) */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f5f4f0;
+  --bg-glow: #e4ebf3;
+  --surface: #ffffff;
+  --surface-2: #f0efea;
+  --surface-3: #e7e5de;
+  --line: #d9d6cf;
+  --line-control: #6a727c;
+  --text: #16181c;
+  --text-muted: #4a525c;
+  --text-faint: #5c6670;
+  --accent: #1f5fa8;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2ecf8;
+  --focus: #0b3d91;
+
+  --bar-bg: #ffffff;
+  --bar-text: #16181c;
+
+  --danger: #b3261e;
+  --danger-bg: #fde8e8;
+  --danger-line: #b3261e;
+  --note-bg: #e3edf7;
+  --note-line: #0b3d91;
+  --note-text: #0b2a4a;
+
+  --agent-walls: #b35900;
+  --agent-doors: #0b6fa4;
+  --agent-floors: #00704f;
+  --agent-lighting: #6b6200;
+  --agent-furniture: #4b46c8;
+  --agent-decor: #a8467f;
+  --agent-style: #5d6773;
+  --agent-reviewer: #16181c;
+  --agent-ink: #ffffff;
+  --agent-neutral: #6a727c;
+
+  --plan-room-fill: #ffffff;
+  --plan-room-line: #222222;
+  --plan-locked-fill: #dce8fa;
+  --plan-locked-line: #0b3d91;
+  --plan-unsure-fill: #fdebd0;
+  --plan-unsure-line: #8a4b00;
+  --plan-ink: #111111;
+
+  --three-background: #e6ebf0;
+  --three-slab: #f4f1e8;
+  --three-slab-edge: #b9b4a6;
+  --three-room: #7d8790;
+  --three-clash: #d4001a;
+  --three-door-edge: #5a3a1a;
+  --three-window-edge: #ffffff;
+  --three-locked-edge: #16181c;
+  --three-sky: #ffffff;
+  --three-ground: #c9c2b4;
+  --three-neutral: #8a929c;
+}

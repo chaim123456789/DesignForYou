@@ -13,7 +13,12 @@
 - The order and each agent's "depends on" list are written in one file only: `src/agents/registry.json`. No other file keeps its own copy of the order.
 - Each agent has its own folder under `src/agents/` with an `agent.js` and a small `agent.json` config file that switches it on or off. The Reviewer cannot be switched off.
 - Each agent has its own knowledge folder under `src/knowledge/`. Knowledge files are plain data, written in our own words from open sources only, with a provenance block (see `src/knowledge/README.md`).
-- Agents only return proposals. Every change goes through the gatekeeper, and only after the user answers. No two agents edit the same file or item.
+- Agents only return proposals. Every change goes through the gatekeeper, and only after the user answers, or after the user's own agent settings confirm for them (see "Page look"). No two agents edit the same file or item.
+
+## Page look
+- Every colour, font and spacing of the page is written in `docs/theme.css` and nowhere else (dark by default, light by toggle). `docs/styles.css` uses those names. The 3D view reads its colours from the theme. No outside font and no outside image.
+- The page keeps only two things in the browser, in `docs/workspace/store.js` and nowhere else: the light or dark choice, and the agent settings. Nothing the user enters about a project is saved.
+- Agent settings decide only how a proposal is confirmed (asked, or confirmed for the user and marked `auto-confirmed`). The gatekeeper, the owners and Locked are not changed by them. The default is "Always ask me".
 
 ## AI keys and secrets
 - Live AI mode comes later. A paid AI model is reachable only through one gate with a spending cap that defaults to zero (off), and only for understanding photos and for taste judgement.

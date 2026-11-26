@@ -192,11 +192,12 @@ export function teamOwnerForKind(kind) {
 // Optional fields for the design team: basis, source, approvedBy.
 //   basis      : [{ itemId, version }] the earlier items this one was worked out from
 //   source     : 'rule' or 'ai' (where the value came from)
-//   approvedBy : 'user' or 'scripted answer' (who said yes to the change)
+//   approvedBy : 'user', 'scripted answer' or 'auto-confirmed' (who said yes to the change). 'auto-confirmed' means the user chose, in the
+//                agent settings, that this kind of proposal is confirmed for them. It is only a label: the gatekeeper's checks do not change.
 // They are only stored when given, so old items and versions look exactly as before.
 // ---------------------------------------------------------------------------
 export const SOURCES = Object.freeze(['rule', 'ai']);
-export const APPROVERS = Object.freeze(['user', 'scripted answer']);
+export const APPROVERS = Object.freeze(['user', 'scripted answer', 'auto-confirmed']);
 
 export function checkBasis(project, basis, ownItemId) {
   if (!Array.isArray(basis)) throw new Error('A basis must be a list of { itemId, version }.');
