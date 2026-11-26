@@ -11,6 +11,10 @@
 
 export function setUpTeamScreen(tools) {
   const { el, attempt, guarded, announce, team, onFinished, onFailed } = tools;
+  // Optional (look-and-feel): autoConfirm = { settings(): the agent settings, decide(session, step, proposal, settings) } confirms some
+  // proposals for the visitor, through the very same run.answer. hooks = { stepShown, answered, stopped } tell the Agents page.
+  const { autoConfirm, hooks } = tools;
+  const hook = (name, ...args) => { if (hooks && typeof hooks[name] === 'function') attempt(`Agents page: ${name}`, () => hooks[name](...args)); };
 
   const refs = {};
   for (const id of ['team-run', 'team-progress', 'heading-team-agent', 'team-agents', 'team-agent-note', 'team-ai-note', 'team-proposals', 'team-nothing',
@@ -37,6 +41,7 @@ export function setUpTeamScreen(tools) {
   let step = null; // the agent now being asked: { agent, kind, proposals, staleItemIds }
   let proposalViews = new Map(); // proposal id -> { item, group, answerLine }
   let busy = false;
+  let autoInStep = 0; // how many proposals of the agent now asked were confirmed by the visitor's settings
 
   const itemName = (itemId) => {
     const item = session.project.items.find((i) => i.id === itemId);
@@ -58,18 +63,22 @@ export function setUpTeamScreen(tools) {
   // ---- One proposal -----------------------------------------------------------------------------
 
   function finishedLine(proposal, outcome) {
-    return outcome.keptAsIs
-      ? 'Your answer: Skip. The item is kept as it is.'
-      : `Your answer: ${outcome.label}. ${outcome.applied ? `It was applied (version ${outcome.version}).` : `It was not applied: ${outcome.reason || 'the change was refused'}.`}`;
+    if (outcome.keptAsIs) return 'Your answer: Skip. The item is kept as it is.';
+    const result = outcome.applied ? `It was applied (version ${outcome.version}).` : `It was not applied: ${outcome.reason || 'the change was refused'}.`;
+    return outcome.automatic
+      ? `Confirmed automatically: ${outcome.label}. ${result} ${outcome.automatic}`
+      : `Your answer: ${outcome.label}. ${result}`;
   }
 
-  function answer(proposal, choice, value, label, view) {
+  // options.automatic: the sentence that says which setting confirmed it (then the answer is marked automatic). options.quiet: no
+  // announcement and no focus move (used while several automatic answers follow each other).
+  function answer(proposal, choice, value, label, view, options = {}) {
     if (busy) return;
     view.error.textContent = '';
     view.error.hidden = true;
     let result;
     try {
-      result = session.run.answer(proposal.id, choice, value);
+      result = session.run.answer(proposal.id, choice, value, options.automatic ? { automatic: options.automatic } : undefined);
     } catch (error) {
       // A custom value the agent's own checker refuses: say why, keep the proposal waiting.
       view.error.textContent = error && error.message ? error.message : String(error);
@@ -77,10 +86,14 @@ export function setUpTeamScreen(tools) {
       return;
     }
     view.group.hidden = true;
-    view.answerLine.textContent = finishedLine(proposal, { keptAsIs: result.keptAsIs === true, applied: result.applied, version: result.version, reason: result.reason, label });
+    if (view.why) view.why.hidden = true;
+    view.answerLine.textContent = finishedLine(proposal, { keptAsIs: result.keptAsIs === true, applied: result.applied, version: result.version, reason: result.reason, label, automatic: options.automatic });
     view.answerLine.hidden = false;
+    if (options.automatic) { view.item.setAttribute('data-auto', 'true'); autoInStep += 1; }
+    hook('answered', { agent: proposal.agent, itemName: itemName(proposal.itemId), label, choice, automatic: options.automatic, result, proposalId: proposal.id });
     const waiting = session.run.pending;
     if (waiting.length > 0) {
+      if (options.quiet) return;
       announce(`Answer saved. ${plural(waiting.length, 'proposal is', 'proposals are')} still waiting.`);
       const next = proposalViews.get(waiting[0].id);
       if (next) attempt('Moving the keyboard focus', () => next.firstButton.focus());
@@ -106,7 +119,8 @@ export function setUpTeamScreen(tools) {
     if (proposal.source === 'ai' && proposal.ai) li.append(make('p', '', `AI task ${proposal.ai.task}, cost $${proposal.ai.costUsd} (${proposal.ai.label}).`));
     if (proposal.aiNote) li.append(make('p', 'hint', proposal.aiNote));
 
-    const view = { item: li, error: make('p', 'field-error'), answerLine: make('p', 'team-answer'), group: make('div', ''), firstButton: null };
+    const view = { item: li, error: make('p', 'field-error'), answerLine: make('p', 'team-answer'), why: make('p', 'hint auto-note-ask'), group: make('div', ''), firstButton: null };
+    view.why.hidden = true;
     view.error.hidden = true;
     view.error.setAttribute('role', 'alert');
     view.answerLine.hidden = true;
@@ -163,7 +177,7 @@ export function setUpTeamScreen(tools) {
 
     view.group.append(...buttons, customBox);
     view.firstButton = buttons[0];
-    li.append(view.group, view.error, view.answerLine);
+    li.append(view.why, view.group, view.error, view.answerLine);
     proposalViews.set(proposal.id, view);
     return li;
   }
@@ -174,6 +188,7 @@ export function setUpTeamScreen(tools) {
     step = next;
     logStart = session.project.runLog.length;
     proposalViews = new Map();
+    autoInStep = 0;
     const order = session.registry.order;
     const number = order.indexOf(step.agent) + 1;
     refs['team-run'].hidden = false;
@@ -182,7 +197,7 @@ export function setUpTeamScreen(tools) {
     drawAgents(step.agent);
     refs['team-agent-note'].textContent = step.kind === 'recheck'
       ? `Something earlier changed, so ${step.agent} looks again at ${plural(step.staleItemIds.length, 'item', 'items')}. Nothing changes unless you agree.`
-      : `${step.agent} suggests changes. Nothing changes until you answer each one.`;
+      : `${step.agent} suggests changes. Nothing changes until it is confirmed: by you, or by your agent settings (see the Agent settings further down this page).`;
     const ai = session.project.runLog.filter((e) => e.agent === step.agent && e.event === 'note' && /^AI was not used/.test(e.reason));
     refs['team-ai-note'].textContent = ai.length > 0 ? 'AI was not used here. The suggestions are Rule-based.' : '';
     refs['team-ai-note'].hidden = ai.length === 0;
@@ -190,12 +205,42 @@ export function setUpTeamScreen(tools) {
     refs['team-nothing'].hidden = step.proposals.length > 0;
     refs['team-rechecked'].hidden = true;
     refs['team-continue'].hidden = true;
+    hook('stepShown', step, session);
+    const automatic = step.proposals.length > 0 ? confirmAutomatically(step) : 0;
     if (step.proposals.length === 0) {
       stepFinished();
-    } else {
-      announce(`${step.agent}, agent ${number} of ${order.length}. ${plural(step.proposals.length, 'proposal', 'proposals')} to answer.`);
+    } else if (session.run.pending.length > 0) {
+      const waiting = session.run.pending.length;
+      announce(`${step.agent}, agent ${number} of ${order.length}. ${plural(waiting, 'proposal', 'proposals')} to answer${automatic > 0 ? `, and ${plural(automatic, 'proposal was', 'proposals were')} confirmed automatically` : ''}.`);
     }
     attempt('Moving the keyboard focus', () => refs['heading-team-agent'].focus());
+  }
+
+  // Confirm, one after the other, the proposals the visitor's settings confirm. Each goes through run.answer, so the gatekeeper decides
+  // exactly as it does for a button press. A proposal that is not confirmed says why the visitor is asked. Returns how many were confirmed.
+  function confirmAutomatically(forStep) {
+    if (!autoConfirm) return 0;
+    let confirmed = 0;
+    for (const proposal of forStep.proposals) {
+      const view = proposalViews.get(proposal.id);
+      if (!view || session.run.pending.every((p) => p.id !== proposal.id)) continue;
+      let decision;
+      try {
+        decision = autoConfirm.decide(session, forStep, proposal, autoConfirm.settings());
+      } catch (error) {
+        decision = { auto: false, reason: `The automatic check could not run, so you are asked. ${error && error.message ? error.message : String(error)}` };
+      }
+      if (decision.auto) {
+        const option = proposal.options.find((o) => o.id === decision.optionId);
+        answer(proposal, decision.optionId, undefined, `Confirm: ${option.label}`, view, { automatic: decision.reason, quiet: true });
+        if (!view.group.hidden) break; // the answer was refused: stop here, the visitor is asked
+        confirmed += 1;
+      } else if (decision.level && decision.level !== 'ask') {
+        view.why.textContent = decision.reason;
+        view.why.hidden = false;
+      }
+    }
+    return confirmed;
   }
 
   // What was re-checked after the answers, in plain words, from the run log.
@@ -217,7 +262,7 @@ export function setUpTeamScreen(tools) {
     refs['team-rechecked'].hidden = text === '';
     refs['team-continue'].textContent = last ? 'Show the result' : 'Continue to the next agent';
     refs['team-continue'].hidden = false;
-    announce(`${step.agent} is finished. ${last ? 'Press Show the result.' : 'Press Continue to the next agent.'}`);
+    announce(`${step.agent} is finished. ${autoInStep > 0 ? `${plural(autoInStep, 'proposal was', 'proposals were')} confirmed automatically by your settings. ` : ''}${last ? 'Press Show the result.' : 'Press Continue to the next agent.'}`);
     attempt('Moving the keyboard focus', () => refs['team-continue'].focus());
   }
 
@@ -243,6 +288,7 @@ export function setUpTeamScreen(tools) {
   // ---- Start and stop ---------------------------------------------------------------------------
 
   function stop() {
+    hook('stopped');
     session = null;
     step = null;
     proposalViews = new Map();

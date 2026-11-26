@@ -24,6 +24,15 @@ Open the published page (the link is under "Publish the page" below). Nothing is
 
 **Result.** You see your home in 3D (turn, zoom, click a block, and use the slider for the history), a summary, your style profile with a mood board of your own pictures, and a section called "What the design team did with your input". It says how many objects you placed, which were Locked, and what Layout and Builder did not do (they only check and mark; they do not choose, move or fix anything). Besides the old clash types, the Reviewer now also reports furniture that overlaps furniture and objects that stick out of their room. It uses only the rectangles you entered. After a step-by-step run, the result also shows a panel called "The design team" with the eight agents in order, what each did, which were re-checked and why, and every suggestion with its tag and your answer, and every report line starts with Rule-based or AI. The result is labelled YOUR PROJECT and is a draft for professional review. The design team is a set of fixed rules, not AI. It does not look at your images or read your brief. Press "Start again" to clear everything and go back to the start.
 
+## The workspace (look-and-feel)
+
+The start screen is a home page. After it the page is a workspace that does not scroll as a whole: a top bar (project name, Show/Hide ribbon, Full screen for the 3D view, a light/dark switch), a left rail (Project, Agents, Materials, Settings), the 3D view in the centre and a slim strip on the right that shows what each agent is doing. On a phone the rail becomes a row of tabs.
+
+- **Agents page.** One card per agent, each with its own colour, letter and shape (colour is never the only signal). The agent that is asking you has its proposals, with Confirm, Skip and Custom, inside its card.
+- **Agent settings** (on the Agents page). "Always ask me", "Recommended" or "Do it and tell me", for all agents and for each agent, plus the switch "Doors and windows move with their wall". They only change who confirms a proposal. A proposal confirmed by a setting is marked "automatic" in the version record and in the log, and a Locked item is never confirmed automatically. Your settings and your colour mode are kept in this browser only. Nothing else is stored.
+- **3D view.** Layer buttons (Structure, Openings, Lighting, Furniture, Decor, Style). Lights, switches, sockets and rugs are off at the start. Blocks take the colour of the agent that owns them; a Locked item has a dark outline and its label says "(Locked)". Furniture is drawn as rounded placeholders (a sofa with back and arms, a round table, a bed with a headboard).
+- **One theme file.** All colours, fonts and spacing are in `docs/theme.css`. Change values there to restyle everything, in light and dark mode.
+
 ## Requirements
 
 - **The website needs no Node.** The published page runs in an ordinary browser.

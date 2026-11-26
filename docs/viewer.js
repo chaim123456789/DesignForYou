@@ -9,10 +9,11 @@
 // is set up in its own protected step (see attempt below). If one step fails, a
 // red message with the error text appears at the top of the page and the other
 // steps still run.
-const PAGE_VERSION = 'build-team-4';
+const PAGE_VERSION = 'build-look-1';
 // The files this page loads carry the version in their address, so a browser
 // cannot mix an old copy of one file with a new copy of another.
 const SCENE_DATA_FILE = `./scene-data.js?v=${PAGE_VERSION}`;
+const AGENT_INFO_FILE = `./agent-info.js?v=${PAGE_VERSION}`;
 
 // Filled in by start(). These come from scene-data.js.
 let buildScene;
@@ -24,18 +25,47 @@ let viewBounds;
 let fitCamera;
 let floorLabelText;
 let shapeParts;
+let layerOf;
+let filterByLayers;
+let LAYERS;
+let DEFAULT_LAYERS;
+let agentOfOwner;
 
-const COLOURS = {
-  locked: 0x0072b2,   // blue
-  unsure: 0xc55a00,   // darker orange (at least 3 to 1 on white and on the floor slab)
-  clash: 0xcc0000,    // red outline
-  room: 0x7d8790,     // neutral grey for the wall outlines
-  slab: 0xf4f1e8,     // pale floor slab
-  slabEdge: 0xb9b4a6,
-  doorEdge: 0x5a3a1a, // dark brown edge so doors look different from furniture
-  windowEdge: 0xffffff,
-  background: 0xdde3e9,
+// Every colour of the 3D view comes from docs/theme.css (the --scene-* and --agent-* names), so the look is restyled in one place and
+// follows the dark and light mode. readTheme() reads them; refreshTheme() reads them again after a mode change.
+// A name the theme does not give is left out, and the 3D view then uses the plain default colour of Three.js.
+const SCENE_NAMES = {
+  background: '--scene-background', slab: '--scene-slab', slabEdge: '--scene-slab-edge', room: '--scene-wall', clash: '--scene-clash',
+  lockedEdge: '--scene-locked-edge', doorEdge: '--scene-door-edge', windowEdge: '--scene-window-edge',
+  lightSky: '--scene-light-sky', lightGround: '--scene-light-ground', lightSun: '--scene-light-sun',
 };
+let COLOURS = {};
+let AGENT_COLOURS = {}; // agent key -> colour text
+
+function readTheme() {
+  const read = (name) => {
+    try {
+      const style = globalThis.getComputedStyle(document.body);
+      const value = String(style.getPropertyValue(name)).trim();
+      return /^#[0-9a-fA-F]{6}$/.test(value) ? value : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  COLOURS = {};
+  for (const [key, name] of Object.entries(SCENE_NAMES)) COLOURS[key] = read(name);
+  AGENT_COLOURS = {};
+  for (const agent of agentList) AGENT_COLOURS[agent.key] = read(agent.colourVar);
+}
+let agentList = [];
+
+// A Three.js colour from a theme colour. Without one it is the plain default colour of Three.js.
+const toColour = (THREE, value) => (value ? new THREE.Color(value) : new THREE.Color());
+// The colour of an object: its owner agent's colour; an owner that is not one of the eight gets the neutral wall colour.
+function ownerColour(owner) {
+  const agent = agentOfOwner ? agentOfOwner(owner) : undefined;
+  return agent ? AGENT_COLOURS[agent.key] : COLOURS.room;
+}
 const CLASH_OUTLINE = 0.1; // metres the red outline sticks out from a clashing box
 
 const SAMPLE_RUN_FILE = 'sample-run.json';
@@ -48,6 +78,7 @@ let userMovedCamera = false; // true once the visitor turns or zooms; the view t
 let shownFloor = 'all'; // 'all', or a floor's order number
 let hoveredItemId = null; // the block under the mouse, if any
 let showAllLabels = false; // the "Show all labels" checkbox
+let shownLayers = {}; // layer name -> shown or not; set from DEFAULT_LAYERS when the helpers load
 
 // ---- Problems and protected steps -----------------------------------------
 
@@ -215,11 +246,11 @@ function addBox(THREE, group, b) {
 
   if (b.type === 'floor-slab') {
     // A solid pale slab, so furniture and panels stand out against it.
-    const slab = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: COLOURS.slab }));
+    const slab = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: toColour(THREE, COLOURS.slab) }));
     slab.position.set(...centre);
     slab.userData = { boxKey: b.key, type: b.type };
     group.add(slab);
-    const rim = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: COLOURS.slabEdge }));
+    const rim = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: toColour(THREE, COLOURS.slabEdge) }));
     rim.position.set(...centre);
     group.add(rim);
     return;
@@ -227,7 +258,7 @@ function addBox(THREE, group, b) {
 
   if (b.type === 'room') {
     // Walls are thin outlines only: no filled faces, so nothing inside is hidden.
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: COLOURS.room }));
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: toColour(THREE, COLOURS.room) }));
     edges.position.set(...centre);
     edges.userData = { boxKey: b.key, type: b.type };
     group.add(edges);
@@ -239,13 +270,15 @@ function addBox(THREE, group, b) {
   const parts = attempt(`3D shape of ${b.label || 'an object'}`, () => shapeParts(b));
   if (Array.isArray(parts) && parts.length > 0) {
     addShapeParts(THREE, group, b, parts);
+    addLockedOutline(THREE, group, b, centre);
     addClashOutline(THREE, group, b, centre);
     return;
   }
 
   const isWindow = b.type === 'window';
+  // The block takes the colour of the agent that owns it. Locked items also get a dark outline (see addLockedOutline).
   const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-    color: COLOURS[b.colour],
+    color: toColour(THREE, ownerColour(b.owner)),
     transparent: isWindow,
     opacity: isWindow ? 0.6 : 1,
   }));
@@ -256,12 +289,26 @@ function addBox(THREE, group, b) {
   // Doors get a dark edge, windows a white edge, furniture and style tiles none.
   if (b.type === 'door' || isWindow) {
     const edgeColour = isWindow ? COLOURS.windowEdge : COLOURS.doorEdge;
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: edgeColour }));
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: toColour(THREE, edgeColour) }));
     edges.position.set(...centre);
     group.add(edges);
   }
 
+  addLockedOutline(THREE, group, b, centre);
   addClashOutline(THREE, group, b, centre);
+}
+
+// A Locked item is drawn with a dark outline around its overall box, so "Locked" is never shown by colour alone (its label also
+// says "Locked"). An Unsure item has no outline.
+function addLockedOutline(THREE, group, b, centre) {
+  if (b.status !== 'Locked') return;
+  const grow = 0.03;
+  const box = new THREE.BoxGeometry(b.width + grow, b.height + grow, b.depth + grow);
+  const outline = new THREE.LineSegments(new THREE.EdgesGeometry(box), new THREE.LineBasicMaterial({ color: toColour(THREE, COLOURS.lockedEdge) }));
+  box.dispose();
+  outline.position.set(...centre);
+  outline.userData = { outline: 'locked' };
+  group.add(outline);
 }
 
 // A slightly larger red box seen from the inside: a thick outline over the status colour.
@@ -271,20 +318,56 @@ function addClashOutline(THREE, group, b, centre) {
   const g = CLASH_OUTLINE * 2;
   const outline = new THREE.Mesh(
     new THREE.BoxGeometry(b.width + g, b.height + g, b.depth + g),
-    new THREE.MeshBasicMaterial({ color: COLOURS.clash, side: THREE.BackSide }),
+    new THREE.MeshBasicMaterial({ color: toColour(THREE, COLOURS.clash), side: THREE.BackSide }),
   );
   outline.position.set(...centre);
   group.add(outline);
 }
 
-// One mesh per part, all with the object's colour (Locked blue, Unsure orange), its key and its item id,
+// The rounded shapes (look-and-feel R6). A "round" part is a box with rounded edges and corners, made from a rounded rectangle pushed
+// out along the depth with a bevel (core Three.js, no extra files). A "cylinder" part is a round disc or post. Anything else is a plain box.
+const ROUND_RADIUS = 0.06; // metres. Thin parts get a smaller radius, so a 4 cm part is never rounded away.
+const ROUND_STEPS = 4;
+function roundedBoxGeometry(THREE, w, h, d) {
+  const r = Math.min(ROUND_RADIUS, (Math.min(w, h, d) - 0.004) / 2);
+  if (!(r > 0.003)) return new THREE.BoxGeometry(w, h, d);
+  const iw = w - 2 * r;
+  const ih = h - 2 * r;
+  const cr = Math.min(r * 0.6, iw / 2, ih / 2);
+  const shape = new THREE.Shape();
+  shape.moveTo(cr, 0);
+  shape.lineTo(iw - cr, 0);
+  shape.quadraticCurveTo(iw, 0, iw, cr);
+  shape.lineTo(iw, ih - cr);
+  shape.quadraticCurveTo(iw, ih, iw - cr, ih);
+  shape.lineTo(cr, ih);
+  shape.quadraticCurveTo(0, ih, 0, ih - cr);
+  shape.lineTo(0, cr);
+  shape.quadraticCurveTo(0, 0, cr, 0);
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: d - 2 * r, bevelEnabled: true, bevelThickness: r, bevelSize: r, bevelSegments: ROUND_STEPS, curveSegments: ROUND_STEPS,
+  });
+  geometry.center();
+  return geometry;
+}
+function partGeometry(THREE, part) {
+  if (part.shape === 'cylinder') {
+    const geometry = new THREE.CylinderGeometry(part.width / 2, part.width / 2, part.height, 32);
+    if (Math.abs(part.depth - part.width) > 1e-6) geometry.scale(1, 1, part.depth / part.width);
+    return geometry;
+  }
+  if (part.shape === 'round') return roundedBoxGeometry(THREE, part.width, part.height, part.depth);
+  return new THREE.BoxGeometry(part.width, part.height, part.depth);
+}
+
+// One mesh per part, all with the colour of the agent that owns the object, its key and its item id,
 // so clicking any part opens that object's panel. The bath's inner part is a lighter shade of the same
 // colour, and a window's glass is see-through. Doors and windows keep their dark and white edges.
 function addShapeParts(THREE, group, b, parts) {
   for (const part of parts) {
-    const geometry = new THREE.BoxGeometry(part.width, part.height, part.depth);
-    const colour = new THREE.Color(COLOURS[part.colour]);
-    if (part.lighter) colour.lerp(new THREE.Color(0xffffff), 0.55);
+    const geometry = partGeometry(THREE, part);
+    const colour = toColour(THREE, ownerColour(b.owner));
+    if (part.lighter) colour.lerp(toColour(THREE, COLOURS.lightSky), 0.55);
     const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
       color: colour,
       transparent: Boolean(part.seeThrough),
@@ -296,7 +379,7 @@ function addShapeParts(THREE, group, b, parts) {
     group.add(mesh);
     if ((b.type === 'door' || b.type === 'window') && !part.seeThrough) {
       const edgeColour = b.type === 'window' ? COLOURS.windowEdge : COLOURS.doorEdge;
-      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: edgeColour }));
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), new THREE.LineBasicMaterial({ color: toColour(THREE, edgeColour) }));
       edges.position.set(...partCentre);
       group.add(edges);
     }
@@ -321,16 +404,22 @@ function addLabels(boxes) {
   const area = el('scene-area');
   for (const old of view.labels) old.element.remove();
   view.labels = [];
-  const add = (b, text, className, y, extra) => {
+  const add = (b, text, className, y, extra, attributes = {}) => {
     const element = document.createElement('span');
     element.className = `scene-label ${className}`;
     element.textContent = text;
+    for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
     area.appendChild(element);
     view.labels.push({ element, point: [b.x + b.width / 2, y, b.z + b.depth / 2], ...extra });
   };
   for (const b of boxes) {
     if (b.itemId === undefined || b.noLabel) continue; // one label per item, also when it is drawn as several small marks
-    add(b, b.label, `${b.type}-label${b.clash ? ' clash-label' : ''}`, b.y + b.height, { itemId: b.itemId, clash: Boolean(b.clash) });
+    // The label starts with its agent's letter badge in the agent's colour, and says "(Locked)" for a Locked item (both from the stylesheet).
+    const agent = agentOfOwner ? agentOfOwner(b.owner) : undefined;
+    const attributes = {};
+    if (agent) { attributes['data-badge'] = agent.letter; attributes['data-agent'] = agent.key; }
+    if (b.status === 'Locked') attributes['data-locked'] = 'true';
+    add(b, b.label, `${b.type}-label${b.clash ? ' clash-label' : ''}`, b.y + b.height, { itemId: b.itemId, clash: Boolean(b.clash) }, attributes);
   }
   for (const b of boxes) {
     if (b.type === 'room') add(b, b.label, 'room-label', b.y + b.height, { always: true });
@@ -402,7 +491,7 @@ function resizeScene() {
 // Draw the blocks, then (as a separate protected step) their text labels. A failing label
 // step never stops the blocks, the clicking or the buttons.
 function drawScene(version) {
-  const boxes = filterByFloor(buildScene(sampleRun, version), shownFloor);
+  const boxes = filterByLayers(filterByFloor(buildScene(sampleRun, version), shownFloor), shownLayers);
   if (view.group) { disposeGroup(view.group); view.scene.remove(view.group); }
   view.group = new view.THREE.Group();
   for (const b of boxes) addBox(view.THREE, view.group, b);
@@ -414,6 +503,8 @@ function drawScene(version) {
 
 // A click or tap on the drawing: open the nearest item under the pointer, or close the panel
 // when the click lands on empty space or on a room.
+const SKY_LIGHT = 1.9; // strength of the soft all-round light
+const SUN_LIGHT = 1.1; // strength of the gentle sun
 const SMALL_MARKS = Object.freeze(['light-marker', 'switch', 'socket', 'rug']);
 function itemUnder(event) {
   const { THREE, renderer, camera, group } = view;
@@ -450,6 +541,7 @@ function setHovered(itemId) {
 
 // Open the details of an item. With the 3D view running, also turn the camera toward it.
 function focusItem(itemId) {
+  showItsLayer(itemId);
   showDetails(itemId);
   const { THREE, camera, controls } = view;
   const box = view.boxes.find((b) => b.itemId === itemId);
@@ -462,6 +554,18 @@ function focusItem(itemId) {
   controls.target.copy(centre);
   controls.update();
   drawFrame();
+}
+
+// An item named in the clash list may sit on a layer that is switched off (lights and rugs are off at the start). Turn that layer on,
+// so the item is there to look at.
+function showItsLayer(itemId) {
+  if (!view.THREE || !view.group) return;
+  if (view.boxes.some((b) => b.itemId === itemId)) return;
+  const box = filterByFloor(buildScene(sampleRun, currentVersion), shownFloor).find((b) => b.itemId === itemId);
+  if (!box) return;
+  const layer = layerOf(box);
+  if (shownLayers[layer]) return;
+  setLayer(layer, true);
 }
 
 // Clicks and taps. Pressing and moving is turning the view, so it does not count as a click.
@@ -516,11 +620,12 @@ async function startScene() {
   const built = attempt('Building the 3D scene', () => {
     view.THREE = THREE;
     view.scene = new THREE.Scene();
-    view.scene.background = new THREE.Color(COLOURS.background);
-    view.scene.add(new THREE.AmbientLight(0xffffff, 1.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.4);
-    sun.position.set(-4, 12, 10);
-    view.scene.add(sun);
+    view.scene.background = toColour(THREE, COLOURS.background);
+    // Soft light: a sky-and-ground light from all sides, and one gentle sun from the front left (no hard shadows).
+    view.sky = new THREE.HemisphereLight(toColour(THREE, COLOURS.lightSky), toColour(THREE, COLOURS.lightGround), SKY_LIGHT);
+    view.sun = new THREE.DirectionalLight(toColour(THREE, COLOURS.lightSun), SUN_LIGHT);
+    view.sun.position.set(-4, 12, 10);
+    view.scene.add(view.sky, view.sun);
     view.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
     area.replaceChildren(view.renderer.domElement);
   });
@@ -577,6 +682,47 @@ function setUpLabelsCheckbox() {
     showAllLabels = Boolean(box.checked);
     refreshLabels();
   }));
+}
+
+// ---- The layers (look-and-feel R6) ----------------------------------------------------------------------------------------------
+
+function markLayerButtons() {
+  for (const name of LAYERS) {
+    const button = el(`layer-${name}`);
+    button.setAttribute('aria-pressed', String(Boolean(shownLayers[name])));
+  }
+}
+
+function setLayer(name, on) {
+  shownLayers = { ...shownLayers, [name]: on };
+  markLayerButtons();
+  if (!view.THREE || !view.group) return;
+  const boxes = drawScene(currentVersion);
+  if (openItemId !== null && !boxes.some((b) => b.itemId === openItemId)) closePanel();
+  drawFrame();
+}
+
+function setUpLayerButtons() {
+  shownLayers = { ...DEFAULT_LAYERS };
+  markLayerButtons();
+  for (const name of LAYERS) {
+    el(`layer-${name}`).addEventListener('click', guarded(`Layer button "${name}"`, () => setLayer(name, !shownLayers[name])));
+  }
+}
+
+// After a change of colour mode: read the theme again and draw with the new colours.
+function refreshTheme() {
+  attempt('Reading the theme colours', readTheme);
+  if (!view.THREE || !view.scene) return;
+  attempt('Redrawing with the new theme', () => {
+    const { THREE } = view;
+    view.scene.background = toColour(THREE, COLOURS.background);
+    view.sky.color = toColour(THREE, COLOURS.lightSky);
+    view.sky.groundColor = toColour(THREE, COLOURS.lightGround);
+    view.sun.color = toColour(THREE, COLOURS.lightSun);
+    if (view.group) drawScene(currentVersion);
+    drawFrame();
+  });
 }
 
 function setUpResetButton() {
@@ -721,6 +867,7 @@ async function showRunData(run, { kind } = {}) {
     attempt('Floor buttons', setUpFloorButtons);
     attempt('Reset view button', setUpResetButton);
     attempt('Show all labels checkbox', setUpLabelsCheckbox);
+    attempt('Layer buttons', setUpLayerButtons);
   } else {
     attempt('Version slider', () => configureSlider(last));
     attempt('Floor buttons', () => markFloorButtons('all'));
@@ -754,12 +901,14 @@ async function showSample() {
   return showRunDataSafely(loadedSample, { kind: 'sample' });
 }
 
-globalThis.designForYouViewer = { showRunData: showRunDataSafely, showSample };
+globalThis.designForYouViewer = { showRunData: showRunDataSafely, showSample, refreshTheme, getSampleRun: () => loadedSample };
 
 async function start() {
   setScriptStatus('started.');
   helpersLoading = attempt('Loading scene-data.js', async () => {
-    ({ buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera, floorLabelText, shapeParts } = await import(SCENE_DATA_FILE));
+    ({ buildScene, describeItem, separateLabels, floorLabels, filterByFloor, viewBounds, fitCamera, floorLabelText, shapeParts, layerOf, filterByLayers, LAYERS, DEFAULT_LAYERS } = await import(SCENE_DATA_FILE));
+    ({ AGENTS: agentList, agentOfOwner } = await import(AGENT_INFO_FILE));
+    readTheme();
   });
   const helperLoaded = await helpersLoading;
   if (helperLoaded === FAILED) return;

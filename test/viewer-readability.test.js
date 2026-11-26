@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { readStyles } from '../test-helpers/fake-page.js';
 import { buildScene, shortLabel, separateLabels } from '../docs/scene-data.js';
 
 const read = (name) => readFileSync(new URL(`../docs/${name}`, import.meta.url), 'utf8');
@@ -218,11 +219,11 @@ test('Task 7b step 6: the page has a "Reset view" button, wired to the starting 
   const js = read('viewer.js');
   assert.match(js, /el\('reset-view'\)\.addEventListener\('click', guarded\('Reset view button', resetView\)\)/);
   assert.match(js, /function resetView\(\)[\s\S]*frameHome\(view\.boxes\)/);
-  assert.match(read('styles.css'), /#scene-area \{[^}]*height: 70vh;/);
+  assert.match(readStyles(), /#scene-area \{[^}]*height: 70vh;/);
 });
 
 test('Task 7b step 7: the page has margins, a 1400 px maximum width and readable fonts, and the two label bars stay outside the scrolling area', () => {
-  const css = read('styles.css');
+  const css = readStyles();
   const rule = (selector) => {
     const m = css.match(new RegExp(`(?:^|\\n)${selector.replace(/[#.]/g, "\\$&")} \\{([^}]*)\\}`));
     assert.ok(m, `no css rule for ${selector}`);

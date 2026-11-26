@@ -82,7 +82,8 @@ test('D5 / D6: the sample run file (now the design-team sample) has the team par
   const run = JSON.parse(readFileSync(new URL('../docs/sample-run.json', import.meta.url), 'utf8'));
   const all = run.snapshots.map((s) => buildScene(run, s.version));
   // The same fingerprint the place-items Task 7 test checks (D6 value for the design-team sample).
-  assert.equal(createHash('sha256').update(JSON.stringify(all)).digest('hex'), 'f1e6e3906fedd2dcc2fa9e9a15898b77292ee99c8c0ed9a8c3b6aa768a62ebaf');
+  // look-and-feel: boxes now also carry their owner, so the fingerprint is taken without that one field (see place-shapes.test.js).
+  assert.equal(createHash('sha256').update(JSON.stringify(all, (key, value) => (key === 'owner' ? undefined : value))).digest('hex'), 'f1e6e3906fedd2dcc2fa9e9a15898b77292ee99c8c0ed9a8c3b6aa768a62ebaf');
   assert.deepEqual(run.team.agents.map((a) => a.name), ORDER);
   assert.ok(run.snapshots[run.versions.length].items.some((i) => i.kind === 'light' && i.marks.length > 0));
   assert.equal(run.sample, true);

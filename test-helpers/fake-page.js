@@ -7,6 +7,29 @@ import { readFileSync } from 'node:fs';
 const docs = new URL('../docs/', import.meta.url);
 export const readDoc = (name) => readFileSync(new URL(name, docs), 'utf8');
 
+// ---- The theme (look-and-feel). All colours, fonts and spacing live in docs/theme.css; styles.css only says var(--name). ----
+// themeValues(mode) returns every name of the theme as written for the mode ('light' is :root, 'dark' adds the body[data-theme="dark"] block).
+// readStyles(mode) returns styles.css with every var(--name) replaced by its value, so a test can read the real colours and sizes.
+function parseBlock(text) {
+  const values = {};
+  for (const m of text.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) values[m[1]] = m[2].trim();
+  return values;
+}
+export function themeValues(mode = 'light') {
+  const text = readDoc('theme.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  const root = /:root\s*\{([^}]*)\}/.exec(text)[1];
+  const dark = /body\[data-theme="dark"\]\s*\{([^}]*)\}/.exec(text)[1];
+  return mode === 'dark' ? { ...parseBlock(root), ...parseBlock(dark) } : parseBlock(root);
+}
+export function resolveVars(text, values) {
+  let out = text;
+  for (let i = 0; i < 6 && /var\(/.test(out); i += 1) {
+    out = out.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*))?\)/g, (all, name, fallback) => (name in values ? values[name] : fallback !== undefined ? fallback.trim() : all));
+  }
+  return out;
+}
+export const readStyles = (mode = 'light') => resolveVars(readDoc('styles.css'), themeValues(mode));
+
 export class FakeElement {
   constructor(page, tag, attributes = {}) {
     this.page = page;
@@ -183,7 +206,7 @@ export function createFakePage({ sampleRunText = readDoc('sample-run.json') } = 
   return page;
 }
 
-const KEYS = ['document', 'window', 'fetch', 'ResizeObserver', '__fakePage'];
+const KEYS = ['document', 'window', 'fetch', 'ResizeObserver', '__fakePage', 'getComputedStyle'];
 
 // Put the fake page where viewer.js looks for the browser, run, then take it away again.
 export function installFakePage(page) {
@@ -192,6 +215,15 @@ export function installFakePage(page) {
   Object.defineProperty(globalThis, 'window', { value: page.window, configurable: true, writable: true });
   Object.defineProperty(globalThis, 'fetch', { value: page.fetch, configurable: true, writable: true });
   Object.defineProperty(globalThis, '__fakePage', { value: page, configurable: true, writable: true });
+  // The 3D view reads its colours from the theme (getComputedStyle). The stand-in answers from docs/theme.css, in the mode the body says.
+  Object.defineProperty(globalThis, 'getComputedStyle', {
+    configurable: true,
+    writable: true,
+    value: () => {
+      const values = themeValues(page.document.body.dataset.theme === 'dark' ? 'dark' : 'light');
+      return { getPropertyValue: (name) => values[name] || '' };
+    },
+  });
   // A real ResizeObserver reports once as soon as it starts watching.
   Object.defineProperty(globalThis, 'ResizeObserver', {
     configurable: true,

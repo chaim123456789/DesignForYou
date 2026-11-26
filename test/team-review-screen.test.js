@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
 import { registerHooks } from '../test-helpers/register-hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
 
 installImportHooks();
 // Test-only switch: when globalThis.__breakTeam is set, the page's team-run.js cannot load (as if the file were missing or broken).
@@ -17,7 +17,7 @@ registerHooks({
   },
 });
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 let caseNumber = 50000;
 const ORDER = ['Walls', 'Doors and windows', 'Floors and ceilings', 'Lighting and electrical', 'Furniture', 'Decor', 'Style', 'Reviewer'];
 
@@ -317,8 +317,10 @@ test('D4: Back from the team run ends it, keeps what was entered, and the run ca
     fill(page);
     stepButton(page).click();
     assert.equal(panel(page).hidden, false);
-    page.el('back-button').click();
-    page.el('next-button').click();
+    // look-and-feel: the run is answered on the Agents page, so "Project" in the left rail takes the visitor back to the Review screen.
+    assert.equal(page.el('screen-agents').hidden, false, 'the run is on the Agents page');
+    page.el('rail-project').click();
+    assert.equal(page.el('screen-review').hidden, false, 'Project goes back to the Review screen');
     assert.equal(panel(page).hidden, true, 'the unfinished run is gone');
     assert.equal(stepButton(page).disabled, false, 'and the button is on again');
     assert.match(page.el('review-list').textContent, /Project name: My home/);
@@ -333,7 +335,7 @@ test('D4: if the design team code cannot load, the red message names the step, t
     await withPage(async (page) => {
       assert.equal(page.el('intake-error-message').hidden, false, 'the red message is shown');
       assert.match(page.el('intake-error-message').textContent, /Step "Design team code" failed/);
-      assert.match(page.el('intake-script-status').textContent, /Page script build-team-4 \(screens\): finished setting up\./);
+      assert.match(page.el('intake-script-status').textContent, /Page script build-look-1 \(screens\): finished setting up\./);
       fill(page);
       assert.equal(stepButton(page), undefined, 'no step-by-step button without its code');
       assert.equal(page.el('run-design-team').disabled, false);

@@ -23,6 +23,27 @@ const KIND_WORDS = {
 // a switch or a socket is a small block on its wall at its height, a rug is a thin mat on the floor. Sizes in metres.
 const MARK = Object.freeze({ lightSize: 0.3, lightThickness: 0.05, pointSize: 0.08, rugThickness: 0.02, defaultHeight: 0.45 });
 
+// ---- The layers of the 3D view (look-and-feel R6). Pure: a box belongs to exactly one layer. ----
+// Structure: floor slabs and room walls. Openings: doors and windows. Lighting: lights, switches and sockets. Furniture: furniture.
+// Decor: rugs. Style: the flat style patches. Lights, switches, sockets and rugs are small marks; their layers start switched off.
+export const LAYERS = Object.freeze(['structure', 'openings', 'lighting', 'furniture', 'decor', 'style']);
+export const DEFAULT_LAYERS = Object.freeze({ structure: true, openings: true, lighting: false, furniture: true, decor: false, style: true });
+const LAYER_OF_TYPE = Object.freeze({
+  'floor-slab': 'structure', room: 'structure',
+  door: 'openings', window: 'openings',
+  'light-marker': 'lighting', switch: 'lighting', socket: 'lighting',
+  furniture: 'furniture',
+  rug: 'decor',
+  'style-marker': 'style',
+});
+export function layerOf(box) {
+  return Object.hasOwn(LAYER_OF_TYPE, box.type) ? LAYER_OF_TYPE[box.type] : 'structure';
+}
+// Keep only the boxes whose layer is shown. layers: { structure: true, ... }. A layer that is not named is shown.
+export function filterByLayers(boxes, layers) {
+  return boxes.filter((b) => layers[layerOf(b)] !== false);
+}
+
 const MARKER_GAP = 0.1;
 const PANEL_THICKNESS = 0.1; // metres. Doors and windows are drawn as thin panels this thick.
 const SLAB_THICKNESS = 0.1; // metres. Each room's floor slab sits just under its floor level.
@@ -178,14 +199,18 @@ function furnitureLocalParts(type, W, D) {
       ];
     }
     case 'table': {
-      const leg = Math.max(MIN_PART, 0.06 * small);
+      // A round table: a round top, one central post and a round foot, all centred in the footprint (diameter = the shorter side).
+      const d = Math.min(W, D);
+      const ox = (W - d) / 2;
+      const oz = (D - d) / 2;
       const under = H.top - H.topThickness;
+      const post = Math.max(MIN_PART, 0.14 * d);
+      const foot = Math.max(post, 0.55 * d);
+      const footHeight = Math.min(0.04, under / 2);
       return [
-        ['top', 0, 0, W, D, under, H.top],
-        ['leg', 0, 0, leg, leg, 0, under],
-        ['leg', W - leg, 0, leg, leg, 0, under],
-        ['leg', 0, D - leg, leg, leg, 0, under],
-        ['leg', W - leg, D - leg, leg, leg, 0, under],
+        ['top', ox, oz, d, d, under, H.top],
+        ['post', ox + (d - post) / 2, oz + (d - post) / 2, post, post, footHeight, under],
+        ['foot', ox + (d - foot) / 2, oz + (d - foot) / 2, foot, foot, 0, footHeight],
       ];
     }
     case 'wardrobe':
@@ -222,6 +247,15 @@ function furnitureLocalParts(type, W, D) {
     default:
       return [];
   }
+}
+
+// The look of each part (look-and-feel R6): "round" is a box with rounded edges, "cylinder" is a round disc or post, "box" is a plain box.
+// Furniture is rounded, so it reads as a soft placeholder and not as a block. Thin or technical parts stay plain.
+const PLAIN_ROLES = Object.freeze(['leg', 'doorline']);
+const ROUND_TABLE_ROLES = Object.freeze(['top', 'post', 'foot']);
+export function partShape(furnitureType, role) {
+  if (furnitureType === 'table' && ROUND_TABLE_ROLES.includes(role)) return 'cylinder';
+  return PLAIN_ROLES.includes(role) ? 'box' : 'round';
 }
 
 // A door or window: a frame around the panel the wall code already works out.
@@ -277,7 +311,7 @@ export function shapeParts(box) {
         x: Math.min(Math.max(lx, 0), W - pw), z: Math.min(Math.max(lz, 0), D - pd), w: pw, d: pd,
       };
       const t = turnRect(turn, box, local);
-      return { role, x: t.x, z: t.z, w: t.w, d: t.d, y0, y1 };
+      return { role, x: t.x, z: t.z, w: t.w, d: t.d, y0, y1, shape: partShape(box.furnitureType, role) };
     });
   } else {
     return [];
@@ -291,8 +325,10 @@ export function shapeParts(box) {
       x: round(box.x + r.x), y: round(box.y + r.y0), z: round(box.z + r.z),
       width: round(r.w), height: round(r.y1 - r.y0), depth: round(r.d),
       colour: box.colour,
+      shape: r.shape || 'box',
       clash: box.clash,
     };
+    if (box.owner !== undefined) part.owner = box.owner;
     if (box.itemId !== undefined) part.itemId = box.itemId;
     if (box.status !== undefined) part.status = box.status;
     if (r.role === 'glass') part.seeThrough = true;
@@ -432,6 +468,7 @@ export function buildScene(sampleRun, version) {
       label: shortLabel(item),
       status: item.status,
       colour: colourFor(item.status),
+      owner: item.owner,
       clash: clashed.has(item.id),
     };
 

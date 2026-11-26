@@ -6,7 +6,7 @@
 // of choices), real screen-reader behaviour. Those are "pending owner check".
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
 import { LIMITS } from '../docs/intake/limits.js';
 import * as stateApi from '../docs/intake/state.js';
 import * as taste from '../docs/intake/taste.js';
@@ -311,7 +311,7 @@ test('Task 9: no fetch, storage, cookie, web address or page-code insertion in t
 });
 
 test('Task 9: the stylesheet gives the choices and the brief box room: choices at least 44 px high, no fixed pixel widths', () => {
-  const css = readDoc('styles.css');
+  const css = readStyles();
   const part = css.slice(css.indexOf('/* ---- Brief and taste screens'));
   assert.match(part, /\.choice-label \{[^}]*min-height: 2\.75rem;/);
   assert.match(part, /\.brief-input \{[^}]*min-height: 11rem;/);

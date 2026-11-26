@@ -10,8 +10,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, statSync } from 'node:fs';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
-import { buildScene, shapeParts } from '../docs/scene-data.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles, themeValues } from '../test-helpers/fake-page.js';
+import { buildScene as buildAllScene, shapeParts, filterByLayers, DEFAULT_LAYERS } from '../docs/scene-data.js';
+// look-and-feel: lights and rugs are on layers that start switched off, so the page draws only the boxes of the default layers.
+const buildScene = (run, version) => filterByLayers(buildAllScene(run, version), DEFAULT_LAYERS);
+const AGENT_KEYS = ['walls', 'doors', 'floors', 'lighting', 'furniture', 'decor', 'style', 'reviewer'];
 import { FIXED_SENTENCE } from '../docs/intake/report.js';
 import * as stateApi from '../docs/intake/state.js';
 import { runDesignTeam } from '../docs/intake/build-brain.js';
@@ -20,7 +23,7 @@ import { makeSummaryHtml } from '../docs/engine/summary/make-summary.js';
 installImportHooks();
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 const sample = JSON.parse(readDoc('sample-run.json'));
 const SAMPLE_LAST = sample.versions.length;
 let caseNumber = 40000;
@@ -200,8 +203,8 @@ function cssValue(rules, selector, property) {
 }
 
 // Named colours of the page (hex written in styles.css; the three status colours also in docs/viewer.js).
-const viewerSource = readDoc('viewer.js');
-const viewerColour = (name) => `#${new RegExp(`${name}:\\s*0x([0-9a-f]{6})`).exec(viewerSource)[1]}`;
+// look-and-feel: the 3D colours are now in docs/theme.css (the --scene-* names), not in viewer.js, and there are two modes.
+const sceneColour = (name, mode = 'light') => hexOf(themeValues(mode)[`--scene-${name}`]);
 
 // Each pair: where its colours come from in the stylesheet, and the smallest ratio it must reach.
 // 'text' needs 4.5 to 1. 'part' (a border, a focus ring, another part of a control) needs 3 to 1.
@@ -213,7 +216,7 @@ function pairsFor(text) {
   const panelBg = v('.panel', 'background');
   const entryBg = v('.entry', 'background');
   const sceneBg = v('#scene-area', 'background');
-  const labelFill = overlay('#ffffff', 0.92, sceneBg); // .scene-label is white at 92% over the 3D area
+  const labelFill = v('.scene-label', 'background'); // look-and-feel: the label colour is solid and comes from the theme
   const T = (name, fg, bg) => ({ name, kind: 'text', min: 4.5, fg, bg });
   const P = (name, fg, bg) => ({ name, kind: 'part', min: 3, fg, bg });
   const focus = v(':focus-visible', 'outline');
@@ -237,8 +240,8 @@ function pairsFor(text) {
     T('Text on normal buttons', v('.action-button', 'color'), v('.action-button', 'background')),
     T('Text on a pressed view button', v('#view-controls button[aria-pressed="true"]', 'color'), v('#view-controls button[aria-pressed="true"]', 'background')),
     // These two buttons set no text colour. The browser's own button text colour is black in a light page (assumed, not checked).
-    T('Text on view buttons (browser black assumed)', '#000000', v('#view-controls button', 'background')),
-    T('Text on clash list buttons (browser black assumed)', '#000000', v('#clash-list button', 'background')),
+    T('Text on view buttons', v('#view-controls button', 'color'), v('#view-controls button', 'background')),
+    T('Text on clash list buttons', v('#clash-list button', 'color'), v('#clash-list button', 'background')),
     T('Text in text boxes', v('.text-input', 'color'), v('.text-input', 'background')),
     T('Panel text', body('color'), panelBg),
     T('List row text', body('color'), entryBg),
@@ -267,6 +270,42 @@ function pairsFor(text) {
     P('Table border', v('.summary-view th', 'border'), panelBg),
     P('Border of a table row on a narrow screen', v('.summary-view tr', 'border'), panelBg),
     P('Table border at a heading', v('.summary-view th', 'border'), v('.summary-view th', 'background')),
+    // ---- look-and-feel: the workspace, the agents and the layer buttons (added)
+    T('Text on the workspace bar', body('color'), v('#workspace-bar', 'background')),
+    T('Brand name on the workspace bar', v('.brand', 'color'), v('#workspace-bar', 'background')),
+    T('Text on a bar button', v('.bar-button', 'color'), v('.bar-button', 'background')),
+    T('Text on a pressed bar button', v('.bar-button[aria-pressed="true"]', 'color'), v('.bar-button[aria-pressed="true"]', 'background')),
+    T('Text on a rail button', v('.rail-button', 'color'), v('#rail', 'background')),
+    T('Text on the current rail button', v('.rail-button', 'color'), v('.rail-button[aria-current="page"]', 'background')),
+    T('Text on a strip button', v('.strip-button', 'color'), v('.strip-button', 'background')),
+    T('Text on a layer button', v('#layer-controls button', 'color'), v('#layer-controls button', 'background')),
+    T('Text on a layer button that is on', v('#layer-controls button[aria-pressed="true"]', 'color'), v('#layer-controls button[aria-pressed="true"]', 'background')),
+    T('Text on a result tab', v('#result-tabs button', 'color'), v('#result-tabs button', 'background')),
+    T('Text on the chosen result tab', v('#result-tabs button[aria-selected="true"]', 'color'), v('#result-tabs button[aria-selected="true"]', 'background')),
+    T('Text in the home note', body('color'), v('.home-note', 'background')),
+    T('Text on an agent card', body('color'), v('.agent-card', 'background')),
+    T('Text on an answered proposal', body('color'), v('.agent-proposal-done', 'background')),
+    T('Text on a log line', body('color'), v('.log-list li', 'background')),
+    T('Text in an automatic note', v('.auto-note', 'color'), v('.auto-note', 'background')),
+    T('Text on the skip link', v('.skip-link', 'color'), v('.skip-link', 'background')),
+    T('Text on the page for the scene area label', v('.floor-label', 'color'), v('.floor-label', 'background')),
+    ...AGENT_KEYS.flatMap((key) => [
+      T(`Letter on the ${key} badge`, v(`[data-agent="${key}"]`, '--agent-ink'), v(`[data-agent="${key}"]`, '--agent-colour')),
+      P(`Edge of the ${key} badge`, v('.badge', 'border'), v(`[data-agent="${key}"]`, '--agent-colour')),
+    ]),
+    P('Border of a bar button', v('.bar-button', 'border'), v('#workspace-bar', 'background')),
+    P('Border of the current rail button', v('.rail-button[aria-current="page"]', 'border-color'), v('#rail', 'background')),
+    P('Border of a strip button', v('.strip-button', 'border'), v('#agent-strip', 'background') || pageBg),
+    P('Border of a layer button', v('#layer-controls button', 'border'), pageBg),
+    P('Border of a result tab', v('#result-tabs button', 'border'), pageBg),
+    P('Border of an agent card', v('.agent-card', 'border'), pageBg),
+    P('Border of a log line', v('.log-list li', 'border-left'), v('.log-list li', 'background')),
+    P('Border of an automatic log line', v('.log-list li[data-auto="true"]', 'border-left-color'), v('.log-list li', 'background')),
+    P('Border of the home note', v('.home-note', 'border-left'), v('.home-note', 'background')),
+    P('Border of a label in 3D', v('.scene-label', 'border'), v('.scene-label', 'background')),
+    P('Border of a clash label in 3D', v('.clash-label', 'border-color'), v('.scene-label', 'background')),
+    P('Keyboard focus ring on the workspace bar', focus, v('#workspace-bar', 'background')),
+    P('Keyboard focus ring on the rail', focus, v('#rail', 'background')),
     P('Border of a mood board picture', v('.mood-image', 'border'), panelBg),
     P('Border of the legend swatches', v('.swatch', 'border'), v('section', 'background')),
     P('Keyboard focus ring on the page', focus, pageBg),
@@ -279,58 +318,66 @@ function pairsFor(text) {
   ];
 }
 
-// The status colours: the page words say Locked and Unsure too, so colour is never the only sign. Their ratios are
-// still computed and printed. Known shortfalls (below 3 to 1) are listed here on purpose; the test fails if the list changes.
-function statusRows(text) {
+// The status marks: the page words say Locked and Unsure too, so colour is never the only sign. Their ratios are
+// still computed and printed. look-and-feel: Locked is now a dark outline (not blue) and Unsure has no outline, so there are two
+// marks left to check: the Locked outline and the clash red, against the legend background and the pale floor slab.
+function statusRows(text, mode) {
   const rules = cssRules(text);
   const white = hexOf(cssValue(rules, 'section', 'background'));
-  const slab = viewerColour('slab');
-  const colours = [['Locked blue', viewerColour('locked')], ['Unsure orange', viewerColour('unsure')], ['Clash red', viewerColour('clash')]];
+  const slab = sceneColour('slab', mode);
+  const colours = [['Locked outline', sceneColour('locked-edge', mode)], ['Clash red', sceneColour('clash', mode)]];
   const rows = [];
   for (const [name, hex] of colours) {
     rows.push({ name: `${name} on the legend background`, fg: hex, bg: white, min: 3 });
-    rows.push({ name: `${name} on the pale floor slab in 3D`, fg: hex, bg: slab, min: 3 });
+    rows.push({ name: `${name} on the floor slab in 3D`, fg: hex, bg: slab, min: 3 });
   }
   return rows;
 }
-const KNOWN_STATUS_SHORTFALLS = []; // the Unsure orange now reaches 3 to 1 (polish step 1), so no shortfall is left
+const KNOWN_STATUS_SHORTFALLS = []; // none
 
-function checkContrast(text) {
-  const rows = [...pairsFor(text), ...statusRows(text)].map((p) => { assert.ok(p.fg && p.bg, `missing colour for: ${p.name}`); return { ...p, ratio: ratio(p.fg, p.bg) }; });
+function checkContrast(text, mode = 'light') {
+  const rows = [...pairsFor(text), ...statusRows(text, mode)].map((p) => { assert.ok(p.fg && p.bg, `missing colour for: ${p.name}`); return { ...p, ratio: ratio(p.fg, p.bg) }; });
   return { rows, failures: rows.filter((r) => r.ratio < r.min) };
 }
 
-test('Task 12 accessibility: every text colour pair reaches 4.5 to 1 and every border and focus colour reaches 3 to 1 (numbers printed)', () => {
-  const { rows, failures } = checkContrast(css);
-  console.log('Contrast, computed from the colour values in docs/styles.css (needs: text 4.5, parts 3.0):');
-  for (const r of rows) console.log(`  ${r.ratio.toFixed(2).padStart(5)} to 1  (needs ${r.min})  ${r.fg} on ${r.bg}  ${r.name}${r.ratio < r.min ? '   <-- BELOW' : ''}`);
-  assert.ok(rows.length >= 55, 'the table is not empty');
-  assert.deepEqual(failures.map((f) => f.name), KNOWN_STATUS_SHORTFALLS,
-    'no pair is below its limit; anything below is a new problem');
-});
+for (const mode of ['light', 'dark']) {
+  test(`Task 12 accessibility (${mode} mode): every text colour pair reaches 4.5 to 1 and every border and focus colour reaches 3 to 1 (numbers printed)`, () => {
+    const { rows, failures } = checkContrast(readStyles(mode), mode);
+    console.log(`Contrast in ${mode} mode, computed from the colour values in docs/theme.css (needs: text 4.5, parts 3.0):`);
+    for (const r of rows) console.log(`  ${r.ratio.toFixed(2).padStart(5)} to 1  (needs ${r.min})  ${r.fg} on ${r.bg}  ${r.name}${r.ratio < r.min ? '   <-- BELOW' : ''}`);
+    assert.ok(rows.length >= 55, 'the table is not empty');
+    assert.deepEqual(failures.map((f) => f.name), KNOWN_STATUS_SHORTFALLS,
+      'no pair is below its limit; anything below is a new problem');
+  });
 
-test('Task 12 accessibility: every colour written in the stylesheet is in the contrast table, or is listed as a plain decoration', () => {
-  const { rows } = checkContrast(css);
-  const checked = new Set(rows.flatMap((r) => [r.fg, r.bg]));
-  // Lines and fills that identify nothing a person needs: the viewer's panel borders, a 3D area frame, the viewer's label
-  // border (on a label that also has text), and the thin line between stacked table cells on a narrow screen.
-  const DECORATION = ['#d5d5d0', '#b8bec4', '#8a9299', '#d0d3d6', '#e69f00'];
-  const written = new Set([...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/#[0-9a-fA-F]{3,6}\b/g)].map((m) => hexOf(m[0])));
-  const unchecked = [...written].filter((hex) => !checked.has(hex) && !DECORATION.map(hexOf).includes(hex));
-  assert.deepEqual(unchecked, [], 'a colour in the stylesheet has no contrast check');
-  // The three status colours of the stylesheet's swatches are the same as the viewer's.
-  for (const [cls, name] of [['.swatch-locked', 'locked'], ['.swatch-unsure', 'unsure'], ['.swatch-clash', 'clash']]) {
-    const value = cssValue(cssRules(css), cls, cls === '.swatch-clash' ? 'border' : 'background');
-    assert.equal(hexOf(value), viewerColour(name), `${cls} equals the viewer colour`);
-  }
-});
+  test(`Task 12 accessibility (${mode} mode): every colour written in the stylesheet is in the contrast table, or is listed as a plain decoration`, () => {
+    const text = readStyles(mode);
+    const { rows } = checkContrast(text, mode);
+    const checked = new Set(rows.flatMap((r) => [r.fg, r.bg]));
+    // Lines and fills that identify nothing a person needs: the soft panel borders (--line-soft), the thin line between stacked table cells on a
+    // narrow screen, the 3D area frame and the colour of the agent badge fallbacks. look-and-feel: the values come from docs/theme.css.
+    const theme = themeValues(mode);
+    // The plan's drawing colours (--plan-*) are checked, in both modes, in test/place-accessibility-privacy.test.js.
+    const CHECKED_ELSEWHERE = Object.entries(theme).filter(([name]) => name.startsWith('--plan-')).map(([, value]) => value);
+    const DECORATION = [theme['--line-soft'], theme['--surface-3'], theme['--scene-slab-edge'], ...CHECKED_ELSEWHERE];
+    const written = new Set([...text.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/#[0-9a-fA-F]{3,6}\b/g)].map((m) => hexOf(m[0])));
+    const unchecked = [...written].filter((hex) => !checked.has(hex) && !DECORATION.map(hexOf).includes(hex));
+    assert.deepEqual(unchecked, [], 'a colour in the stylesheet has no contrast check');
+    // The status marks of the stylesheet's swatches are the same as the 3D view's (both come from the theme).
+    for (const [cls, name, prop] of [['.swatch-locked', 'locked-edge', 'border'], ['.swatch-clash', 'clash', 'border']]) {
+      assert.equal(hexOf(cssValue(cssRules(text), cls, prop)), sceneColour(name, mode), `${cls} equals the 3D colour`);
+    }
+  });
+}
 
 test('Task 12 accessibility: the contrast check fails when a colour is made too light (planted change in a copy)', () => {
   assert.equal(checkContrast(css).failures.length, KNOWN_STATUS_SHORTFALLS.length);
-  const planted = css.replace('.hint { color: #444; }', '.hint { color: #aaa; }');
+  // look-and-feel: the colours are resolved from the theme, so the plant replaces the resolved colour of the hint text and of the focus ring.
+  const hint = themeValues('light')['--text-muted'];
+  const planted = css.replace(`.hint { color: ${hint}; }`, '.hint { color: #aaaaaa; }');
   assert.notEqual(planted, css, 'the plant changed the copy');
   assert.ok(checkContrast(planted).failures.some((f) => f.name === 'Hint text in a panel'));
-  const plantedFocus = css.replace('outline: 3px solid #0b3d91', 'outline: 3px solid #ccd');
+  const plantedFocus = css.replace(`outline: 3px solid ${themeValues('light')['--focus']}`, 'outline: 3px solid #ccccdd');
   assert.notEqual(plantedFocus, css);
   assert.ok(checkContrast(plantedFocus).failures.some((f) => f.name.startsWith('Keyboard focus ring')));
 });
@@ -353,7 +400,7 @@ test('Task 12 accessibility: the page has a language, a zoomable viewport tag, a
   assert.doesNotMatch(viewport[1], /user-scalable|maximum-scale|minimum-scale/, 'zooming is not blocked');
   assert.match(html, /<title>[^<]+<\/title>/);
   assert.equal((html.match(/<main\b/g) || []).length, 1);
-  assert.deepEqual(screenIds, ['start', 'setup', 'inspiration', 'overrides', 'brief', 'taste', 'items', 'place', 'review', 'result']);
+  assert.deepEqual(screenIds, ['start', 'setup', 'inspiration', 'overrides', 'brief', 'taste', 'items', 'place', 'review', 'result', 'agents', 'materials', 'settings']); // look-and-feel: three workspace pages added
   for (const id of screenIds) {
     const open = new RegExp(`<div id="screen-${id}" class="screen"( hidden)?>`).exec(html);
     assert.ok(open, `screen ${id} is a plain block`);
@@ -502,7 +549,10 @@ test('Task 12 accessibility: the tab order follows the order on screen (controls
     items: ['item-text', 'item-room', 'item-status-locked', 'item-status-unsure', 'item-tag', 'add-item'],
     place: ['place-room', 'place-type', 'place-name', 'place-status-locked', 'place-status-unsure', 'place-x', 'place-y', 'place-width', 'place-depth', 'add-placed', 'sel-name', 'sel-x', 'sel-y', 'sel-width', 'sel-depth', 'sel-save', 'sel-status', 'nudge-left', 'nudge-right', 'nudge-up', 'nudge-down', 'sel-turn', 'sel-wall'],
     review: ['run-design-team'],
-    result: ['result-back', 'floor-all', 'floor-ground', 'floor-upper', 'reset-view', 'show-all-labels', 'version-slider', 'result-start-again'],
+    agents: ['setting-global', 'setting-doors-follow'], // look-and-feel: the cards and their settings are made by the page script
+    materials: [],
+    settings: ['theme-select', 'settings-open-agents'],
+    result: ['result-back', 'tab-view', 'tab-details', 'tab-summary', 'floor-all', 'floor-ground', 'floor-upper', 'reset-view', 'show-all-labels', 'layer-structure', 'layer-openings', 'layer-lighting', 'layer-furniture', 'layer-decor', 'layer-style', 'version-slider', 'result-start-again'], // look-and-feel: result tabs and layer buttons added
   };
   for (const id of screenIds) assert.deepEqual(controlsIn(blockOf(id)), expected[id], `order on the ${id} screen`);
   assert.deepEqual(controlsIn(html.slice(html.indexOf('<div id="step-nav"'))), ['back-button', 'start-again', 'next-button'], 'Back, Start again, Next come after the screens, as on screen');
@@ -548,7 +598,12 @@ function privacyProblems(files) {
   const problems = [];
   for (const { name, text } of files) {
     const noComments = name.endsWith('.js') ? text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1') : text;
-    for (const [what, pattern] of PRIVACY_RULES) if (pattern.test(noComments)) problems.push(`${name}: ${what}`);
+    for (const [what, pattern] of PRIVACY_RULES) {
+      // look-and-feel: ONE file may use localStorage, for the colour mode and the agent settings only (R4.3). Every other kind of storage,
+      // and every other file, still fails. test/look-settings.test.js checks what that file stores.
+      if (name === 'intake/browser-store.js' && what === 'browser storage' && !/\b(sessionStorage|indexedDB|openDatabase|caches\.(open|match)|cookieStore)\b/.test(noComments)) continue;
+      if (pattern.test(noComments)) problems.push(`${name}: ${what}`);
+    }
     if (name.endsWith('.js')) {
       const calls = noComments.match(/\bfetch\s*\(/g) || [];
       if (name === 'viewer.js') {
@@ -604,7 +659,12 @@ test('Task 12 privacy: a planted localStorage call, cookie, web request or web a
 test('Task 12 privacy: using the whole app (images, notes, brief, items, run, start again) touches no storage, cookie or network, other than the sample file at page load', async () => {
   const touched = [];
   const trap = (name) => Object.defineProperty(globalThis, name, { configurable: true, get() { touched.push(name); throw new Error(`${name} must not be used`); } });
-  const trapped = ['localStorage', 'sessionStorage', 'indexedDB', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'Worker'];
+  const trapped = ['sessionStorage', 'indexedDB', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'Worker'];
+  // look-and-feel: localStorage may be used for the colour mode and the agent settings only. A recording stand-in keeps every key and value,
+  // and the test then checks that nothing about the project was stored.
+  const stored = new Map();
+  const savedLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k) => (stored.has(k) ? stored.get(k) : null), setItem: (k, v) => { stored.set(k, String(v)); } } });
   const savedDescriptors = Object.fromEntries(trapped.map((n) => [n, Object.getOwnPropertyDescriptor(globalThis, n)]));
   trapped.forEach(trap);
   try {
@@ -625,8 +685,12 @@ test('Task 12 privacy: using the whole app (images, notes, brief, items, run, st
     });
   } finally {
     for (const n of trapped) { if (savedDescriptors[n]) Object.defineProperty(globalThis, n, savedDescriptors[n]); else delete globalThis[n]; }
+    if (savedLocalStorage) Object.defineProperty(globalThis, 'localStorage', savedLocalStorage); else delete globalThis.localStorage;
   }
   assert.deepEqual(touched, []);
+  // Only the two allowed keys were written, and nothing the visitor typed is in them.
+  assert.ok([...stored.keys()].every((k) => ['designforyou.theme', 'designforyou.agent-settings'].includes(k)), `keys written: ${[...stored.keys()].join(', ')}`);
+  for (const value of stored.values()) assert.doesNotMatch(value, /My home|Kitchen|photo-1|warm oak/i);
 });
 
 test('Task 12 privacy: an image\'s file name is shown only in the visitor\'s own image list, not in the Project Brain, the summary or the result screen', async () => {

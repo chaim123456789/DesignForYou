@@ -68,10 +68,10 @@ test('D6 / R12: .kiro is not in .gitignore, LICENSE is unchanged, package.json i
   }
 });
 
-test('D6: the page code uses the cache tag build-team-4 everywhere', () => {
+test('look-and-feel: the page code uses the cache tag build-look-1 everywhere', () => {
   const html = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
-  for (const f of ['styles.css', 'viewer.js', 'intake/screens.js']) assert.match(html, new RegExp(`${f.replace('.', '\\.')}\\?v=build-team-4`));
-  assert.match(readFileSync(new URL('../docs/viewer.js', import.meta.url), 'utf8'), /const PAGE_VERSION = 'build-team-4'/);
-  assert.match(readFileSync(new URL('../docs/intake/screens.js', import.meta.url), 'utf8'), /const PAGE_VERSION = 'build-team-4'/);
-  assert.doesNotMatch(html, /v=build-(?!team-4)/);
+  for (const f of ['styles.css', 'viewer.js', 'intake/screens.js']) assert.match(html, new RegExp(`${f.replace('.', '\\.')}\\?v=build-look-1`));
+  assert.match(readFileSync(new URL('../docs/viewer.js', import.meta.url), 'utf8'), /const PAGE_VERSION = 'build-look-1'/);
+  assert.match(readFileSync(new URL('../docs/intake/screens.js', import.meta.url), 'utf8'), /const PAGE_VERSION = 'build-look-1'/);
+  assert.doesNotMatch(html, /v=build-(?!look-1)/);
 });
