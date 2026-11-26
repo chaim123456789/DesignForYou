@@ -43,12 +43,15 @@ test('place-items Task 7: bed has a mattress and a headboard taller than the mat
   insideFootprint(furnitureBox('bed'), parts);
 });
 
-test('place-items Task 7: table has a top and four legs', () => {
+test('place-items Task 7: a table is round: a round top, a post and a foot (look-and-feel R6: it had a top and four legs)', () => {
   const parts = shapeParts(furnitureBox('table'));
   assert.equal(count(parts, 'top'), 1);
-  assert.equal(count(parts, 'leg'), 4);
-  assert.equal(parts.length, 5);
+  assert.equal(count(parts, 'post'), 1);
+  assert.equal(count(parts, 'foot'), 1);
+  assert.equal(parts.length, 3);
+  assert.ok(parts.every((p) => p.shape === 'cylinder'), 'every part of the table is a round shape');
   const top = parts.find((p) => p.role === 'top');
+  assert.ok(Math.abs(top.width - top.depth) < EPS, 'the top is a circle');
   assert.ok(Math.abs(top.y + top.height - (3 + 0.75)) < EPS, 'the top is at 0.75 m');
   insideFootprint(furnitureBox('table'), parts);
 });
@@ -201,7 +204,10 @@ test('place-items Task 7: no type, an unknown type or a non-shaped box gives an 
 test('place-items Task 7: the sample\'s boxes are identical to before (same fingerprint of all 8 versions)', () => {
   const run = JSON.parse(readFileSync(new URL('../docs/sample-run.json', import.meta.url), 'utf8'));
   const all = run.snapshots.map((s) => buildScene(run, s.version));
-  const hash = createHash('sha256').update(JSON.stringify(all)).digest('hex');
+  // look-and-feel: each box now also carries its owner (for the agent colour). The fingerprint is taken without it, so it proves that
+  // nothing else about the boxes changed, and every box with an item has its owner.
+  const hash = createHash('sha256').update(JSON.stringify(all, (key, value) => (key === 'owner' ? undefined : value))).digest('hex');
+  for (const box of all.flat()) if (box.itemId !== undefined) assert.equal(typeof box.owner, 'string', 'an item box names its owner');
   // D6: new value for the design-team sample (old value d04a5af0...e58f42 for the four-agent sample).
   assert.equal(hash, 'f1e6e3906fedd2dcc2fa9e9a15898b77292ee99c8c0ed9a8c3b6aa768a62ebaf');
   // D6: the design-team sample's furniture has a type, so it gets a shape; its doors and windows are still plain panels (not own).

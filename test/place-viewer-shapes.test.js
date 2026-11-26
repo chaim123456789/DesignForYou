@@ -7,7 +7,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, themeValues } from '../test-helpers/fake-page.js';
+import { agentOfOwner } from '../docs/agent-info.js';
 import { buildScene, shapeParts } from '../docs/scene-data.js';
 import { createState, setProjectName, addFloor, addRoom, addPlaced } from '../docs/intake/state.js';
 import { runDesignTeam } from '../docs/intake/build-brain.js';
@@ -18,7 +19,11 @@ installImportHooks();
 let caseNumber = 40000;
 // D6: measured on the viewer with the design-team sample (old value 26 for the four-agent sample): slabs, room outlines, blocks,
 // the parts of the typed furniture, the small marks, edges and clash outlines.
-const SAMPLE_MESH_COUNT = 118;
+// look-and-feel: the sample is drawn with the default layers (lights and rugs are off) and each Locked item has a dark outline. Value 118 became 65.
+// With every layer on, the old 118 meshes come back (checked in test/look-3d.test.js).
+const SAMPLE_MESH_COUNT = 65;
+// look-and-feel: a block takes the colour of the agent that owns it (an owner that is not one of the eight gets the neutral wall colour).
+const ownerHex = (owner) => { const agent = agentOfOwner(owner); const t = themeValues('light'); return parseInt((agent ? t[agent.colourVar] : t['--scene-wall']).slice(1), 16); };
 
 function ownRun(placeThem) {
   const s = createState();
@@ -72,18 +77,20 @@ test('place-items Task 8: a typed sofa is drawn as 4 meshes, all with the same i
     assert.equal(meshes.length, 4);
     assert.deepEqual(meshes.map((m) => m.userData.part).sort(), ['arm', 'arm', 'back', 'seat']);
     assert.deepEqual([...new Set(meshes.map((m) => m.userData.boxKey))], [sofa.key]);
-    for (const m of meshes) assert.equal(m.material.color.getHex(), 0x0072b2, 'Locked is blue on every part');
+    for (const m of meshes) assert.equal(m.material.color.getHex(), ownerHex(sofa.owner), 'every part has the colour of its owner agent');
   });
 });
 
-test('place-items Task 8: an Unsure table is orange on all five parts', async () => {
+test('place-items Task 8: an Unsure table is a round table of three parts, in its owner agent colour', async () => {
   const run = ownRun((s, room) => addPlaced(s, { type: 'table', name: 'Dining', room, status: 'Unsure', x: 100, y: 100, width: 140, depth: 80 }));
   const table = buildScene(run, run.snapshots.length - 1).find((b) => b.label === 'Dining');
   await withPage(async (page, viewer) => {
     await viewer.showRunData(run, { kind: 'own' });
     const meshes = meshesOf(page, table.itemId);
-    assert.equal(meshes.length, 5);
-    for (const m of meshes) assert.equal(m.material.color.getHex(), 0xc55a00);
+    assert.equal(meshes.length, 3);
+    assert.deepEqual(meshes.map((m) => m.userData.part).sort(), ['foot', 'post', 'top']);
+    for (const m of meshes) assert.equal(m.material.color.getHex(), ownerHex(table.owner));
+    assert.equal(group(page).children.filter((o) => o.userData && o.userData.outline === 'locked').length, 0, 'an Unsure item has no Locked outline');
   });
 });
 
@@ -170,7 +177,9 @@ test('place-items Task 8: a sofa turned 90 degrees has its back mesh on the righ
     assert.deepEqual(page.problemLines(), []);
     const back = meshesOf(page, sofa.itemId).find((m) => m.userData.part === 'back');
     const right = sofa.x + sofa.width;
-    assert.ok(Math.abs(back.position.x + back.geometry.parameters.width / 2 - right) < 1e-6);
+    // look-and-feel: the back is a rounded shape now, so its edge comes from its bounding box.
+    back.geometry.computeBoundingBox();
+    assert.ok(Math.abs(back.position.x + back.geometry.boundingBox.max.x - right) < 1e-6);
   });
 });
 

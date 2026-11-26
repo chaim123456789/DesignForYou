@@ -7,12 +7,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles, themeValues } from '../test-helpers/fake-page.js';
 import { PLAN_STYLES, drawPlan } from '../docs/intake/place-plan.js';
 import * as geometry from '../docs/intake/place-geometry.js';
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 const plain = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 const placeCss = plain(css.slice(css.indexOf('/* ---- Place furniture, doors and windows')));
 const placeBlock = html.slice(html.indexOf('<div id="screen-place"'), html.indexOf('<div id="screen-review"'));
@@ -145,38 +145,51 @@ test('Place Task 13: the plan text is at least 16 px at 320 px wide, for small a
 
 // ==== Contrast of the plan's own colours ==============================================================
 
-test('Place Task 13: the plan colours reach the contrast limits, and Locked and Unsure differ by line style and words, not colour alone', () => {
-  const { Locked, Unsure } = PLAN_STYLES;
-  const white = '#ffffff';
-  const rows = [
-    ['Label text on the room (white)', '#111111', white, 4.5],
-    ['Label text on a Locked object', '#111111', Locked.fill, 4.5],
-    ['Label text on an Unsure object', '#111111', Unsure.fill, 4.5],
-    ['Locked outline on the room', Locked.stroke, white, 3],
-    ['Unsure outline on the room', Unsure.stroke, white, 3],
-    ['Locked outline on its own fill', Locked.stroke, Locked.fill, 3],
-    ['Unsure outline on its own fill', Unsure.stroke, Unsure.fill, 3],
-    ['Selected-object ring on the room', '#111111', white, 3],
-    ['Room outline on the page panel', '#222222', white, 3],
-    ['Plan border (stylesheet) on a panel', '#7d858c', white, 3],
-  ];
-  for (const [name, fg, bg, min] of rows) {
-    const r = ratio(fg, bg);
-    console.log(`  ${r.toFixed(2).padStart(5)} to 1  (needs ${min})  ${fg} on ${bg}  ${name}`);
-    assert.ok(r >= min, `${name}: ${r.toFixed(2)} is below ${min}`);
-  }
-  // The stylesheet's .plan border is the colour tested above.
-  assert.match(placeCss, /\.plan \{[^}]*border: 1px solid #7d858c;/);
-  // Not by colour alone: different dash, different thickness.
-  assert.equal(Locked.dash, 'none');
-  assert.notEqual(Unsure.dash, 'none');
-  assert.ok(Locked.strokeWidth > Unsure.strokeWidth);
+for (const mode of ['light', 'dark']) {
+  // look-and-feel: the plan's colours moved from place-plan.js to docs/theme.css (the --plan-* names), in two modes.
+  test(`Place Task 13 (${mode} mode): the plan colours reach the contrast limits, and Locked and Unsure differ by line style and words, not colour alone`, () => {
+    const t = themeValues(mode);
+    const Locked = { ...PLAN_STYLES.Locked, stroke: t['--plan-locked-stroke'], fill: t['--plan-locked-fill'] };
+    const Unsure = { ...PLAN_STYLES.Unsure, stroke: t['--plan-unsure-stroke'], fill: t['--plan-unsure-fill'] };
+    const room = t['--plan-room-fill'];
+    const text = t['--plan-text'];
+    const rows = [
+      ['Label text on the room', text, room, 4.5],
+      ['Label text on a Locked object', text, Locked.fill, 4.5],
+      ['Label text on an Unsure object', text, Unsure.fill, 4.5],
+      ['Locked outline on the room', Locked.stroke, room, 3],
+      ['Unsure outline on the room', Unsure.stroke, room, 3],
+      ['Locked outline on its own fill', Locked.stroke, Locked.fill, 3],
+      ['Unsure outline on its own fill', Unsure.stroke, Unsure.fill, 3],
+      ['Selected-object ring on the room', t['--plan-ring'], room, 3],
+      ['Room outline on the page panel', t['--plan-room-stroke'], room, 3],
+      ['Plan border (stylesheet) on a panel', t['--line'], t['--surface'], 3],
+    ];
+    for (const [name, fg, bg, min] of rows) {
+      const r = ratio(fg, bg);
+      console.log(`  ${r.toFixed(2).padStart(5)} to 1  (needs ${min})  ${fg} on ${bg}  ${name}`);
+      assert.ok(r >= min, `${name}: ${r.toFixed(2)} is below ${min}`);
+    }
+    // The stylesheet's .plan border is the colour tested above, and the drawing's colours come only from the classes.
+    assert.match(readStyles(mode), new RegExp(`\\.plan \\{[^}]*border: 1px solid ${t['--line']};`));
+    assert.doesNotMatch(readDoc('intake/place-plan.js'), /#[0-9a-fA-F]{3,6}\b/, 'no colour value in place-plan.js');
+    assert.equal(Locked.dash, 'none');
+    assert.notEqual(Unsure.dash, 'none');
+    assert.ok(Locked.strokeWidth > Unsure.strokeWidth, 'Locked is thicker');
+  });
+}
+
+test('Place Task 13: the plan classes are styled from the theme', () => {
+  for (const cls of ['plan-room', 'plan-locked', 'plan-unsure', 'plan-selected', 'plan-label']) assert.match(readDoc('styles.css'), new RegExp(`\\.${cls} \\{[^}]*var\\(--plan-`));
 });
 
+
 test('Place Task 13: the plan colour check fails when a plan colour is made too light (planted change in a copy)', () => {
-  const lightened = { ...PLAN_STYLES.Unsure, stroke: '#f0c080' };
-  assert.ok(ratio(lightened.stroke, '#ffffff') < 3, 'the planted colour is below the limit, so the check would catch it');
-  assert.ok(ratio(PLAN_STYLES.Unsure.stroke, '#ffffff') >= 3, 'the real colour passes');
+  // look-and-feel: the real colour is read from the theme (--plan-unsure-stroke).
+  const real = themeValues('light')['--plan-unsure-stroke'];
+  const lightened = '#f0c080';
+  assert.ok(ratio(lightened, '#ffffff') < 3, 'the planted colour is below the limit, so the check would catch it');
+  assert.ok(ratio(real, themeValues('light')['--plan-room-fill']) >= 3, 'the real colour passes');
 });
 
 // ==== 320 px layout ===================================================================================
@@ -264,7 +277,11 @@ test('Place Task 13: the content security rule is exactly the one set in Task 6 
 
 test('Place Task 13: using the place screen (add, select, nudge, turn, remove) touches no storage, cookie or network', async () => {
   const touched = [];
-  const trapped = ['localStorage', 'sessionStorage', 'indexedDB', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'Worker'];
+  // look-and-feel: localStorage may be used for the colour mode and the agent settings only, so it is a recording stand-in here.
+  const stored = new Map();
+  const savedLocal = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k) => (stored.has(k) ? stored.get(k) : null), setItem: (k, v) => { stored.set(k, String(v)); } } });
+  const trapped = ['sessionStorage', 'indexedDB', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'Worker'];
   const saved = Object.fromEntries(trapped.map((n) => [n, Object.getOwnPropertyDescriptor(globalThis, n)]));
   for (const name of trapped) Object.defineProperty(globalThis, name, { configurable: true, get() { touched.push(name); throw new Error(`${name} must not be used`); } });
   try {
@@ -282,6 +299,8 @@ test('Place Task 13: using the place screen (add, select, nudge, turn, remove) t
     });
   } finally {
     for (const n of trapped) { if (saved[n]) Object.defineProperty(globalThis, n, saved[n]); else delete globalThis[n]; }
+    if (savedLocal) Object.defineProperty(globalThis, 'localStorage', savedLocal); else delete globalThis.localStorage;
   }
   assert.deepEqual(touched, []);
+  assert.ok([...stored.keys()].every((k) => ['designforyou.theme', 'designforyou.agent-settings'].includes(k)), 'only the colour mode and the agent settings are stored');
 });

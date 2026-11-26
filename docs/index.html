@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'; img-src 'self' blob:">
   <title>Start - DesignForYou</title>
-  <link rel="stylesheet" href="styles.css?v=build-team-4">
+  <link rel="stylesheet" href="theme.css?v=build-look-1">
+  <link rel="stylesheet" href="styles.css?v=build-look-1">
 </head>
-<body>
+<body data-view="home" data-theme="light" data-result-pane="view">
+  <a class="skip-link" href="#page">Skip to the main area</a>
   <header id="top-bar" class="label-bar">
     <p class="label-sample">SAMPLE PROJECT</p>
     <p class="label-own" hidden>YOUR PROJECT</p>
@@ -17,19 +19,39 @@
   <div id="error-message" role="alert" hidden></div>
   <div id="intake-error-message" role="alert" hidden></div>
 
-  <main id="page">
+  <div id="workspace-bar" role="toolbar" aria-label="Workspace">
+    <p class="brand">DesignForYou</p>
+    <p id="ws-project-name" class="project-name">Project</p>
+    <div class="bar-actions">
+      <button type="button" id="toggle-ribbon" class="bar-button" aria-controls="ribbon col-side" aria-expanded="true">Hide ribbon</button>
+      <button type="button" id="fullscreen-button" class="bar-button" aria-controls="scene-area">Full screen</button>
+      <button type="button" id="theme-toggle" class="bar-button">Dark mode</button>
+    </div>
+  </div>
+
+  <div id="shell">
+  <nav id="rail" aria-label="Sections">
+    <button type="button" id="rail-project" class="rail-button" aria-current="page">Project</button>
+    <button type="button" id="rail-agents" class="rail-button">Agents</button>
+    <button type="button" id="rail-materials" class="rail-button">Materials</button>
+    <button type="button" id="rail-settings" class="rail-button">Settings</button>
+  </nav>
+
+  <main id="page" tabindex="-1">
     <p id="step-text" class="step-text" hidden></p>
     <p id="action-status" class="action-status" role="status" aria-live="polite"></p>
 
     <div id="screen-start" class="screen">
-      <h1 id="heading-start" tabindex="-1">DesignForYou</h1>
-      <p id="start-about">DesignForYou helps you describe a home project in simple steps and see a draft of it in 3D. It needs no login, and nothing you enter leaves your browser.</p>
-      <p id="start-fixed-rules">The design team is a set of fixed rules, not AI. It does not look at your images or read your brief.</p>
-      <p id="start-lost">Nothing is saved. If you close or reload this page, everything you entered is lost.</p>
+      <p class="brand">DesignForYou</p>
+      <h1 id="heading-start" tabindex="-1">Design your home with a team that shows its reasoning</h1>
+      <p id="start-about" class="home-lead">DesignForYou helps you describe a home project in simple steps and see a draft of it in 3D, with a team of eight design agents.</p>
       <div id="start-choices" class="choices" role="group" aria-label="Choose how to start">
         <button type="button" id="choose-sample" class="choice-button">Try the sample</button>
         <button type="button" id="choose-own" class="choice-button choice-primary">Start my own project</button>
       </div>
+      <p id="start-ai-off" class="home-note">The design team is rule-based, and AI is off. Every suggestion says which rule made it.</p>
+      <p id="start-fixed-rules">The design team is a set of fixed rules, not AI. It does not look at your images or read your brief.</p>
+      <p id="start-lost">It needs no login, and nothing you enter leaves your browser. Nothing is saved. If you close or reload this page, everything you entered is lost. Only your colour mode and your agent settings are kept, in this browser.</p>
     </div>
 
     <div id="screen-setup" class="screen" hidden>
@@ -355,32 +377,40 @@
         <div id="run-extra"></div>
       </div>
 
-      <div id="team-run" class="panel team-run" role="group" aria-labelledby="heading-team-agent" hidden>
-        <p id="team-progress" class="hint"></p>
-        <h2 id="heading-team-agent" tabindex="-1"></h2>
-        <ol id="team-agents" class="team-agents" aria-label="The eight agents, in order"></ol>
-        <p id="team-agent-note" class="hint"></p>
-        <p id="team-ai-note" class="hint" hidden></p>
-        <ol id="team-proposals" class="team-proposals"></ol>
-        <p id="team-nothing" hidden>This agent had nothing to propose. Nothing was changed.</p>
-        <p id="team-rechecked" class="hint" hidden></p>
-      </div>
     </div>
 
     <div id="screen-result" class="screen" hidden>
-      <button type="button" id="result-back" class="nav-button">Back to start</button>
-      <p id="sample-fixed-rules" class="setup-needs"></p>
+      <div id="result-top">
+        <button type="button" id="result-back" class="nav-button">Back to start</button>
+        <p id="sample-fixed-rules" class="setup-needs"></p>
+      </div>
+      <div id="result-tabs" role="tablist" aria-label="What to show">
+        <button type="button" id="tab-view" role="tab" aria-selected="true" aria-controls="page-inner">3D view</button>
+        <button type="button" id="tab-details" role="tab" aria-selected="false" aria-controls="col-side">Details</button>
+        <button type="button" id="tab-summary" role="tab" aria-selected="false" aria-controls="own-result" hidden>Summary and report</button>
+      </div>
    <div id="page-inner">
     <div id="col-main">
     <h1 id="heading-result" tabindex="-1">Sample two-storey home</h1>
     <p id="how-to-use">How to use this: drag to turn, scroll to zoom, click a block for details, use the slider for history.</p>
 
+    <div id="ribbon">
     <div id="view-controls" role="group" aria-label="Choose what to show">
       <button type="button" id="floor-all" class="floor-button" data-floor="all" aria-pressed="true">Both</button>
       <button type="button" id="floor-ground" class="floor-button" data-floor="1" aria-pressed="false">Ground floor</button>
       <button type="button" id="floor-upper" class="floor-button" data-floor="2" aria-pressed="false">Upper floor</button>
       <button type="button" id="reset-view">Reset view</button>
       <label id="show-all-labels-label" for="show-all-labels"><input type="checkbox" id="show-all-labels"> Show all labels</label>
+    </div>
+    <div id="layer-controls" role="group" aria-labelledby="layer-heading">
+      <span id="layer-heading" class="layer-heading">Layers:</span>
+      <button type="button" id="layer-structure" class="layer-button" data-layer="structure" aria-pressed="true">Structure</button>
+      <button type="button" id="layer-openings" class="layer-button" data-layer="openings" aria-pressed="true">Openings</button>
+      <button type="button" id="layer-lighting" class="layer-button" data-layer="lighting" aria-pressed="false">Lighting</button>
+      <button type="button" id="layer-furniture" class="layer-button" data-layer="furniture" aria-pressed="true">Furniture</button>
+      <button type="button" id="layer-decor" class="layer-button" data-layer="decor" aria-pressed="false">Decor</button>
+      <button type="button" id="layer-style" class="layer-button" data-layer="style" aria-pressed="true">Style</button>
+    </div>
     </div>
 
     <div id="scene-area" aria-label="3D view of the sample home">Loading the 3D view.</div>
@@ -392,10 +422,13 @@
     <section id="legend" aria-label="Legend">
       <h2>Legend</h2>
       <ul>
-        <li><span class="swatch swatch-locked"></span> Locked: must stay as it is</li>
-        <li><span class="swatch swatch-unsure"></span> Unsure: open to change</li>
-        <li><span class="swatch swatch-clash"></span> Clash: a problem the Reviewer found</li>
+        <li><span class="swatch swatch-locked"></span> Locked: must stay as it is (dark outline, and the word Locked on its name)</li>
+        <li><span class="swatch swatch-unsure"></span> Unsure: open to change (no outline)</li>
+        <li><span class="swatch swatch-clash"></span> Clash: a problem the Reviewer found (red outline)</li>
       </ul>
+      <h3 id="legend-agents-heading">Agents: colour, letter and shape</h3>
+      <ul id="agent-legend-3d" class="agent-legend"></ul>
+      <p id="legend-layers">Lights, switches, sockets and rugs are small marks. They are hidden until you turn on the Lighting or Decor layer.</p>
       <p id="legend-labels">Block names show when you point at or select a block, and always for clashes; tick "Show all labels" to see every name.</p>
       <p id="legend-shapes">Doors and windows are thin panels; furniture is solid; style items are flat patches</p>
       <p id="legend-team">Lights are small squares under the ceiling; switches and sockets are small blocks on the walls; a rug is a thin mat on the floor</p>
@@ -466,6 +499,73 @@
     </div>
     </div>
 
+    <div id="screen-agents" class="screen" hidden>
+      <h1 id="heading-agents" tabindex="-1">Your design team</h1>
+      <p id="agents-intro">Eight agents work in this order on one shared record of your home. Each one owns its own items. Nothing changes until a proposal is confirmed, by you or by your settings (the Agent settings are further down this page). The team is rule-based and AI is off.</p>
+      <p id="agents-mode" class="setup-needs"></p>
+
+      <div class="panel" role="group" aria-labelledby="agent-legend-heading">
+        <h2 id="agent-legend-heading">Legend</h2>
+        <p class="hint">Each agent has its own colour, its own letter and its own shape, so you never have to rely on colour alone.</p>
+        <ul id="agent-legend" class="agent-legend"></ul>
+      </div>
+
+      <div id="team-run" class="panel team-run" role="group" aria-labelledby="heading-team-agent" hidden>
+        <p id="team-progress" class="hint"></p>
+        <h2 id="heading-team-agent" tabindex="-1"></h2>
+        <ol id="team-agents" class="team-agents" aria-label="The eight agents, in order"></ol>
+        <p id="team-agent-note" class="hint"></p>
+        <p id="team-ai-note" class="hint" hidden></p>
+        <ol id="team-proposals" class="team-proposals"></ol>
+        <p id="team-nothing" hidden>This agent had nothing to propose. Nothing was changed.</p>
+        <p id="team-rechecked" class="hint" hidden></p>
+      </div>
+
+      <h2 id="cards-heading">The eight agents</h2>
+      <ol id="agent-cards" class="agent-cards" aria-labelledby="cards-heading"></ol>
+
+      <div id="agent-settings" class="panel" role="group" aria-labelledby="settings-heading">
+        <h2 id="settings-heading">Agent settings</h2>
+        <p id="settings-explain" class="hint">These choose how a proposal is confirmed. They never change who owns an item, never change a Locked item, and every change still goes through the gatekeeper. A proposal confirmed for you is marked "automatic" in the version record and shown in the log below.</p>
+        <label for="setting-global">For all agents</label>
+        <select id="setting-global" class="text-input level-select" aria-describedby="level-help"></select>
+        <ul id="level-help" class="entry-list"></ul>
+        <div class="switch-row"><input type="checkbox" id="setting-doors-follow"><label for="setting-doors-follow">Doors and windows move with their wall</label></div>
+        <p id="setting-doors-note" class="hint">When a wall changes, its doors and windows are looked at again. With this on, a door or window that only follows its wall counts as part of the wall change you already confirmed, so Recommended applies it and tells you. "Always ask me" still asks. The gatekeeper still refuses a Locked door or window.</p>
+        <p id="settings-storage-note" class="hint" role="status"></p>
+        <p>Each agent can have its own choice. Find it on the agent's card below.</p>
+      </div>
+
+      <div class="panel" role="group" aria-labelledby="log-heading">
+        <h2 id="log-heading">What the team did</h2>
+        <p id="log-empty" class="hint">Nothing yet.</p>
+        <ul id="agent-log" class="log-list"></ul>
+      </div>
+    </div>
+
+    <div id="screen-materials" class="screen" hidden>
+      <h1 id="heading-materials" tabindex="-1">Materials</h1>
+      <p id="materials-note" class="setup-needs">Coming next. This page will hold the materials and finishes you can pick for each room. Nothing here works yet.</p>
+    </div>
+
+    <div id="screen-settings" class="screen" hidden>
+      <h1 id="heading-settings" tabindex="-1">Settings</h1>
+      <div class="panel" role="group" aria-labelledby="look-heading">
+        <h2 id="look-heading">Look</h2>
+        <label for="theme-select">Colour mode</label>
+        <select id="theme-select" class="text-input">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+        <p id="theme-note" class="hint">Your choice stays in this browser only.</p>
+      </div>
+      <div class="panel" role="group" aria-labelledby="agent-settings-heading">
+        <h2 id="agent-settings-heading">Agent settings</h2>
+        <p>How proposals are confirmed is set on the Agents page, next to the agents it affects.</p>
+        <button type="button" id="settings-open-agents" class="action-button">Open the Agents page</button>
+      </div>
+    </div>
+
     <div id="step-nav" class="step-nav" hidden>
       <button type="button" id="back-button" class="nav-button">Back</button>
       <button type="button" id="start-again" class="nav-button">Start again</button>
@@ -476,6 +576,12 @@
    <noscript><p>This page needs JavaScript to show the sample home.</p></noscript>
   </main>
 
+  <aside id="agent-strip" aria-label="The design team now">
+    <p class="strip-title">Team</p>
+    <ul id="strip-list" class="strip-list"></ul>
+  </aside>
+  </div>
+
   <footer id="bottom-bar" class="label-bar">
     <p class="label-sample">SAMPLE PROJECT</p>
     <p class="label-own" hidden>YOUR PROJECT</p>
@@ -483,7 +589,7 @@
   </footer>
 
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-  <script type="module" src="viewer.js?v=build-team-4"></script>
-  <script type="module" src="intake/screens.js?v=build-team-4"></script>
+  <script type="module" src="viewer.js?v=build-look-1"></script>
+  <script type="module" src="intake/screens.js?v=build-look-1"></script>
 </body>
 </html>

@@ -104,7 +104,7 @@ export function createTeamSession(state, options = {}) {
   const project = buildTeamBrain(state);
   const { agents, gate } = makeTeamAgents(registry);
   const run = createRun(project, { registry, agents, now: fixedClock(), scripted: options.scripted === true });
-  return { project, run, registry, gate, inputs: state };
+  return { project, run, registry, gate, agents, inputs: state };
 }
 
 // The result the result screen shows once the last agent has been answered. The team data holds the eight agents, their proposals and answers.

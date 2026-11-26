@@ -7,11 +7,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { registerHooks } from '../test-helpers/register-hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
 import { LIMITS } from '../docs/intake/limits.js';
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 
 let caseNumber = 0;
 

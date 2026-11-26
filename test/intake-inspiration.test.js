@@ -9,7 +9,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync } from 'node:fs';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
 import { LIMITS } from '../docs/intake/limits.js';
 import * as stateApi from '../docs/intake/state.js';
 import { buildBrain } from '../docs/intake/build-brain.js';
@@ -484,5 +484,5 @@ test('Task 8: every control on the inspiration screens has a visible label, and 
 
 test('Task 8: the "Start again" button is in the step buttons, labelled, and the stylesheet lets the buttons wrap on a narrow screen', () => {
   assert.match(html, /<button type="button" id="start-again" class="nav-button">Start again<\/button>/);
-  assert.match(readDoc('styles.css'), /\.step-nav \{[^}]*flex-wrap: wrap;/);
+  assert.match(readStyles(), /\.step-nav \{[^}]*flex-wrap: wrap;/);
 });

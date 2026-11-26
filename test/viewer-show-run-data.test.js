@@ -9,7 +9,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { installImportHooks } from '../test-helpers/hooks.js';
 import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
-import { buildScene, shapeParts } from '../docs/scene-data.js';
+import { buildScene as buildAllScene, shapeParts, filterByLayers, DEFAULT_LAYERS } from '../docs/scene-data.js';
+// look-and-feel: lights and rugs are on layers that start switched off, so the page draws only the boxes of the default layers.
+const buildScene = (run, version) => filterByLayers(buildAllScene(run, version), DEFAULT_LAYERS);
 import * as stateApi from '../docs/intake/state.js';
 import { runDesignTeam } from '../docs/intake/build-brain.js';
 import { makeRunData } from '../docs/engine/viewer/make-run-data.js';

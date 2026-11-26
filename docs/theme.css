@@ -1,0 +1,167 @@
+/*
+  THE THEME FILE (look-and-feel). The one place that holds colours, fonts and spacing.
+  To restyle the whole page, change values here and nowhere else.
+  styles.css and the page scripts use only the names below (var(--name)), never a colour, font or spacing value of their own.
+  The 3D view reads its colours from the --scene-* and --agent-* names, so it follows the theme too.
+  No outside fonts and no outside images: system fonts only.
+
+  Contrast: every text pair is at least 4.5 to 1 and every border or focus ring is at least 3 to 1, in both modes
+  (test/look-theme.test.js computes this from the values in this file).
+*/
+
+:root {
+  /* ---- fonts: system fonts only ---- */
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --text-base: 1rem;
+  --text-lg: 1.15rem;
+  --text-xl: 1.6rem;
+  --text-hero: 2.6rem;
+  --weight-normal: 400;
+  --weight-strong: 600;
+  --weight-bold: 700;
+  --leading-body: 1.5;
+  --leading-tight: 1.25;
+  --letter-wide: 0.05em;
+
+  /* ---- spacing ---- */
+  --space-0: 0.125rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --measure: 46rem;
+  --measure-wide: 60rem;
+  --page-max: 1400px;
+  --rail-width: 5.5rem;
+  --strip-width: 4.5rem;
+  --side-width: 21rem;
+
+  /* ---- rounded corners ---- */
+  --radius-sm: 0.375rem;
+  --radius: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 62rem;
+
+  /* ---- colours, light mode ---- */
+  --bg: #f5f3ee;
+  --surface: #ffffff;
+  --surface-2: #f0ede6;
+  --surface-3: #e4e0d7;
+  --text: #1c2226;
+  --text-muted: #474f56;
+  --line: #6b737b;
+  --line-soft: #d9d4c9;
+  --accent: #2b5b61;
+  --on-accent: #ffffff;
+  --accent-soft: #d8e8ea;
+  --bar: #1c2226;
+  --on-bar: #ffffff;
+  --focus: #0b3d91;
+  --danger: #b00020;
+  --danger-text: #6b0010;
+  --danger-bg: #fde8e8;
+  --info-bg: #e3edf7;
+  --info-text: #0b2a4a;
+  --info-line: #0b3d91;
+  --shadow: rgba(28, 34, 38, 0.14);
+
+  /* ---- the eight agents: colour-blind-safe (Okabe and Ito) set. Each also has a letter and a shape, so colour is never alone. ---- */
+  --agent-edge: #1c2226;
+  --agent-walls: #999999;
+  --agent-walls-ink: #000000;
+  --agent-doors: #0072b2;
+  --agent-doors-ink: #ffffff;
+  --agent-floors: #009e73;
+  --agent-floors-ink: #000000;
+  --agent-lighting: #f0e442;
+  --agent-lighting-ink: #000000;
+  --agent-furniture: #e69f00;
+  --agent-furniture-ink: #000000;
+  --agent-decor: #cc79a7;
+  --agent-decor-ink: #000000;
+  --agent-style: #56b4e9;
+  --agent-style-ink: #000000;
+  --agent-reviewer: #d55e00;
+  --agent-reviewer-ink: #000000;
+
+  /* ---- the 3D view (hex only: the page script reads these) ---- */
+  --scene-background: #dfe6ea;
+  --scene-slab: #f4f1e8;
+  --scene-slab-edge: #b9b4a6;
+  --scene-wall: #6d7780;
+  --scene-clash: #cc0000;
+  --scene-locked-edge: #111111;
+  --scene-door-edge: #4a3320;
+  --scene-window-edge: #ffffff;
+  --scene-light-sky: #ffffff;
+  --scene-light-ground: #c9c2b4;
+  --scene-light-sun: #fff6e6;
+  --plan-room-fill: #ffffff;
+  --plan-room-stroke: #222222;
+  --plan-locked-stroke: #0b3d91;
+  --plan-locked-fill: #dce8fa;
+  --plan-unsure-stroke: #8a4b00;
+  --plan-unsure-fill: #fdebd0;
+  --plan-text: #111111;
+  --plan-ring: #111111;
+  --label-bg: #ffffff;
+  --label-text: #1c2226;
+  --label-line: #6b737b;
+  --floor-label-bg: #2b5b61;
+  --floor-label-text: #ffffff;
+}
+
+/* ---- dark mode: the page script sets data-theme="dark" on the body ---- */
+body[data-theme="dark"] {
+  --bg: #12171b;
+  --surface: #1b2227;
+  --surface-2: #222a30;
+  --surface-3: #2d363d;
+  --text: #e9edf0;
+  --text-muted: #b7c0c7;
+  --line: #8b969f;
+  --line-soft: #34404a;
+  --accent: #8fc7cd;
+  --on-accent: #0d1a1c;
+  --accent-soft: #24393c;
+  --bar: #0b0f12;
+  --on-bar: #f2f5f7;
+  --focus: #9cc4ff;
+  --danger: #ff8a9b;
+  --danger-text: #ffd3d9;
+  --danger-bg: #4a1620;
+  --info-bg: #17304a;
+  --info-text: #d6e8fb;
+  --info-line: #9cc4ff;
+  --shadow: rgba(0, 0, 0, 0.5);
+
+  --scene-background: #232c33;
+  --scene-slab: #39424a;
+  --scene-slab-edge: #5c6872;
+  --scene-wall: #9aa6b0;
+  --scene-clash: #ff5a5a;
+  --scene-locked-edge: #ffffff;
+  --scene-door-edge: #d9c2a5;
+  --scene-window-edge: #e9edf0;
+  --scene-light-sky: #dfe9f2;
+  --scene-light-ground: #3a3f45;
+  --scene-light-sun: #f5ead8;
+  --plan-room-fill: #1b2227;
+  --plan-room-stroke: #e9edf0;
+  --plan-locked-stroke: #9cc4ff;
+  --plan-locked-fill: #1f3a5c;
+  --plan-unsure-stroke: #ffb86b;
+  --plan-unsure-fill: #4a3418;
+  --plan-text: #f2f5f7;
+  --plan-ring: #ffffff;
+  --label-bg: #1b2227;
+  --label-text: #e9edf0;
+  --label-line: #8b969f;
+  --floor-label-bg: #8fc7cd;
+  --floor-label-text: #0d1a1c;
+}

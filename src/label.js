@@ -34,6 +34,9 @@ export const teamSentence = (aiUsed) => (aiUsed ? TEAM_SENTENCE_AI_ON : TEAM_SEN
 // Shown when a script, not a person, answered the proposals (R4.8).
 export const SCRIPTED_SENTENCE = 'Answers marked "scripted answer" were chosen by a fixed script, not by a person.';
 export const SCRIPTED_WORDS = 'scripted answer';
+// Shown when the user's own settings confirmed some proposals, not the user one by one (look-and-feel R4).
+export const AUTOMATIC_SENTENCE = 'Answers marked "automatic" were confirmed by your agent settings, not by you one by one. They went through the same gatekeeper.';
+export const AUTOMATIC_WORDS = 'automatic';
 
 // One line of text with its tag in front: "Rule-based: ..." or "AI: ...".
 export const taggedLine = (source, text) => `${sourceTag(source)}: ${text}`;
@@ -54,6 +57,7 @@ export function describeTeamRun(project, nameOf = (id) => id) {
   if (!isTeam) return null;
   const proposals = new Map(log.filter((e) => e.event === 'proposed').map((e) => [e.proposal, e]));
   const scripted = log.some((e) => e.event === 'answered' && e.by === SCRIPTED_WORDS);
+  const automatic = log.some((e) => e.event === 'answered' && e.by === AUTOMATIC_WORDS);
   const aiUsed = log.some((e) => e.event === 'proposed' && e.source === 'ai');
   const rows = log.map((e, i) => {
     const via = e.proposal ? proposals.get(e.proposal) : undefined;
@@ -80,7 +84,7 @@ export function describeTeamRun(project, nameOf = (id) => id) {
     return via ? via.source : 'rule';
   });
   return {
-    rows, versionSources, scripted, aiUsed,
-    sentences: [teamSentence(aiUsed), ...(scripted ? [SCRIPTED_SENTENCE] : [])],
+    rows, versionSources, scripted, aiUsed, automatic,
+    sentences: [teamSentence(aiUsed), ...(scripted ? [SCRIPTED_SENTENCE] : []), ...(automatic ? [AUTOMATIC_SENTENCE] : [])],
   };
 }

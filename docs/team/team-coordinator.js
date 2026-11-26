@@ -19,6 +19,7 @@ import { findStale, agentsToRecheck, ITSELF_STALE } from './ripple.js';
 const REVIEWER = 'Reviewer';
 export const SCRIPTED = 'scripted answer';
 const USER_APPROVER = 'user';
+export const AUTOMATIC = 'automatic';
 
 // Items a re-check cannot help. `seeds` are items nobody can fix by looking again (a Locked item flagged "needs your look", an item
 // the user skipped). An item is also unfixable when EVERY reason it is stale is "that item is itself stale" and that item is
@@ -60,6 +61,7 @@ export function createRun(project, options = {}) {
   }
   const enabled = checkConfigs(registry, options.configs);
   const approvedBy = options.scripted ? SCRIPTED : USER_APPROVER;
+  const isScripted = () => options.scripted === true; // a scripted run is always labelled scripted, never automatic
   const log = (entry) => project.runLog.push(entry);
   // The gatekeeper is the one door. Its functions are used by name so this file holds the run, not the rules.
   const { changeItem, refreshBasis } = createGatekeeper(project, { now: options.now });
@@ -209,14 +211,20 @@ export function createRun(project, options = {}) {
   }
 
   // Answer one proposal. choice: an option id, 'custom' (give value) or 'skip'.
-  function answer(proposalId, choice, value) {
+  // answerOptions.automatic (optional, look-and-feel R4): a sentence saying which setting confirmed it. The answer is then recorded as
+  // approved by 'automatic' (in the version record and the run log) instead of 'user'. It goes through the same gatekeeper, so
+  // Locked and owner checks are exactly the same. A skip is never automatic.
+  function answer(proposalId, choice, value, answerOptions = {}) {
     if (failure) throw new Error('The run has stopped. Nothing more can be answered.');
+    const automatic = answerOptions && typeof answerOptions.automatic === 'string' && answerOptions.automatic.trim() !== '' && !isScripted() ? answerOptions.automatic : undefined;
+    if (automatic !== undefined && choice === 'skip') throw new Error('A skip cannot be confirmed automatically.');
+    const by = automatic !== undefined ? AUTOMATIC : approvedBy;
     const proposal = current && current.proposals.get(proposalId);
     if (!proposal) throw new Error(`Proposal "${proposalId}" is not waiting for an answer.`);
     let result;
     if (choice === 'skip') {
       keptAsIs.push({ itemId: proposal.itemId, agent: proposal.agent, proposalId });
-      log({ agent: proposal.agent, event: 'kept-as-is', item: proposal.itemId, proposal: proposalId, by: approvedBy, reason: 'Skipped. The item is kept as it is.' });
+      log({ agent: proposal.agent, event: 'kept-as-is', item: proposal.itemId, proposal: proposalId, by, reason: 'Skipped. The item is kept as it is.' });
       result = { applied: false, keptAsIs: true };
     } else {
       let newValue;
@@ -236,8 +244,8 @@ export function createRun(project, options = {}) {
       // A request is applied by the owner of the earlier item, never by the asking agent.
       const who = proposal.request ? proposal.request.owner : proposal.agent;
       const item = project.items.find((i) => i.id === proposal.itemId);
-      const r = changeItem(who, item.id, newValue, { approvedBy, basis: currentBasis(item) });
-      log({ agent: proposal.agent, event: 'answered', item: item.id, proposal: proposalId, choice, by: approvedBy, accepted: r.accepted });
+      const r = changeItem(who, item.id, newValue, { approvedBy: by, basis: currentBasis(item) });
+      log({ agent: proposal.agent, event: 'answered', item: item.id, proposal: proposalId, choice, by, accepted: r.accepted, ...(automatic !== undefined ? { reason: automatic } : {}) });
       if (!r.accepted) {
         if (item.status === 'Locked') {
           needsLook.add(item.id);
@@ -250,9 +258,9 @@ export function createRun(project, options = {}) {
       }
     }
     current.proposals.delete(proposalId);
-    answers.push({ proposalId, choice, by: approvedBy, ...result });
+    answers.push({ proposalId, choice, by, ...result });
     const recorded = history[history.length - 1].proposals.find((x) => x.proposal.id === proposalId);
-    if (recorded) recorded.answer = { choice, by: approvedBy, ...result };
+    if (recorded) recorded.answer = { choice, by, ...result };
     if (current.proposals.size === 0) {
       const step = current;
       finishStep();

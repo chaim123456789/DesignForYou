@@ -2,9 +2,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { readStyles, themeValues } from '../test-helpers/fake-page.js';
 
 const read = (name) => readFileSync(new URL(`../docs/${name}`, import.meta.url), 'utf8');
-const css = read('styles.css');
+const css = readStyles();
 const viewer = read('viewer.js');
 const html = read('index.html');
 
@@ -24,39 +25,45 @@ const hue = (hex) => {
   const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
   return (h * 60 + 360) % 360;
 };
-const viewerColour = (src, name) => `#${new RegExp(`${name}:\\s*0x([0-9a-f]{6})`).exec(src)[1]}`;
-const swatchColour = (text, cls) => new RegExp(`\\.${cls}\\s*\\{\\s*background:\\s*(#[0-9a-fA-F]{6})`).exec(text)[1].toLowerCase();
+// look-and-feel: Locked is no longer blue and Unsure is no longer orange in the 3D view. Locked is a dark outline, Unsure has no outline,
+// and the colour of an object is its agent's colour. So this check now covers the two marks that are left (the Locked outline and the
+// clash red), which come from docs/theme.css in both modes, and the legend swatches that must show the same marks.
+const sceneColour = (mode, name) => themeValues(mode)[`--scene-${name}`].toLowerCase();
+const swatchBorder = (text, cls) => new RegExp(`\\.${cls}\\s*\\{[^}]*border:\\s*\\d+px solid (#[0-9a-fA-F]{6})`).exec(text)[1].toLowerCase();
 
-function checkUnsure(viewerSrc, cssText) {
-  const unsure = viewerColour(viewerSrc, 'unsure');
-  const locked = viewerColour(viewerSrc, 'locked');
-  const slab = viewerColour(viewerSrc, 'slab');
+function checkMarks(mode, cssText) {
+  const locked = sceneColour(mode, 'locked-edge');
+  const clash = sceneColour(mode, 'clash');
+  const slab = sceneColour(mode, 'slab');
+  const white = themeValues(mode)['--surface'];
   const problems = [];
-  if (ratio(unsure, '#ffffff') < 3) problems.push(`Unsure on white is ${ratio(unsure, '#ffffff').toFixed(2)} to 1`);
-  if (ratio(unsure, slab) < 3) problems.push(`Unsure on the floor slab is ${ratio(unsure, slab).toFixed(2)} to 1`);
-  const gap = Math.abs(hue(unsure) - hue(locked));
-  if (Math.min(gap, 360 - gap) < 90) problems.push('Unsure is too close to the Locked blue in hue');
-  if (swatchColour(cssText, 'swatch-unsure') !== unsure) problems.push('the legend swatch is not the viewer colour');
-  if (swatchColour(cssText, 'swatch-locked') !== locked) problems.push('the Locked swatch is not the viewer colour');
+  for (const [name, hex] of [['Locked outline', locked], ['Clash red', clash]]) {
+    if (ratio(hex, white) < 3) problems.push(`${name} on the legend background is ${ratio(hex, white).toFixed(2)} to 1`);
+    if (ratio(hex, slab) < 3) problems.push(`${name} on the floor slab is ${ratio(hex, slab).toFixed(2)} to 1`);
+  }
+  if (swatchBorder(cssText, 'swatch-locked') !== locked) problems.push('the Locked legend swatch is not the 3D colour');
+  if (swatchBorder(cssText, 'swatch-clash') !== clash) problems.push('the clash legend swatch is not the 3D colour');
   return problems;
 }
 
-test('Polish 1: the Unsure orange has at least 3 to 1 against white and the 3D floor slab, differs from the Locked blue, and the legend swatch matches', () => {
-  const unsure = viewerColour(viewer, 'unsure');
-  console.log(`Unsure ${unsure}: ${ratio(unsure, '#ffffff').toFixed(2)} to 1 on white, ${ratio(unsure, viewerColour(viewer, 'slab')).toFixed(2)} to 1 on the floor slab; hue ${hue(unsure).toFixed(0)} against Locked hue ${hue(viewerColour(viewer, 'locked')).toFixed(0)}`);
-  assert.deepEqual(checkUnsure(viewer, css), []);
-  assert.ok(hue(unsure) > 15 && hue(unsure) < 40, 'it is still an orange');
-  assert.match(html, /<span class="swatch swatch-locked"[^>]*><\/span>\s*Locked/);
-  assert.match(html, /<span class="swatch swatch-unsure"[^>]*><\/span>\s*Unsure/);
-});
+for (const mode of ['light', 'dark']) {
+  test(`Polish 1 (${mode} mode): the Locked outline and the clash red have at least 3 to 1 against the legend background and the 3D floor slab, and the legend swatches match`, () => {
+    assert.deepEqual(checkMarks(mode, readStyles(mode)), []);
+    // Locked and Unsure are told apart without colour: the legend says "dark outline" and "no outline", and a Locked label says "(Locked)".
+    assert.match(html, /<span class="swatch swatch-locked"[^>]*><\/span>\s*Locked/);
+    assert.match(html, /<span class="swatch swatch-unsure"[^>]*><\/span>\s*Unsure/);
+    assert.match(html, /Locked: must stay as it is \(dark outline, and the word Locked on its name\)/);
+  });
+}
 
-test('Polish 1: the colour check fails on the old light orange, on a swatch that does not match, and on a blue-looking Unsure (planted changes in copies)', () => {
-  const old = viewer.replace(/unsure:\s*0x[0-9a-f]{6}/, 'unsure: 0xe69f00');
-  assert.ok(checkUnsure(old, css).length >= 2);
-  const mismatch = css.replace(/(\.swatch-unsure\s*\{\s*background:\s*)#[0-9a-fA-F]{6}/, '$1#e69f00');
-  assert.ok(checkUnsure(viewer, mismatch).some((p) => /swatch/.test(p)));
-  const blueish = viewer.replace(/unsure:\s*0x[0-9a-f]{6}/, 'unsure: 0x0060a0');
-  assert.ok(checkUnsure(blueish, css).some((p) => /Locked blue/.test(p)));
+test('Polish 1: the colour check fails on a swatch that does not match and on a mark that is too light (planted changes in copies)', () => {
+  const css0 = readStyles('light');
+  const mismatch = css0.replace(/(\.swatch-locked\s*\{[^}]*border:\s*\d+px solid )#[0-9a-fA-F]{6}/, '$1#e69f00');
+  assert.ok(checkMarks('light', mismatch).some((p) => /swatch/.test(p)));
+  const real = sceneColour('light', 'locked-edge');
+  const lightened = css0.replace(new RegExp(`(\\.swatch-locked\\s*\\{[^}]*border:\\s*\\d+px solid )${real}`), '$1#dddddd');
+  assert.notEqual(lightened, css0);
+  assert.ok(checkMarks('light', lightened).length >= 1);
 });
 
 // ---- Step 2: block names in the 3D view -------------------------------------------------------

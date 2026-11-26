@@ -7,7 +7,7 @@
 // run. Unexpected page errors are already shown by viewer.js, so this file does not add a second handler.
 //
 // Visitor text is only ever put on the page with textContent. Nothing here reads files, stores or sends anything.
-const PAGE_VERSION = 'build-team-4';
+const PAGE_VERSION = 'build-look-1';
 
 // The screens in the order Back and Next move through them. `step` is the number shown in the step text.
 // Start and Result are outside the numbered steps.
@@ -22,11 +22,21 @@ const SCREENS = [
   { id: 'place', name: 'Place furniture, doors and windows', step: 7 },
   { id: 'review', name: 'Review and run', step: 8 },
   { id: 'result', name: 'Result', step: null },
+  // The other pages of the workspace (look-and-feel). They have no step number and are reached from the left rail.
+  { id: 'agents', name: 'Agents', step: null },
+  { id: 'materials', name: 'Materials', step: null },
+  { id: 'settings', name: 'Settings', step: null },
 ];
 const STEPS = SCREENS.filter((s) => s.step !== null);
+const RAIL_SCREENS = ['agents', 'materials', 'settings'];
 
 const el = (id) => document.getElementById(id);
 let currentScreen = 'start';
+let lastProjectScreen = null; // the project screen to come back to from the Agents, Materials or Settings page
+let projectMode = null; // 'sample' or 'own': which project the workspace is showing
+let workspace = null; // the workspace frame (workspace.js), once loaded
+let agentsApi = null; // the Agents page and strip (agents-page.js), once loaded
+let stopTeamRun = null; // stops a step-by-step run that is waiting for answers
 
 // Screens ask to be redrawn each time they are shown (so they match the rooms entered in setup),
 // and the setup screen asks to be cleared on "Start again".
@@ -61,6 +71,11 @@ const TEAM_SCREEN_FILE = `./team-screen.js?v=${PAGE_VERSION}`;
 const RUN_DATA_FILE = `./run-data.js?v=${PAGE_VERSION}`;
 const SUMMARY_VIEW_FILE = `./summary-view.js?v=${PAGE_VERSION}`;
 const MAKE_SUMMARY_FILE = `../engine/summary/make-summary.js?v=${PAGE_VERSION}`;
+const WORKSPACE_FILE = `./workspace.js?v=${PAGE_VERSION}`;
+const BROWSER_STORE_FILE = `./browser-store.js?v=${PAGE_VERSION}`;
+const AGENT_SETTINGS_FILE = `./agent-settings.js?v=${PAGE_VERSION}`;
+const AGENTS_PAGE_FILE = `./agents-page.js?v=${PAGE_VERSION}`;
+const AUTO_CONFIRM_FILE = `./auto-confirm.js?v=${PAGE_VERSION}`;
 
 // ---- Problems and protected steps (same pattern as viewer.js, own red box) -------------------
 
@@ -133,6 +148,8 @@ function show(id, { moveFocus = true } = {}) {
     document.body.dataset.screen = id; // the stylesheet shows SAMPLE PROJECT only on the sample result
   });
   attempt('Page title', () => { document.title = `${screen.name} - DesignForYou`; });
+  if (!RAIL_SCREENS.includes(id) && id !== 'start') lastProjectScreen = id;
+  attempt('Workspace frame', () => { if (workspace) { workspace.screenChanged(id); workspace.setProjectName(projectLabel()); } });
   attempt('Step text, Back and Next', () => updateNavigation(screen));
   attempt('Clearing the status line', () => { el('action-status').textContent = ''; });
   attempt('Drawing the screen', () => { for (const redraw of showHandlers[id] || []) attempt('Drawing the screen', redraw); });
@@ -175,12 +192,42 @@ let resultApi = null;
 // "Try the sample" shows the existing viewer. viewer.js has already loaded sample-run.json by itself.
 function setUpSampleButton() {
   el('choose-sample').addEventListener('click', guarded('Try the sample button', () => {
+    if (stopTeamRun) stopTeamRun(); // a step-by-step run of the visitor's project is left behind
+    projectMode = 'sample';
     if (resultApi) resultApi.showSampleResult();
     else show('result');
+    attempt('Workspace: summary tab', () => { if (workspace) { workspace.setSummaryTab(false); workspace.setPane('view'); } });
+    attempt('Agents page: the sample run', () => {
+      const viewer = getViewerApi();
+      const run = viewer && typeof viewer.getSampleRun === 'function' ? viewer.getSampleRun() : null;
+      if (agentsApi) agentsApi.showFinished(run && run.team, 'sample');
+    });
   }));
 }
 function setUpOwnProjectButton() {
-  el('choose-own').addEventListener('click', guarded('Start my own project button', () => show('setup')));
+  el('choose-own').addEventListener('click', guarded('Start my own project button', () => {
+    // The sample's run must not stay on the Agents page next to the visitor's own project.
+    if (projectMode === 'sample' && agentsApi) attempt('Agents page: leaving the sample', () => agentsApi.showIdle());
+    projectMode = 'own';
+    show('setup');
+  }));
+}
+const getViewerApi = () => globalThis.designForYouViewer;
+
+// The name shown in the top bar.
+function projectLabel() {
+  if (projectMode === 'sample') return 'Sample two-storey home';
+  const name = appState && typeof appState.name === 'string' ? appState.name.trim() : '';
+  return name === '' ? 'Your project (not named yet)' : name;
+}
+
+// The left rail: Project goes back to the project screen you were on; the others open their own page.
+function openSection(name) {
+  if (name === 'project') {
+    show(lastProjectScreen || (projectMode === 'sample' ? 'result' : 'setup'));
+  } else {
+    show(name);
+  }
 }
 
 // Each button is its own protected step, so one that cannot be set up never stops the others.
@@ -231,6 +278,10 @@ function askStartAgain() {
 
 // Clears everything the visitor entered, including the image previews, and goes to the start screen.
 function startAgain() {
+  projectMode = null;
+  lastProjectScreen = null;
+  if (stopTeamRun) stopTeamRun();
+  if (agentsApi) attempt('Agents page: start again', () => { agentsApi.showIdle(); });
   if (appState && appStateCode) {
     releaseImages(appStateCode.allImages(appState));
     appState = appStateCode.createState();
@@ -243,6 +294,29 @@ function startAgain() {
 function announce(text) {
   attempt('Status line', () => { el('action-status').textContent = text; });
   attempt('Warning before leaving the page', updateLeaveWarning);
+}
+
+let agentSettings = null; // the agent settings (agent-settings.js), once loaded
+
+// The frame around the screens: top bar, rail, strip, colour mode, and the Agents page with its settings. It is its own protected
+// step: if it cannot load, the red message says why and the screens themselves still work.
+async function loadWorkspace() {
+  const workspaceCode = await import(WORKSPACE_FILE);
+  const storeCode = await import(BROWSER_STORE_FILE);
+  const settingsCode = await import(AGENT_SETTINGS_FILE);
+  const agentsCode = await import(AGENTS_PAGE_FILE);
+  const store = storeCode.openStore();
+  agentSettings = settingsCode.createSettings(store, storeCode.KEYS.settings);
+  workspace = workspaceCode.setUpWorkspace({
+    el, attempt, guarded, announce, openSection, store, themeKey: storeCode.KEYS.theme, getViewer: getViewerApi,
+    prefersDark: () => typeof globalThis.matchMedia === 'function' && globalThis.matchMedia('(prefers-color-scheme: dark)').matches,
+  });
+  agentsApi = agentsCode.setUpAgentsPage({ el, attempt, guarded, announce, settings: agentSettings, openAgents: () => show('agents') });
+  attempt('Settings page: open the Agents page', () => {
+    el('settings-open-agents').addEventListener('click', guarded('Open the Agents page', () => show('agents')));
+  });
+  workspace.screenChanged(currentScreen);
+  workspace.setProjectName(projectLabel());
 }
 
 async function loadProjectData() {
@@ -308,9 +382,13 @@ async function loadReviewScreen(data) {
   const { setUpReviewScreen } = await import(REVIEW_SCREEN_FILE);
   const { runDesignTeam } = await import(BUILD_BRAIN_FILE);
   const taste = await import(TASTE_FILE);
-  const showResult = (run) => {
+  const showResult = async (run) => {
     if (!resultApi) throw new Error('The result screen could not be loaded. See the red message at the top of the page.');
-    return resultApi.showOwnResult(run);
+    projectMode = 'own';
+    const shown = await resultApi.showOwnResult(run);
+    attempt('Agents page: the run of your project', () => { if (agentsApi) agentsApi.showFinished(run.team, 'own'); });
+    attempt('Workspace: summary tab', () => { if (workspace) { workspace.setSummaryTab(true); workspace.setPane('view'); } });
+    return shown;
   };
   // The eight-agent design team. Its code is its own protected step: if it cannot load, the red message appears and the button
   // runs the old four-agent pipeline as before.
@@ -318,10 +396,14 @@ async function loadReviewScreen(data) {
   let teamCallbacks = null;
   const teamCode = await attempt('Design team code', () => import(TEAM_RUN_FILE));
   const teamScreenCode = teamCode === FAILED ? FAILED : await attempt('Design team screen code', () => import(TEAM_SCREEN_FILE));
+  // Automatic confirmation (the agent settings). If its code cannot load, every proposal simply waits for the visitor.
+  const autoCode = await attempt('Automatic confirmation code', () => import(AUTO_CONFIRM_FILE));
   if (teamCode !== FAILED && teamScreenCode !== FAILED) {
     attempt('Design team screen', () => {
       teamScreen = teamScreenCode.setUpTeamScreen({
         el, attempt, guarded, announce, team: teamCode,
+        autoConfirm: autoCode !== FAILED && agentSettings ? { settings: () => agentSettings.get(), decide: autoCode.decide } : undefined,
+        hooks: agentsApi ? agentsApi.hooks : undefined,
         onFinished: (result) => teamCallbacks.finished(result),
         onFailed: (agent, reason) => teamCallbacks.failed(agent, reason),
       });
@@ -330,7 +412,18 @@ async function loadReviewScreen(data) {
   setUpReviewScreen({
     el, attempt, guarded, announce, getState: () => appState, onShow, onReset, taste, runDesignTeam, showResult,
     ...(teamScreen ? {
-      startTeam: (state, callbacks) => { teamCallbacks = callbacks; teamScreen.start(state); },
+      startTeam: (state, callbacks) => {
+        teamCallbacks = callbacks;
+        stopTeamRun = () => teamScreen.stop();
+        if (agentsApi) agentsApi.resetLive();
+        teamScreen.start(state);
+        // The proposals are answered on the Agents page, inside the card of the agent that is asking. Showing a screen clears the
+        // status line, so the sentence the team screen just announced is announced again.
+        const said = el('action-status').textContent;
+        show('agents', { moveFocus: false });
+        if (said) announce(said);
+        attempt('Moving the keyboard focus', () => el('heading-team-agent').focus());
+      },
       stopTeam: () => teamScreen.stop(),
       teamIsRunning: () => teamScreen.isRunning(),
     } : {}),
@@ -348,6 +441,7 @@ async function start() {
   attempt('Start again button', setUpStartAgainButton);
   attempt('Back to start button', setUpResultBackButton);
   attempt('Start screen', () => show('start', { moveFocus: false }));
+  await attempt('Workspace frame code', loadWorkspace);
   const data = await attempt('Loading the project data code', loadProjectData);
   if (data !== FAILED) await attempt('Setup screen', () => loadSetupScreen(data));
   if (data !== FAILED) await attempt('Inspiration screens', () => loadInspirationScreens(data));

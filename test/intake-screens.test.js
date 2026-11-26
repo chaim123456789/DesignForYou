@@ -6,12 +6,12 @@
 // security enforcement. Those are "pending owner check" until someone looks at a real browser.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
 import { DRAFT_STATEMENT } from '../src/label.js';
 import { FIXED_SENTENCE } from '../docs/intake/report.js';
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 
 // The screens in the order Next moves through them, with the words used in the step text and the title.
 const STEPS = [
@@ -24,7 +24,7 @@ const STEPS = [
   ['place', 'Place furniture, doors and windows'],
   ['review', 'Review and run'],
 ];
-const ALL_SCREEN_IDS = ['start', ...STEPS.map(([id]) => id), 'result'];
+const ALL_SCREEN_IDS = ['start', ...STEPS.map(([id]) => id), 'result', 'agents', 'materials', 'settings']; // look-and-feel: three workspace pages added
 
 let caseNumber = 0;
 
@@ -101,7 +101,7 @@ test('Task 6: "Start my own project" opens the setup screen', async () => {
 
 // ---- Screens, headings, focus, titles ------------------------------------------------------
 
-test('Task 6: each screen has exactly one heading, and the page has exactly the nine screens', () => {
+test('Task 6: each screen has exactly one heading, and the page has exactly the twelve screens', () => {
   const ids = [...html.matchAll(/<div id="screen-([a-z]+)"/g)].map((m) => m[1]);
   assert.deepEqual(ids, ALL_SCREEN_IDS);
   for (const id of ALL_SCREEN_IDS) {
@@ -145,6 +145,11 @@ test('Task 6: every screen has its own page title, and the titles differ', async
     for (let i = 0; i < 8; i += 1) page.el('back-button').click(); // back to the start
     page.el('choose-sample').click();
     titles.set('result', page.document.title);
+    // look-and-feel: the three workspace pages are reached from the rail.
+    for (const id of ['agents', 'materials', 'settings']) {
+      page.el(`rail-${id}`).click();
+      titles.set(id, page.document.title);
+    }
     assert.equal(titles.size, ALL_SCREEN_IDS.length);
     assert.equal(new Set(titles.values()).size, ALL_SCREEN_IDS.length, `titles differ: ${[...titles.values()].join(' | ')}`);
     for (const [id, name] of STEPS) assert.ok(titles.get(id).startsWith(name), `${id} title names the screen`);
@@ -264,16 +269,16 @@ test('Task 6: an unusable red box is not fatal (the error goes to the browser co
 // ---- The cache tag and the status line -----------------------------------------------------
 
 test('Task 6: the page files carry the cache tag build-intake-1, and the grey status lines name it', async () => {
-  assert.match(html, /styles\.css\?v=build-team-4/);
-  assert.match(html, /viewer\.js\?v=build-team-4/);
-  assert.match(html, /intake\/screens\.js\?v=build-team-4/);
+  assert.match(html, /styles\.css\?v=build-look-1/);
+  assert.match(html, /viewer\.js\?v=build-look-1/);
+  assert.match(html, /intake\/screens\.js\?v=build-look-1/);
   assert.match(html, /id="script-status">Page script: not started yet/);
   assert.match(html, /id="intake-script-status" class="status-line">Screens script: not started yet/);
   for (const text of [html, readDoc('viewer.js'), readDoc('intake/screens.js')]) assert.doesNotMatch(text, /build-viewer-3/);
-  assert.match(readDoc('viewer.js'), /const PAGE_VERSION = 'build-team-4'/);
-  assert.match(readDoc('intake/screens.js'), /const PAGE_VERSION = 'build-team-4'/);
+  assert.match(readDoc('viewer.js'), /const PAGE_VERSION = 'build-look-1'/);
+  assert.match(readDoc('intake/screens.js'), /const PAGE_VERSION = 'build-look-1'/);
   await withScreens(() => {}, async (page) => {
-    assert.equal(page.el('intake-script-status').textContent, 'Page script build-team-4 (screens): finished setting up.');
+    assert.equal(page.el('intake-script-status').textContent, 'Page script build-look-1 (screens): finished setting up.');
   });
 });
 

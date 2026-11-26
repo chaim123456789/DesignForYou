@@ -9,8 +9,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
-import { buildScene, describeItem } from '../docs/scene-data.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
+import { buildScene, describeItem, filterByLayers, DEFAULT_LAYERS } from '../docs/scene-data.js';
 
 installImportHooks();
 
@@ -18,7 +18,7 @@ const run = JSON.parse(readDoc('sample-run.json'));
 const LAST = run.versions.length;
 const html = readDoc('index.html');
 const js = readDoc('viewer.js');
-const css = readDoc('styles.css');
+const css = readStyles();
 
 let caseNumber = 0;
 
@@ -111,7 +111,9 @@ test('fix-viewer-1: normal run: no problem message, no missing ids, labels, deta
     const labels = page.labels();
     const boxes = buildScene(run, LAST);
     // D6: the design-team sample's small marks (lights, switches, sockets, rugs) carry no text label (noLabel).
-    const expected = boxes.filter((b) => b.itemId !== undefined && !b.noLabel).length + boxes.filter((b) => b.type === 'room').length + run.floors.length;
+    // look-and-feel: lights and rugs are on layers that start switched off, so only the boxes of the default layers are drawn and labelled.
+    const drawn = filterByLayers(boxes, DEFAULT_LAYERS);
+    const expected = drawn.filter((b) => b.itemId !== undefined && !b.noLabel).length + drawn.filter((b) => b.type === 'room').length + run.floors.length;
     assert.equal(labels.length, expected);
     for (const l of labels) {
       assert.ok(l.textContent.length > 0);
@@ -121,7 +123,7 @@ test('fix-viewer-1: normal run: no problem message, no missing ids, labels, deta
       assert.match(String(l.style.top), /px$/);
     }
     const texts = labels.map((l) => l.textContent);
-    for (const b of boxes.filter((x) => x.itemId !== undefined && !x.noLabel)) assert.ok(texts.includes(b.label), `no label "${b.label}"`);
+    for (const b of drawn.filter((x) => x.itemId !== undefined && !x.noLabel)) assert.ok(texts.includes(b.label), `no label "${b.label}"`);
 
     // Click a block: the details panel changes to that item.
     assert.match(detailsText(page), /Click a block/);
@@ -299,10 +301,10 @@ test('fix-viewer-1: when the sample file cannot be read, the red message says so
 test('fix-viewer-1: the page says which script version ran, so a stale cached copy can be spotted', async () => {
   assert.match(html, /id="script-status">Page script: not started yet/);
   await withPage(() => {}, async (page) => {
-    assert.match(page.el('script-status').textContent, /Page script build-team-4: finished/);
+    assert.match(page.el('script-status').textContent, /Page script build-look-1: finished/);
   });
-  assert.match(html, /styles\.css\?v=build-team-4/);
-  assert.match(html, /viewer\.js\?v=build-team-4/);
+  assert.match(html, /styles\.css\?v=build-look-1/);
+  assert.match(html, /viewer\.js\?v=build-look-1/);
   assert.match(js, /scene-data\.js\?v=\$\{PAGE_VERSION\}/);
 });
 
@@ -360,7 +362,7 @@ test('fix-viewer-1: CSS: one column by default, two columns (canvas left, panels
   assert.ok(Number(wide[1]) <= 900, 'the two-column layout must start at 900 px or narrower');
   assert.match(wide[2], /#page-inner \{[^}]*flex-direction: row/);
   assert.match(wide[2], /#col-main \{[^}]*flex: 1 1 0/);
-  assert.match(wide[2], /#col-side \{[^}]*flex: 0 0 \d+px/);
+  assert.match(wide[2], /#col-side \{[^}]*flex: 0 0 \d+(?:px|rem)/); // look-and-feel: the width is now a rem value from the theme
   // The wide rule comes after the base rule, so it wins.
   assert.ok(css.indexOf('@media (min-width') > css.indexOf('#page-inner {'));
 });
