@@ -1,13 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GqsWfEjHm73zbHa7lGbVXfv95jxypKuCtjd6kntjIRA='; style-src 'self'; base-uri 'none'; form-action 'none'; img-src 'self' blob:">
   <title>Start - DesignForYou</title>
-  <link rel="stylesheet" href="styles.css?v=build-team-4">
+  <link rel="stylesheet" href="theme.css?v=build-look-1">
+  <link rel="stylesheet" href="styles.css?v=build-look-1">
 </head>
 <body>
+  <a class="skip-link" href="#page">Skip to the main content</a>
   <header id="top-bar" class="label-bar">
     <p class="label-sample">SAMPLE PROJECT</p>
     <p class="label-own" hidden>YOUR PROJECT</p>
@@ -18,20 +21,49 @@
   <div id="intake-error-message" role="alert" hidden></div>
 
   <main id="page">
-    <p id="step-text" class="step-text" hidden></p>
-    <p id="action-status" class="action-status" role="status" aria-live="polite"></p>
-
-    <div id="screen-start" class="screen">
-      <h1 id="heading-start" tabindex="-1">DesignForYou</h1>
-      <p id="start-about">DesignForYou helps you describe a home project in simple steps and see a draft of it in 3D. It needs no login, and nothing you enter leaves your browser.</p>
-      <p id="start-fixed-rules">The design team is a set of fixed rules, not AI. It does not look at your images or read your brief.</p>
-      <p id="start-lost">Nothing is saved. If you close or reload this page, everything you entered is lost.</p>
-      <div id="start-choices" class="choices" role="group" aria-label="Choose how to start">
-        <button type="button" id="choose-sample" class="choice-button">Try the sample</button>
-        <button type="button" id="choose-own" class="choice-button choice-primary">Start my own project</button>
+    <div id="screen-start" class="screen home">
+      <div class="home-glow" aria-hidden="true"></div>
+      <div class="home-inner">
+        <p id="home-kicker" class="kicker">DesignForYou</p>
+        <h1 id="heading-start" tabindex="-1">Design your home with taste, without CAD.</h1>
+        <p id="start-about" class="lead">DesignForYou turns your notes and measurements into a draft of your home in 3D, with a team of eight agents that suggest each change and you decide what is applied.</p>
+        <p id="start-privacy">It needs no login, and nothing you enter leaves your browser.</p>
+        <div id="start-choices" class="choices" role="group" aria-label="Choose how to start">
+          <button type="button" id="choose-sample" class="choice-button">Try the sample</button>
+          <button type="button" id="choose-own" class="choice-button choice-primary">Start my own project</button>
+        </div>
+        <div class="home-honest">
+          <p id="start-ai-off" class="honest-chip">AI is off in this version.</p>
+          <p id="start-fixed-rules">The design team is a set of fixed rules, not AI. It does not look at your images or read your brief.</p>
+          <p id="start-lost">Nothing is saved. If you close or reload this page, everything you entered is lost. Only your light or dark choice and your agent settings are kept in this browser.</p>
+        </div>
       </div>
     </div>
 
+    <div id="workspace" class="workspace" hidden>
+      <header id="workspace-bar" class="workspace-bar">
+        <button type="button" id="home-button" class="bar-button bar-brand">DesignForYou</button>
+        <p id="workspace-project-name" class="bar-project">Sample project</p>
+        <div id="bar-actions" class="bar-actions" role="group" aria-label="View options">
+          <button type="button" id="ribbon-toggle" class="bar-button" aria-pressed="true" aria-controls="ribbon">Hide ribbon</button>
+          <button type="button" id="fullscreen-button" class="bar-button" aria-pressed="false">Full screen</button>
+          <button type="button" id="theme-toggle" class="bar-button" aria-pressed="false">Light mode</button>
+        </div>
+      </header>
+
+      <div id="workspace-body" class="workspace-body">
+        <nav id="rail" class="rail" aria-label="Workspace pages">
+          <button type="button" id="rail-project" class="rail-button" data-page="project" aria-current="page"><span class="rail-icon" aria-hidden="true">P</span><span class="rail-text">Project</span></button>
+          <button type="button" id="rail-agents" class="rail-button" data-page="agents"><span class="rail-icon" aria-hidden="true">A</span><span class="rail-text">Agents</span></button>
+          <button type="button" id="rail-materials" class="rail-button" data-page="materials"><span class="rail-icon" aria-hidden="true">M</span><span class="rail-text">Materials</span></button>
+          <button type="button" id="rail-settings" class="rail-button" data-page="settings"><span class="rail-icon" aria-hidden="true">S</span><span class="rail-text">Settings</span></button>
+        </nav>
+
+        <div id="workspace-main" class="workspace-main">
+          <section id="page-project" class="workspace-page page-project" aria-label="Project">
+            <p id="step-text" class="step-text" hidden></p>
+            <p id="action-status" class="action-status" role="status" aria-live="polite"></p>
+            <div id="project-scroll" class="project-scroll">
     <div id="screen-setup" class="screen" hidden>
       <h1 id="heading-setup" tabindex="-1">Set up your project</h1>
       <p id="setup-intro">Name your project, then add its floors and rooms. Nothing is saved: if you close or reload this page, what you entered is lost.</p>
@@ -351,86 +383,99 @@
       <div class="panel" role="group" aria-labelledby="run-heading">
         <h2 id="run-heading">Run the design team</h2>
         <p id="run-reason" class="setup-needs"></p>
+        <p id="run-agents-note" class="hint">The step-by-step run shows the eight agents on the Agents page, one at a time. How much you are asked is chosen there.</p>
         <button type="button" id="run-design-team" class="action-button run-button" aria-describedby="run-reason" disabled>Run the design team</button>
         <div id="run-extra"></div>
       </div>
-
-      <div id="team-run" class="panel team-run" role="group" aria-labelledby="heading-team-agent" hidden>
-        <p id="team-progress" class="hint"></p>
-        <h2 id="heading-team-agent" tabindex="-1"></h2>
-        <ol id="team-agents" class="team-agents" aria-label="The eight agents, in order"></ol>
-        <p id="team-agent-note" class="hint"></p>
-        <p id="team-ai-note" class="hint" hidden></p>
-        <ol id="team-proposals" class="team-proposals"></ol>
-        <p id="team-nothing" hidden>This agent had nothing to propose. Nothing was changed.</p>
-        <p id="team-rechecked" class="hint" hidden></p>
+    </div>
+    <div id="screen-result" class="screen screen-result" data-result-tab="3d" hidden>
+      <div id="result-head" class="result-head">
+        <button type="button" id="result-back" class="nav-button">Back to start</button>
+        <h1 id="heading-result" tabindex="-1">Sample two-storey home</h1>
+        <p id="sample-fixed-rules" class="setup-needs"></p>
       </div>
-    </div>
 
-    <div id="screen-result" class="screen" hidden>
-      <button type="button" id="result-back" class="nav-button">Back to start</button>
-      <p id="sample-fixed-rules" class="setup-needs"></p>
-   <div id="page-inner">
-    <div id="col-main">
-    <h1 id="heading-result" tabindex="-1">Sample two-storey home</h1>
-    <p id="how-to-use">How to use this: drag to turn, scroll to zoom, click a block for details, use the slider for history.</p>
+      <div id="ribbon" class="ribbon">
+        <div id="view-controls" role="group" aria-label="Choose what to show">
+          <button type="button" id="floor-all" class="floor-button" data-floor="all" aria-pressed="true">Both</button>
+          <button type="button" id="floor-ground" class="floor-button" data-floor="1" aria-pressed="false">Ground floor</button>
+          <button type="button" id="floor-upper" class="floor-button" data-floor="2" aria-pressed="false">Upper floor</button>
+          <button type="button" id="reset-view" class="ribbon-button">Reset view</button>
+          <label id="show-all-labels-label" for="show-all-labels"><input type="checkbox" id="show-all-labels"> Show all labels</label>
+        </div>
+        <fieldset id="layer-controls" class="layer-controls">
+          <legend>Layers</legend>
+          <label class="layer-label" for="layer-structure"><input type="checkbox" id="layer-structure" checked> Structure</label>
+          <label class="layer-label" for="layer-openings"><input type="checkbox" id="layer-openings" checked> Openings</label>
+          <label class="layer-label" for="layer-lighting"><input type="checkbox" id="layer-lighting"> Lighting</label>
+          <label class="layer-label" for="layer-furniture"><input type="checkbox" id="layer-furniture" checked> Furniture</label>
+          <label class="layer-label" for="layer-decor"><input type="checkbox" id="layer-decor"> Decor</label>
+          <label class="layer-label" for="layer-style"><input type="checkbox" id="layer-style" checked> Style</label>
+        </fieldset>
+      </div>
 
-    <div id="view-controls" role="group" aria-label="Choose what to show">
-      <button type="button" id="floor-all" class="floor-button" data-floor="all" aria-pressed="true">Both</button>
-      <button type="button" id="floor-ground" class="floor-button" data-floor="1" aria-pressed="false">Ground floor</button>
-      <button type="button" id="floor-upper" class="floor-button" data-floor="2" aria-pressed="false">Upper floor</button>
-      <button type="button" id="reset-view">Reset view</button>
-      <label id="show-all-labels-label" for="show-all-labels"><input type="checkbox" id="show-all-labels"> Show all labels</label>
-    </div>
+      <div id="result-tabs" class="result-tabs" role="group" aria-label="Choose a part of the result">
+        <button type="button" id="tab-3d" class="tab-button" data-tab="3d" aria-pressed="true">3D view</button>
+        <button type="button" id="tab-details" class="tab-button tab-phone-only" data-tab="details" aria-pressed="false">Details</button>
+        <button type="button" id="tab-report" class="tab-button" data-tab="report" aria-pressed="false" hidden>Report</button>
+      </div>
 
-    <div id="scene-area" aria-label="3D view of the sample home">Loading the 3D view.</div>
-    <p id="sample-text-alternative" class="hint">The 3D view has a text alternative: the summary and the clash list on this page hold the same information.</p>
+      <div id="result-body" class="result-body">
+        <div id="page-inner">
+          <div id="col-main">
+            <p id="how-to-use">How to use this: drag to turn, scroll to zoom, click a block for details, use the slider for history.</p>
+            <div id="stage" class="stage">
+              <div id="scene-area" aria-label="3D view of the sample home">Loading the 3D view.</div>
+              <section id="agent-legend" class="agent-legend" aria-label="Agent legend">
+                <h2>Agents</h2>
+                <ul id="agent-legend-list"></ul>
+              </section>
+            </div>
+            <p id="sample-text-alternative" class="hint">The 3D view has a text alternative: the summary and the clash list on this page hold the same information.</p>
+          </div>
 
-    </div>
+          <div id="col-side">
+            <section id="legend" aria-label="Legend">
+              <h2>Legend</h2>
+              <ul>
+                <li><span class="swatch swatch-locked"></span> Locked: must stay as it is (drawn with a bright outline, and its label says Locked)</li>
+                <li><span class="swatch swatch-unsure"></span> Unsure: open to change (no outline)</li>
+                <li><span class="swatch swatch-clash"></span> Clash: a problem the Reviewer found (red outline, and its label says Clash)</li>
+              </ul>
+              <p id="legend-agents">Each block has the colour of the agent that owns it. Every agent also has a letter and a shape, shown in the agent legend on the 3D view.</p>
+              <p id="legend-labels">Block names show when you point at or select a block, and always for clashes; tick "Show all labels" to see every name.</p>
+              <p id="legend-shapes">Doors and windows are thin panels; furniture is solid and rounded; style items are flat patches</p>
+              <p id="legend-team">Lights are small squares under the ceiling; switches and sockets are small blocks on the walls; a rug is a thin mat on the floor. They stay hidden until you switch on the Lighting and Decor layers.</p>
+            </section>
 
-    <div id="col-side">
-    <section id="legend" aria-label="Legend">
-      <h2>Legend</h2>
-      <ul>
-        <li><span class="swatch swatch-locked"></span> Locked: must stay as it is</li>
-        <li><span class="swatch swatch-unsure"></span> Unsure: open to change</li>
-        <li><span class="swatch swatch-clash"></span> Clash: a problem the Reviewer found</li>
-      </ul>
-      <p id="legend-labels">Block names show when you point at or select a block, and always for clashes; tick "Show all labels" to see every name.</p>
-      <p id="legend-shapes">Doors and windows are thin panels; furniture is solid; style items are flat patches</p>
-      <p id="legend-team">Lights are small squares under the ceiling; switches and sockets are small blocks on the walls; a rug is a thin mat on the floor</p>
-    </section>
+            <section id="team-panel" class="team-panel-viewer" aria-labelledby="team-panel-heading" hidden>
+              <h2 id="team-panel-heading">The design team</h2>
+              <p id="team-panel-sentence"></p>
+              <ol id="team-panel-list"></ol>
+            </section>
 
-    <section id="team-panel" class="team-panel-viewer" aria-labelledby="team-panel-heading" hidden>
-      <h2 id="team-panel-heading">The design team</h2>
-      <p id="team-panel-sentence"></p>
-      <ol id="team-panel-list"></ol>
-    </section>
+            <section id="history" aria-label="Version history">
+              <h2>History</h2>
+              <label for="version-slider">Version: <output id="version-number" for="version-slider">40 of 40</output></label>
+              <input type="range" id="version-slider" min="0" max="40" step="1" value="40" disabled>
+              <p id="caption">Loading the sample.</p>
+            </section>
 
-    <section id="history" aria-label="Version history">
-      <h2>History</h2>
-      <label for="version-slider">Version: <output id="version-number" for="version-slider">40 of 40</output></label>
-      <input type="range" id="version-slider" min="0" max="40" step="1" value="40" disabled>
-      <p id="caption">Loading the sample.</p>
-    </section>
+            <section id="clash-section" aria-label="Clash list">
+              <h2>Clashes</h2>
+              <p id="clash-summary"></p>
+              <p id="clash-hidden-note" class="hint" hidden></p>
+              <ul id="clash-list"></ul>
+            </section>
 
-    <section id="clash-section" aria-label="Clash list">
-      <h2>Clashes</h2>
-      <p id="clash-summary"></p>
-      <ul id="clash-list"></ul>
-    </section>
+            <section id="details-panel" aria-label="Item details" aria-live="polite">
+              <h2>Details</h2>
+              <div id="details-text"><p>Click a block to see its details.</p></div>
+            </section>
+          </div>
+        </div>
 
-    <section id="details-panel" aria-label="Item details" aria-live="polite">
-      <h2>Details</h2>
-      <div id="details-text"><p>Click a block to see its details.</p></div>
-    </section>
-
-    <p id="script-status">Page script: not started yet. If this line never changes, the page script did not run.</p>
-    </div>
-
-   </div>
-
-    <div id="own-result" class="own-result" hidden>
+<div id="own-result" class="own-result" hidden>
       <p id="own-viewer-note" class="setup-needs" hidden></p>
       <p id="own-text-alternative" class="hint">The 3D view has a text alternative: the summary and the clash list on this page hold the same information.</p>
 
@@ -464,26 +509,120 @@
       <p id="result-team-sentence" class="setup-needs" hidden></p>
       <button type="button" id="result-start-again" class="nav-button">Start again</button>
     </div>
+      </div>
     </div>
+            </div>
+            <div id="step-nav" class="step-nav" hidden>
+              <button type="button" id="back-button" class="nav-button">Back</button>
+              <button type="button" id="start-again" class="nav-button">Start again</button>
+              <button type="button" id="next-button" class="nav-button nav-primary">Next</button>
+            </div>
+          </section>
 
-    <div id="step-nav" class="step-nav" hidden>
-      <button type="button" id="back-button" class="nav-button">Back</button>
-      <button type="button" id="start-again" class="nav-button">Start again</button>
-      <button type="button" id="next-button" class="nav-button nav-primary">Next</button>
+          <section id="page-agents" class="workspace-page page-agents" aria-labelledby="heading-agents" hidden>
+            <div class="page-scroll">
+              <h1 id="heading-agents" tabindex="-1">Agents</h1>
+              <p id="agents-intro" class="lead">Eight agents work one after another on your project. Each one owns its own items and only suggests changes. You decide what is applied, or you choose how much to be asked.</p>
+
+              <section id="agents-settings" class="agents-settings" aria-labelledby="agents-settings-heading">
+                <h2 id="agents-settings-heading">How proposals are confirmed</h2>
+                <p id="agents-settings-note" class="hint">These choices only change how a proposal is confirmed. They never change who owns an item, and a Locked item is still protected by the same rule. They are saved in this browser only.</p>
+                <fieldset id="settings-global" class="choice-group">
+                  <legend>For all agents</legend>
+                  <div class="choice-row"><label class="choice-label" for="settings-level-ask"><input type="radio" id="settings-level-ask" name="settings-level" value="ask" checked><span><strong>Always ask me</strong><span class="choice-help">Every proposal waits for your answer.</span></span></label></div>
+                  <div class="choice-row"><label class="choice-label" for="settings-level-recommended"><input type="radio" id="settings-level-recommended" name="settings-level" value="recommended"><span><strong>Recommended</strong><span class="choice-help">Asks you when a change affects another agent's work, causes a clash, or touches a Locked item. Otherwise it applies the change and tells you.</span></span></label></div>
+                  <div class="choice-row"><label class="choice-label" for="settings-level-auto"><input type="radio" id="settings-level-auto" name="settings-level" value="auto"><span><strong>Do it and tell me</strong><span class="choice-help">Applies each proposal and tells you what it did.</span></span></label></div>
+                </fieldset>
+                <p id="settings-unsure-note" class="hint">When an agent is unsure and shows two options, you are always asked to pick one.</p>
+                <div class="choice-row"><label class="choice-label" for="settings-doors-follow"><input type="checkbox" id="settings-doors-follow" checked><span><strong>Doors and windows move with their wall</strong><span class="choice-help">When a wall changes, the follow-up for its doors and windows is confirmed together with it (except when you chose Always ask me for that agent, or when it would cause a clash or touch a Locked item).</span></span></label></div>
+                <p id="settings-saved" class="hint" role="status" aria-live="polite"></p>
+              </section>
+
+              <section id="agents-legend" class="agents-legend" aria-labelledby="agents-legend-heading">
+                <h2 id="agents-legend-heading">Legend</h2>
+                <p id="agents-legend-note" class="hint">Each agent has its own colour, letter and shape. The colour is never the only signal.</p>
+                <ul id="agents-legend-list" class="legend-list"></ul>
+              </section>
+
+              <div id="team-run" class="panel team-run" role="group" aria-labelledby="heading-team-agent" hidden>
+                <p id="team-progress" class="hint"></p>
+                <h2 id="heading-team-agent" tabindex="-1"></h2>
+                <ol id="team-agents" class="team-agents" aria-label="The eight agents, in order"></ol>
+                <p id="team-agent-note" class="hint"></p>
+                <p id="team-ai-note" class="hint" hidden></p>
+                <ol id="team-proposals" class="team-proposals"></ol>
+                <p id="team-nothing" hidden>This agent had nothing to propose. Nothing was changed.</p>
+                <p id="team-rechecked" class="hint" hidden></p>
+              </div>
+
+              <p id="agents-run-hint" class="setup-needs"></p>
+              <ol id="agents-cards" class="agents-cards" aria-label="The eight agents, in order"></ol>
+
+              <section id="agents-log-section" class="agents-log" aria-labelledby="agents-log-heading">
+                <h2 id="agents-log-heading">Log</h2>
+                <p id="agents-log-note" class="hint">What the agents did, newest last. A proposal that was confirmed for you by your settings says "Auto-confirmed".</p>
+                <ol id="agents-log" class="log-list"></ol>
+              </section>
+            </div>
+          </section>
+
+          <section id="page-materials" class="workspace-page page-materials" aria-labelledby="heading-materials" hidden>
+            <div class="page-scroll">
+              <h1 id="heading-materials" tabindex="-1">Materials</h1>
+              <p id="materials-soon" class="lead">Coming next. This is where you will choose and compare finishes for floors, walls and furniture.</p>
+              <p class="hint">Nothing here works yet. The Style agent still suggests colours and materials in the Agents page.</p>
+            </div>
+          </section>
+
+          <section id="page-settings" class="workspace-page page-settings" aria-labelledby="heading-settings" hidden>
+            <div class="page-scroll">
+              <h1 id="heading-settings" tabindex="-1">Settings</h1>
+              <section class="panel" aria-labelledby="settings-look-heading">
+                <h2 id="settings-look-heading">Look</h2>
+                <p class="hint">The page starts in dark mode. You can also use the button in the top bar.</p>
+                <div class="button-row">
+                  <button type="button" id="settings-theme-dark" class="action-button" aria-pressed="true">Dark</button>
+                  <button type="button" id="settings-theme-light" class="action-button" aria-pressed="false">Light</button>
+                </div>
+                <p id="settings-motion" class="hint">Motion follows your device setting "Reduce motion".</p>
+              </section>
+              <section class="panel" aria-labelledby="settings-saved-heading">
+                <h2 id="settings-saved-heading">Saved in this browser</h2>
+                <p id="settings-storage-note" class="hint">Only your look and your agent settings are kept in this browser. Nothing you enter about your project is saved, and nothing is sent anywhere.</p>
+                <button type="button" id="settings-reset" class="action-button">Reset my settings</button>
+                <p id="settings-reset-done" class="hint" role="status" aria-live="polite"></p>
+              </section>
+              <p class="hint">Agent settings are on the Agents page.</p>
+            </div>
+          </section>
+        </div>
+
+        <aside id="agent-strip" class="agent-strip" aria-label="What the agents are doing">
+          <h2 id="agent-strip-heading" class="strip-heading">Agents</h2>
+          <ul id="agent-strip-list" class="strip-list"></ul>
+        </aside>
+      </div>
+
+      <nav id="phone-tabs" class="phone-tabs" aria-label="Workspace pages">
+        <button type="button" id="tab-project" class="phone-tab" data-page="project" aria-current="page">Project</button>
+        <button type="button" id="tab-agents" class="phone-tab" data-page="agents">Agents</button>
+        <button type="button" id="tab-materials" class="phone-tab" data-page="materials">Materials</button>
+        <button type="button" id="tab-settings" class="phone-tab" data-page="settings">Settings</button>
+      </nav>
     </div>
-
-    <p id="intake-script-status" class="status-line">Screens script: not started yet. If this line never changes, the screens script did not run.</p>
-   <noscript><p>This page needs JavaScript to show the sample home.</p></noscript>
   </main>
 
   <footer id="bottom-bar" class="label-bar">
     <p class="label-sample">SAMPLE PROJECT</p>
     <p class="label-own" hidden>YOUR PROJECT</p>
     <p class="label-draft">Plans are drafts for professional review. They are not verified engineering.</p>
+    <p id="script-status" class="status-line">Page script: not started yet. If this line never changes, the page script did not run.</p>
+    <p id="intake-script-status" class="status-line">Screens script: not started yet. If this line never changes, the screens script did not run.</p>
   </footer>
+  <noscript><p>This page needs JavaScript to show the sample home.</p></noscript>
 
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
-  <script type="module" src="viewer.js?v=build-team-4"></script>
-  <script type="module" src="intake/screens.js?v=build-team-4"></script>
+  <script type="module" src="viewer.js?v=build-look-1"></script>
+  <script type="module" src="intake/screens.js?v=build-look-1"></script>
 </body>
 </html>

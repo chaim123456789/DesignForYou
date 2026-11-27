@@ -9,8 +9,16 @@
 //
 // Every part is its own protected step (attempt and guarded come from screens.js).
 
+// Look-and-feel L4 and L5 add three optional tools (without them this screen works exactly as before):
+//   decide(session, proposal, kind)  says how a proposal is confirmed: { auto, level, why }. When auto is true the proposal is confirmed
+//                                    for the user with its first option, marked "auto-confirmed", and shown in the list and the log.
+//   mountProposals(agentName)        puts the list of proposals into that agent's card on the Agents page (null: back where it was).
+//   onChange()                       called after anything changed, so the Agents page and the agent strip can redraw.
 export function setUpTeamScreen(tools) {
   const { el, attempt, guarded, announce, team, onFinished, onFailed } = tools;
+  const decide = typeof tools.decide === 'function' ? tools.decide : null;
+  const mountProposals = typeof tools.mountProposals === 'function' ? tools.mountProposals : () => {};
+  const changed = () => { if (typeof tools.onChange === 'function') attempt('Telling the Agents page', tools.onChange); };
 
   const refs = {};
   for (const id of ['team-run', 'team-progress', 'heading-team-agent', 'team-agents', 'team-agent-note', 'team-ai-note', 'team-proposals', 'team-nothing',
@@ -58,35 +66,47 @@ export function setUpTeamScreen(tools) {
   // ---- One proposal -----------------------------------------------------------------------------
 
   function finishedLine(proposal, outcome) {
+    if (outcome.auto) {
+      return `Auto-confirmed (${outcome.autoLevel}): ${outcome.label}. ${outcome.applied ? `It was applied (version ${outcome.version}).` : `It was not applied: ${outcome.reason || 'the change was refused'}.`}`;
+    }
     return outcome.keptAsIs
       ? 'Your answer: Skip. The item is kept as it is.'
       : `Your answer: ${outcome.label}. ${outcome.applied ? `It was applied (version ${outcome.version}).` : `It was not applied: ${outcome.reason || 'the change was refused'}.`}`;
   }
 
-  function answer(proposal, choice, value, label, view) {
-    if (busy) return;
+  // auto: { level, label } when the user's settings confirm this proposal for them. quiet: no announcement and no focus move (the batch of
+  // automatic answers at the start of an agent's step reports once at the end).
+  function answer(proposal, choice, value, label, view, auto, quiet) {
+    if (busy) return false;
     view.error.textContent = '';
     view.error.hidden = true;
     let result;
     try {
-      result = session.run.answer(proposal.id, choice, value);
+      result = session.run.answer(proposal.id, choice, value, auto ? { auto: true } : undefined);
     } catch (error) {
       // A custom value the agent's own checker refuses: say why, keep the proposal waiting.
       view.error.textContent = error && error.message ? error.message : String(error);
       view.error.hidden = false;
-      return;
+      return false;
     }
     view.group.hidden = true;
-    view.answerLine.textContent = finishedLine(proposal, { keptAsIs: result.keptAsIs === true, applied: result.applied, version: result.version, reason: result.reason, label });
+    view.decisionNote.hidden = true;
+    view.answerLine.textContent = finishedLine(proposal, {
+      keptAsIs: result.keptAsIs === true, applied: result.applied, version: result.version, reason: result.reason, label,
+      auto: Boolean(auto), autoLevel: auto ? auto.level : '',
+    });
     view.answerLine.hidden = false;
+    if (quiet) return true;
+    changed();
     const waiting = session.run.pending;
     if (waiting.length > 0) {
       announce(`Answer saved. ${plural(waiting.length, 'proposal is', 'proposals are')} still waiting.`);
       const next = proposalViews.get(waiting[0].id);
       if (next) attempt('Moving the keyboard focus', () => next.firstButton.focus());
-      return;
+      return true;
     }
     stepFinished();
+    return true;
   }
 
   function drawProposal(proposal) {
@@ -106,7 +126,9 @@ export function setUpTeamScreen(tools) {
     if (proposal.source === 'ai' && proposal.ai) li.append(make('p', '', `AI task ${proposal.ai.task}, cost $${proposal.ai.costUsd} (${proposal.ai.label}).`));
     if (proposal.aiNote) li.append(make('p', 'hint', proposal.aiNote));
 
-    const view = { item: li, error: make('p', 'field-error'), answerLine: make('p', 'team-answer'), group: make('div', ''), firstButton: null };
+    const view = { item: li, error: make('p', 'field-error'), answerLine: make('p', 'team-answer'), decisionNote: make('p', 'hint decision-note'), group: make('div', ''), firstButton: null };
+    view.decisionNote.hidden = true;
+    li.append(view.decisionNote);
     view.error.hidden = true;
     view.error.setAttribute('role', 'alert');
     view.answerLine.hidden = true;
@@ -187,15 +209,46 @@ export function setUpTeamScreen(tools) {
     refs['team-ai-note'].textContent = ai.length > 0 ? 'AI was not used here. The suggestions are Rule-based.' : '';
     refs['team-ai-note'].hidden = ai.length === 0;
     refs['team-proposals'].replaceChildren(...step.proposals.map(drawProposal));
+    attempt('Showing the proposals on the agent card', () => mountProposals(step.agent));
     refs['team-nothing'].hidden = step.proposals.length > 0;
     refs['team-rechecked'].hidden = true;
     refs['team-continue'].hidden = true;
-    if (step.proposals.length === 0) {
-      stepFinished();
+    const autoCount = confirmForTheUser();
+    if (step.proposals.length === 0 || session.run.pending.length === 0) {
+      stepFinished(autoCount);
     } else {
-      announce(`${step.agent}, agent ${number} of ${order.length}. ${plural(step.proposals.length, 'proposal', 'proposals')} to answer.`);
+      const left = session.run.pending.length;
+      announce(`${step.agent}, agent ${number} of ${order.length}. ${plural(left, 'proposal', 'proposals')} to answer.${autoCount > 0 ? ` ${plural(autoCount, 'was', 'were')} auto-confirmed for you.` : ''}`);
     }
+    changed();
     attempt('Moving the keyboard focus', () => refs['heading-team-agent'].focus());
+  }
+
+  // Look-and-feel L5: the user's agent settings decide how each proposal of this step is confirmed. Each proposal is decided one after
+  // the other, because an earlier automatic change can change the facts about the next one. A proposal that is put to the user says why.
+  // Returns how many proposals were confirmed automatically.
+  function confirmForTheUser() {
+    if (!decide) return 0;
+    let count = 0;
+    for (const proposal of step.proposals) {
+      const view = proposalViews.get(proposal.id);
+      if (!view || !session.run.pending.some((p) => p.id === proposal.id)) continue;
+      let decision;
+      try {
+        decision = decide(session, proposal, step.kind);
+      } catch (error) {
+        decision = { auto: false, level: '', why: 'The settings could not be checked, so you are asked.' };
+      }
+      if (!decision.auto) {
+        view.decisionNote.textContent = decision.why;
+        view.decisionNote.hidden = false;
+        continue;
+      }
+      const first = proposal.options.find((o) => o.id !== 'custom');
+      const levelName = decision.level === 'auto' ? 'Do it and tell me' : 'Recommended';
+      if (answer(proposal, first.id, undefined, `Confirm: ${first.label}`, view, { level: levelName }, true)) count += 1;
+    }
+    return count;
   }
 
   // What was re-checked after the answers, in plain words, from the run log.
@@ -209,7 +262,7 @@ export function setUpTeamScreen(tools) {
     return lines.length > 0 ? `To be re-checked after your answers: ${lines.join(' ')}` : fine > 0 ? 'Some earlier work was looked at again and is still fine.' : '';
   }
 
-  function stepFinished() {
+  function stepFinished(autoCount = 0) {
     const order = session.registry.order;
     const last = order.indexOf(step.agent) === order.length - 1 && step.kind === 'first';
     const text = recheckLine();
@@ -217,7 +270,9 @@ export function setUpTeamScreen(tools) {
     refs['team-rechecked'].hidden = text === '';
     refs['team-continue'].textContent = last ? 'Show the result' : 'Continue to the next agent';
     refs['team-continue'].hidden = false;
-    announce(`${step.agent} is finished. ${last ? 'Press Show the result.' : 'Press Continue to the next agent.'}`);
+    const told = autoCount > 0 ? ` ${plural(autoCount, 'proposal was', 'proposals were')} auto-confirmed for you.` : '';
+    announce(`${step.agent} is finished.${told} ${last ? 'Press Show the result.' : 'Press Continue to the next agent.'}`);
+    changed();
     attempt('Moving the keyboard focus', () => refs['team-continue'].focus());
   }
 
@@ -246,10 +301,12 @@ export function setUpTeamScreen(tools) {
     session = null;
     step = null;
     proposalViews = new Map();
+    attempt('Taking the proposals off the agent card', () => mountProposals(null));
     refs['team-run'].hidden = true;
     refs['team-proposals'].replaceChildren();
     refs['team-agents'].replaceChildren();
     refs['team-continue'].hidden = true;
+    changed();
   }
 
   // Start a run for the visitor's inputs. Throws if the inputs cannot make a project (the review screen shows that message).
@@ -274,5 +331,18 @@ export function setUpTeamScreen(tools) {
     }));
   });
 
-  return { start, stop, isRunning: () => session !== null };
+  // What is happening now, for the Agents page and the agent strip. null when no run is going.
+  function getLive() {
+    if (!session || !step) return null;
+    return {
+      order: session.registry.order.slice(),
+      current: step.agent,
+      kind: step.kind,
+      waiting: session.run.pending.length,
+      rows: team.liveLog ? team.liveLog(session) : [],
+      team: team.liveTeamData ? team.liveTeamData(session) : null,
+    };
+  }
+
+  return { start, stop, isRunning: () => session !== null, getLive };
 }

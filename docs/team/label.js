@@ -34,6 +34,9 @@ export const teamSentence = (aiUsed) => (aiUsed ? TEAM_SENTENCE_AI_ON : TEAM_SEN
 // Shown when a script, not a person, answered the proposals (R4.8).
 export const SCRIPTED_SENTENCE = 'Answers marked "scripted answer" were chosen by a fixed script, not by a person.';
 export const SCRIPTED_WORDS = 'scripted answer';
+// Shown when the user's agent settings confirmed proposals for them (look-and-feel L5).
+export const AUTO_SENTENCE = 'Answers marked "auto-confirmed" were confirmed for you by your agent settings. The gatekeeper checked each one in the same way as an answer you give yourself.';
+export const AUTO_WORDS = 'auto-confirmed';
 
 // One line of text with its tag in front: "Rule-based: ..." or "AI: ...".
 export const taggedLine = (source, text) => `${sourceTag(source)}: ${text}`;
@@ -55,6 +58,7 @@ export function describeTeamRun(project, nameOf = (id) => id) {
   const proposals = new Map(log.filter((e) => e.event === 'proposed').map((e) => [e.proposal, e]));
   const scripted = log.some((e) => e.event === 'answered' && e.by === SCRIPTED_WORDS);
   const aiUsed = log.some((e) => e.event === 'proposed' && e.source === 'ai');
+  const autoConfirmed = log.some((e) => e.event === 'answered' && e.by === AUTO_WORDS);
   const rows = log.map((e, i) => {
     const via = e.proposal ? proposals.get(e.proposal) : undefined;
     const source = e.event === 'proposed' ? e.source : via ? via.source : 'rule';
@@ -68,7 +72,7 @@ export function describeTeamRun(project, nameOf = (id) => id) {
       parts.push(`answered by ${e.by}`);
     }
     if (e.reason) parts.push(e.reason);
-    return { number: i + 1, agent: e.agent, event: e.event, what: TEAM_EVENT_WORDS[e.event] || e.event, source, tag: sourceTag(source), details: parts.join('. ') };
+    return { number: i + 1, agent: e.agent, event: e.event, what: e.event === 'answered' && e.by === AUTO_WORDS ? 'Auto-confirmed' : TEAM_EVENT_WORDS[e.event] || e.event, source, tag: sourceTag(source), details: parts.join('. ') };
   });
   // The nth accepted answer made the nth version of the run, so each version gets the tag of the proposal that made it.
   const accepted = log.filter((e) => e.event === 'answered' && e.accepted);
@@ -80,7 +84,7 @@ export function describeTeamRun(project, nameOf = (id) => id) {
     return via ? via.source : 'rule';
   });
   return {
-    rows, versionSources, scripted, aiUsed,
-    sentences: [teamSentence(aiUsed), ...(scripted ? [SCRIPTED_SENTENCE] : [])],
+    rows, versionSources, scripted, aiUsed, autoConfirmed,
+    sentences: [teamSentence(aiUsed), ...(scripted ? [SCRIPTED_SENTENCE] : []), ...(autoConfirmed ? [AUTO_SENTENCE] : [])],
   };
 }

@@ -301,6 +301,85 @@ export function shapeParts(box) {
   });
 }
 
+// ---- Layers, owners and soft shapes (look-and-feel L6). Pure: no Three.js. ----
+
+// The six layers the visitor can switch on and off. `on` is whether a layer is shown when the 3D view first opens: the lights and the
+// small marks (switches, sockets, rugs) are hidden until asked for, so the first picture is calm.
+export const LAYERS = Object.freeze([
+  { id: 'structure', label: 'Structure', on: true },
+  { id: 'openings', label: 'Openings', on: true },
+  { id: 'lighting', label: 'Lighting', on: false },
+  { id: 'furniture', label: 'Furniture', on: true },
+  { id: 'decor', label: 'Decor', on: false },
+  { id: 'style', label: 'Style', on: true },
+]);
+
+const LAYER_OF_TYPE = Object.freeze({
+  'floor-slab': 'structure',
+  room: 'structure',
+  door: 'openings',
+  window: 'openings',
+  'light-marker': 'lighting',
+  switch: 'lighting',
+  socket: 'lighting',
+  furniture: 'furniture',
+  rug: 'decor',
+  'style-marker': 'style',
+});
+
+// The layer a box belongs to. A box type this file does not know is shown with the structure, so nothing can vanish for good.
+export function layerOf(box) {
+  return Object.hasOwn(LAYER_OF_TYPE, box.type) ? LAYER_OF_TYPE[box.type] : 'structure';
+}
+
+// Which agent owns each item at one version: a map of item id to the owner's name.
+export function ownersAt(sampleRun, version) {
+  const owners = new Map();
+  for (const item of snapshotAt(sampleRun, version).items) owners.set(item.id, item.owner);
+  return owners;
+}
+
+// How one part of a piece of furniture is drawn: 'box' (a plain block), 'rounded' (a block with rounded upright corners, radius in
+// metres) or 'cylinder' (round, scaled to the part's width and depth). A sofa, a table and a bed are soft; other pieces keep a small
+// rounding. Returns a list of { part, form, radius } for the parts that are drawn. A round table gets one pedestal in place of its four legs.
+const SOFT_RADIUS = Object.freeze({ seat: 0.08, back: 0.1, arm: 0.08, mattress: 0.06, headboard: 0.05 });
+export function softShapes(box, parts) {
+  if (box.type !== 'furniture' || !Array.isArray(parts)) return parts.map((part) => ({ part, form: 'box', radius: 0 }));
+  const shapes = [];
+  if (box.furnitureType === 'table') {
+    const top = parts.find((p) => p.role === 'top');
+    const leg = parts.find((p) => p.role === 'leg');
+    if (top && leg) {
+      const under = leg.height;
+      const size = Math.min(top.width, top.depth);
+      const post = Math.max(MIN_PART, size * 0.16);
+      shapes.push({ part: top, form: 'cylinder', radius: 0 });
+      shapes.push({
+        part: {
+          ...leg, role: 'pedestal', key: `${box.key}:pedestal1`,
+          x: round(top.x + top.width / 2 - post / 2), z: round(top.z + top.depth / 2 - post / 2), width: round(post), depth: round(post),
+          height: under,
+        },
+        form: 'cylinder',
+        radius: 0,
+      });
+      return shapes;
+    }
+  }
+  for (const part of parts) {
+    if (Object.hasOwn(SOFT_RADIUS, part.role)) {
+      const r = Math.min(SOFT_RADIUS[part.role], part.width / 2.2, part.depth / 2.2);
+      shapes.push({ part, form: 'rounded', radius: round(Math.max(r, 0)) });
+    } else if ((part.role === 'body' || part.role === 'base' || part.role === 'worktop' || part.role === 'top') && box.furnitureType) {
+      const r = Math.min(0.03, part.width / 2.2, part.depth / 2.2);
+      shapes.push({ part, form: 'rounded', radius: round(Math.max(r, 0)) });
+    } else {
+      shapes.push({ part, form: 'box', radius: 0 });
+    }
+  }
+  return shapes;
+}
+
 // "Ground Floor" is shown as "Ground floor", "Upper Floor" as "Upper floor".
 export function floorLabelText(floor) {
   const name = String(floor.name).trim();

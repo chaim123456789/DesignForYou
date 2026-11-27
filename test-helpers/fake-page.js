@@ -50,7 +50,8 @@ export class FakeElement {
   focus() { if (!this.hidden && !this.disabled) this.page.document.activeElement = this; }
   // A click from the keyboard or mouse. A disabled control ignores it.
   click() { if (!this.disabled) this.dispatch('click'); }
-  appendChild(child) { child.parent = this; this.children.push(child); return child; }
+  // Like a browser, adding an element that already has a parent moves it: it leaves its old parent first.
+  appendChild(child) { if (child.parent) child.parent.children = child.parent.children.filter((c) => c !== child); child.parent = this; this.children.push(child); return child; }
   append(...nodes) { nodes.forEach((n) => this.appendChild(n)); }
   replaceChildren(...nodes) {
     this._text = '';
@@ -130,6 +131,7 @@ export function createFakePage({ sampleRunText = readDoc('sample-run.json') } = 
       }
     },
     body: new FakeElement(page, 'body'),
+    documentElement: new FakeElement(page, 'html', { 'data-theme': 'dark' }),
     activeElement: null,
     title: 'Start - DesignForYou',
     getElementById(id) {
@@ -183,7 +185,22 @@ export function createFakePage({ sampleRunText = readDoc('sample-run.json') } = 
   return page;
 }
 
-const KEYS = ['document', 'window', 'fetch', 'ResizeObserver', '__fakePage'];
+const KEYS = ['document', 'window', 'fetch', 'ResizeObserver', '__fakePage', 'getComputedStyle'];
+
+// The theme's variables (docs/theme.css) for a theme, so the page's colours in the tests are the real ones. The dark block comes first and
+// is the default; the light block overrides it when documentElement says data-theme="light".
+export function themeVariables(theme = 'dark') {
+  const css = readDoc('theme.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  const read = (selectorPattern) => {
+    const m = new RegExp(`${selectorPattern}\\s*\\{([^}]*)\\}`).exec(css);
+    return Object.fromEntries([...(m ? m[1] : '').matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((x) => [x[1], x[2].trim()]));
+  };
+  const shared = read(':root');
+  const dark = read(':root,\\s*:root\\[data-theme="dark"\\]');
+  const light = read(':root\\[data-theme="light"\\]');
+  return { ...shared, ...dark, ...(theme === 'light' ? light : {}) };
+}
+export const themeHex = (name, theme = 'dark') => Number.parseInt(themeVariables(theme)[name].slice(1), 16);
 
 // Put the fake page where viewer.js looks for the browser, run, then take it away again.
 export function installFakePage(page) {
@@ -192,6 +209,12 @@ export function installFakePage(page) {
   Object.defineProperty(globalThis, 'window', { value: page.window, configurable: true, writable: true });
   Object.defineProperty(globalThis, 'fetch', { value: page.fetch, configurable: true, writable: true });
   Object.defineProperty(globalThis, '__fakePage', { value: page, configurable: true, writable: true });
+  // The page reads its 3D colours from the theme. The stand-in answers with the real values from docs/theme.css.
+  Object.defineProperty(globalThis, 'getComputedStyle', {
+    configurable: true,
+    writable: true,
+    value: () => ({ getPropertyValue: (name) => themeVariables(page.document.documentElement.getAttribute('data-theme') || 'dark')[name] || '' }),
+  });
   // A real ResizeObserver reports once as soon as it starts watching.
   Object.defineProperty(globalThis, 'ResizeObserver', {
     configurable: true,
@@ -218,4 +241,45 @@ export async function waitFor(condition, what, tries = 400) {
     await new Promise((resolve) => setTimeout(resolve, 5));
   }
   throw new Error(`gave up waiting for: ${what}`);
+}
+
+// Look-and-feel L6: the lights and the small marks (switches, sockets, rugs) are hidden until their layer is switched on.
+// Tests that compare the drawing with ALL the boxes of the data use these two helpers.
+import { layerOf, LAYERS, shapeParts, softShapes } from '../docs/scene-data.js';
+const ON_BY_DEFAULT = new Set(LAYERS.filter((l) => l.on).map((l) => l.id));
+export const shownByDefault = (box) => ON_BY_DEFAULT.has(layerOf(box));
+export function switchOnAllLayers(page) {
+  for (const layer of LAYERS) {
+    const box = page.el(`layer-${layer.id}`);
+    if (!box.checked) { box.checked = true; box.dispatch('change'); }
+  }
+}
+// How many meshes the viewer draws for one box: a plain block is one; a typed piece is one per part (a round table has a top and one pedestal).
+export const drawnPartCount = (box) => Math.max(1, softShapes(box, shapeParts(box)).length);
+
+// docs/styles.css with every var(--name) replaced by its value in docs/theme.css (the dark theme, the default). The page's colours, fonts and
+// sizes live in theme.css, so the tests that read a size or a colour read the value the page really gets.
+export function resolveVariables(css, theme = 'dark') {
+  const vars = themeVariables(theme);
+  return css.replace(/var\((--[\w-]+)\)/g, (whole, name) => (Object.hasOwn(vars, name) ? vars[name] : whole));
+}
+export const readStyles = (theme = 'dark') => resolveVariables(readDoc('styles.css'), theme);
+
+// A stand-in for the browser's localStorage that remembers every write. Look-and-feel L5 lets the page keep two things in the browser
+// (the agent settings and the theme). Tests use it to show that nothing else is ever kept.
+export function recordingStorage(initial = {}) {
+  const data = new Map(Object.entries(initial));
+  const writes = [];
+  const storage = {
+    getItem: (key) => (data.has(key) ? data.get(key) : null),
+    setItem: (key, value) => { writes.push([key, String(value)]); data.set(key, String(value)); },
+    removeItem: (key) => { writes.push([key, null]); data.delete(key); },
+    clear: () => { data.clear(); },
+  };
+  return { storage, writes, data };
+}
+export function installStorage(storage) {
+  const saved = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true, writable: true });
+  return () => { if (saved) Object.defineProperty(globalThis, 'localStorage', saved); else delete globalThis.localStorage; };
 }

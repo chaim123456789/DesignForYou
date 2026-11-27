@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, themeHex, shownByDefault, drawnPartCount } from '../test-helpers/fake-page.js';
 import { buildScene, shapeParts, describeItem } from '../docs/scene-data.js';
 
 installImportHooks();
@@ -38,14 +38,15 @@ function drawn(page) {
   const group = page.scene.children.find((c) => c.type === 'Group');
   assert.ok(group, 'no group of blocks in the scene');
   const items = group.children.filter((o) => o.userData && o.userData.itemId !== undefined);
-  const outlines = group.children.filter((o) => o.material && o.material.side === 1 && o.material.color.getHex() === 0xcc0000);
+  const outlines = group.children.filter((o) => o.material && o.material.side === 1 && o.material.color.getHex() === themeHex('--three-clash'));
   return { itemIds: items.map((o) => o.userData.itemId).sort(), outlines: outlines.length, all: group.children.length };
 }
 const expected = (version) => {
-  const boxes = buildScene(run, version);
+  // Look-and-feel L6: the Lighting and Decor layers are off by default, so their blocks are not drawn.
+  const boxes = buildScene(run, version).filter(shownByDefault);
   return {
     // D6: one id per drawn mesh. The design-team sample's typed furniture is drawn as several parts, each with the item's id.
-    itemIds: boxes.filter((b) => b.itemId !== undefined).flatMap((b) => Array(Math.max(1, shapeParts(b).length)).fill(b.itemId)).sort(),
+    itemIds: boxes.filter((b) => b.itemId !== undefined).flatMap((b) => Array(drawnPartCount(b)).fill(b.itemId)).sort(),
     outlines: boxes.filter((b) => b.itemId !== undefined && b.clash).length,
   };
 };

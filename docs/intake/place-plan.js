@@ -10,11 +10,12 @@
 // web address in a page file, stays strict and needs no exception.
 export const SVG_NS = ['http:', '', ['www', 'w3', 'org'].join('.'), '2000', 'svg'].join('/');
 
-// Locked: a solid, thick outline. Unsure: a thinner, dashed outline. The colours match the 3D
-// colours (blue, orange), but the line style and the words in the label carry the meaning too.
+// Locked: a solid, thick outline. Unsure: a thinner, dashed outline. The line style and the words in the label carry the meaning, not colour.
+// The colours are not written here: the classes plan-room, plan-locked, plan-unsure, plan-selected and plan-label take them from the
+// --plan-* names in docs/theme.css (through docs/styles.css), so the plan follows the theme, dark or light.
 export const PLAN_STYLES = Object.freeze({
-  Locked: Object.freeze({ stroke: '#0b3d91', fill: '#dce8fa', strokeWidth: 6, dash: 'none' }),
-  Unsure: Object.freeze({ stroke: '#8a4b00', fill: '#fdebd0', strokeWidth: 3, dash: '12 8' }),
+  Locked: Object.freeze({ strokeWidth: 6, dash: 'none' }),
+  Unsure: Object.freeze({ strokeWidth: 3, dash: '12 8' }),
 });
 
 export function planLabel(object, selected) {
@@ -47,7 +48,7 @@ export function drawPlan(geometry, { room, objects, selectedId }) {
     'aria-label': planAriaLabel(room, objects.length),
     focusable: 'false',
   });
-  svg.append(node('rect', { class: 'plan-room', x: 0, y: 0, width: size.width, height: size.depth, fill: '#ffffff', stroke: '#222222', 'stroke-width': 4 }));
+  svg.append(node('rect', { class: 'plan-room', x: 0, y: 0, width: size.width, height: size.depth, 'stroke-width': 4 }));
   const ordered = [...objects.filter((o) => o.kind === 'layout'), ...objects.filter((o) => o.kind !== 'layout')];
   for (const object of ordered) {
     const style = PLAN_STYLES[object.status] || PLAN_STYLES.Unsure;
@@ -57,13 +58,13 @@ export function drawPlan(geometry, { room, objects, selectedId }) {
       class: `plan-object plan-${object.status.toLowerCase()}`,
       'data-id': object.id,
       x: object.x, y: object.y, width: object.width, height: object.depth,
-      fill: style.fill, stroke: style.stroke, 'stroke-width': style.strokeWidth,
+      'stroke-width': style.strokeWidth,
       'stroke-dasharray': style.dash,
     }));
     if (selected) {
       group.append(node('rect', {
         class: 'plan-selected', x: object.x - 6, y: object.y - 6, width: object.width + 12, height: object.depth + 12,
-        fill: 'none', stroke: '#111111', 'stroke-width': 3,
+        'stroke-width': 3,
       }));
     }
     const thin = object.depth < fontSize * 2;
@@ -71,7 +72,7 @@ export function drawPlan(geometry, { room, objects, selectedId }) {
       class: 'plan-label',
       x: object.x + 6,
       y: thin ? object.y + object.depth + fontSize + 4 : object.y + fontSize + 4,
-      'font-size': fontSize, 'font-family': 'sans-serif', fill: '#111111',
+      'font-size': fontSize,
     }, planLabel(object, selected)));
     svg.append(group);
   }

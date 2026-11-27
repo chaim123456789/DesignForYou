@@ -19,6 +19,7 @@ import { findStale, agentsToRecheck, ITSELF_STALE } from './ripple.js';
 const REVIEWER = 'Reviewer';
 export const SCRIPTED = 'scripted answer';
 const USER_APPROVER = 'user';
+export const AUTO_CONFIRMED = 'auto-confirmed';
 
 // Items a re-check cannot help. `seeds` are items nobody can fix by looking again (a Locked item flagged "needs your look", an item
 // the user skipped). An item is also unfixable when EVERY reason it is stale is "that item is itself stale" and that item is
@@ -59,7 +60,7 @@ export function createRun(project, options = {}) {
     if (!registry.order.includes(name)) throw new Error(`An agent function was given for "${name}", which is not in the registry.`);
   }
   const enabled = checkConfigs(registry, options.configs);
-  const approvedBy = options.scripted ? SCRIPTED : USER_APPROVER;
+  const defaultApprover = options.scripted ? SCRIPTED : USER_APPROVER;
   const log = (entry) => project.runLog.push(entry);
   // The gatekeeper is the one door. Its functions are used by name so this file holds the run, not the rules.
   const { changeItem, refreshBasis } = createGatekeeper(project, { now: options.now });
@@ -209,7 +210,10 @@ export function createRun(project, options = {}) {
   }
 
   // Answer one proposal. choice: an option id, 'custom' (give value) or 'skip'.
-  function answer(proposalId, choice, value) {
+  // details.auto (optional, look-and-feel): true when the user's agent settings confirmed this proposal for them. Only the label of who
+  // approved changes ("auto-confirmed" instead of "user"); the gatekeeper's checks (Locked, owner) are exactly the same.
+  function answer(proposalId, choice, value, details = {}) {
+    const approvedBy = options.scripted ? SCRIPTED : details.auto === true ? AUTO_CONFIRMED : USER_APPROVER;
     if (failure) throw new Error('The run has stopped. Nothing more can be answered.');
     const proposal = current && current.proposals.get(proposalId);
     if (!proposal) throw new Error(`Proposal "${proposalId}" is not waiting for an answer.`);
@@ -272,7 +276,7 @@ export function createRun(project, options = {}) {
     get answers() { return answers.slice(); },
     get steps() { return history.map((h) => ({ ...h, staleItemIds: h.staleItemIds.slice(), proposals: h.proposals.map((x) => ({ proposal: x.proposal, answer: x.answer ? { ...x.answer } : null })) })); },
     get ripplePasses() { return ripplePasses; },
-    approvedBy,
+    approvedBy: defaultApprover,
   };
 }
 

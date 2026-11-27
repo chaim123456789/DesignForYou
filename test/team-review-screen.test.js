@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { installImportHooks } from '../test-helpers/hooks.js';
 import { registerHooks } from '../test-helpers/register-hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
 
 installImportHooks();
 // Test-only switch: when globalThis.__breakTeam is set, the page's team-run.js cannot load (as if the file were missing or broken).
@@ -17,7 +17,7 @@ registerHooks({
   },
 });
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 let caseNumber = 50000;
 const ORDER = ['Walls', 'Doors and windows', 'Floors and ceilings', 'Lighting and electrical', 'Furniture', 'Decor', 'Style', 'Reviewer'];
 
@@ -287,7 +287,7 @@ test('D4 / R3.3, R3.6: a request from Furniture to Walls is shown, and after it 
 
 test('D4: the same checks as the place screen: 44 px targets, the 320 px rules, reading order with no positive tabindex, and no storage or network', async () => {
   // Sizes: every button the team screen makes uses the shared .action-button style, which is 2.75 rem (44 px) high and wide.
-  assert.match(css, /\.choice-button, \.nav-button, \.action-button \{[^}]*min-height: 2\.75rem;[^}]*min-width: 2\.75rem;/);
+  assert.match(css, /\.choice-button, \.nav-button, \.action-button, [^{]*\{[^}]*min-height: 2\.75rem;[^}]*min-width: 2\.75rem;/);
   // 320 px: the panel and the proposals may shrink (min-width 0, long words wrap); the option buttons wrap their text.
   assert.match(css, /\.team-proposal \{[^}]*min-width: 0;/);
   assert.match(css, /\.team-option-button \{[^}]*white-space: normal;[^}]*overflow-wrap: anywhere;/);
@@ -333,7 +333,7 @@ test('D4: if the design team code cannot load, the red message names the step, t
     await withPage(async (page) => {
       assert.equal(page.el('intake-error-message').hidden, false, 'the red message is shown');
       assert.match(page.el('intake-error-message').textContent, /Step "Design team code" failed/);
-      assert.match(page.el('intake-script-status').textContent, /Page script build-team-4 \(screens\): finished setting up\./);
+      assert.match(page.el('intake-script-status').textContent, /Page script build-look-1 \(screens\): finished setting up\./);
       fill(page);
       assert.equal(stepButton(page), undefined, 'no step-by-step button without its code');
       assert.equal(page.el('run-design-team').disabled, false);

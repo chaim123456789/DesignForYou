@@ -7,7 +7,7 @@
 // run. Unexpected page errors are already shown by viewer.js, so this file does not add a second handler.
 //
 // Visitor text is only ever put on the page with textContent. Nothing here reads files, stores or sends anything.
-const PAGE_VERSION = 'build-team-4';
+const PAGE_VERSION = 'build-look-1';
 
 // The screens in the order Back and Next move through them. `step` is the number shown in the step text.
 // Start and Result are outside the numbered steps.
@@ -35,6 +35,10 @@ const resetHandlers = [];
 function onShow(id, handler) { (showHandlers[id] ||= []).push(handler); }
 function onReset(handler) { resetHandlers.push(handler); }
 
+// The workspace (look-and-feel): the shell and the Agents page, once their code has loaded. Until then, and if it cannot load, the screens
+// work on their own. It is set up before the screens, so every screen change reaches it.
+let workspace = null;
+
 // The visitor's project, in the page's memory only. It is created when the state code has loaded.
 let appState = null;
 let appStateCode = null; // the loaded state.js
@@ -61,6 +65,11 @@ const TEAM_SCREEN_FILE = `./team-screen.js?v=${PAGE_VERSION}`;
 const RUN_DATA_FILE = `./run-data.js?v=${PAGE_VERSION}`;
 const SUMMARY_VIEW_FILE = `./summary-view.js?v=${PAGE_VERSION}`;
 const MAKE_SUMMARY_FILE = `../engine/summary/make-summary.js?v=${PAGE_VERSION}`;
+// The workspace around the project (look-and-feel): the shell, the Agents page, the agent settings and what is stored in the browser.
+const SHELL_FILE = `../workspace/shell.js?v=${PAGE_VERSION}`;
+const AGENTS_PAGE_FILE = `../workspace/agents-page.js?v=${PAGE_VERSION}`;
+const SETTINGS_FILE = `../workspace/settings.js?v=${PAGE_VERSION}`;
+const STORE_FILE = `../workspace/store.js?v=${PAGE_VERSION}`;
 
 // ---- Problems and protected steps (same pattern as viewer.js, own red box) -------------------
 
@@ -133,6 +142,10 @@ function show(id, { moveFocus = true } = {}) {
     document.body.dataset.screen = id; // the stylesheet shows SAMPLE PROJECT only on the sample result
   });
   attempt('Page title', () => { document.title = `${screen.name} - DesignForYou`; });
+  // The home page and the workspace are never shown together. This one line does not depend on the workspace code, so if that code cannot load
+  // (the red message says so), the project steps still show.
+  attempt('Home page or workspace', () => { el('workspace').hidden = id === 'start'; });
+  attempt('Workspace', () => { if (workspace) workspace.onScreen(id); });
   attempt('Step text, Back and Next', () => updateNavigation(screen));
   attempt('Clearing the status line', () => { el('action-status').textContent = ''; });
   attempt('Drawing the screen', () => { for (const redraw of showHandlers[id] || []) attempt('Drawing the screen', redraw); });
@@ -245,6 +258,73 @@ function announce(text) {
   attempt('Warning before leaving the page', updateLeaveWarning);
 }
 
+// The design team screen (once loaded), so the Agents page can ask what is happening now.
+let teamScreenApi = null;
+let teamRunCode = null;
+
+// What the Agents page and the agent strip show: the run in progress, or the run of the result now on screen (the sample's scripted run
+// or the visitor's own), never the sample's run while the visitor is still entering their own project.
+function currentTeamData() {
+  const live = teamScreenApi ? teamScreenApi.getLive() : null;
+  if (live) return live.team;
+  const viewer = globalThis.designForYouViewer;
+  if (currentScreen !== 'result' || !viewer || typeof viewer.getRun !== 'function') return null;
+  const run = viewer.getRun();
+  return run && run.team ? run.team : null;
+}
+
+function projectName() {
+  if (document.body.dataset.run === 'own' && currentScreen === 'result' && appState) return appState.name;
+  if (currentScreen === 'result') return 'Sample two-storey home';
+  return appState && appState.name ? appState.name : 'Your project';
+}
+
+async function loadWorkspace() {
+  const { setUpShell } = await import(SHELL_FILE);
+  const { setUpAgentsPage } = await import(AGENTS_PAGE_FILE);
+  const settingsCode = await import(SETTINGS_FILE);
+  const store = await import(STORE_FILE);
+  const parts = { shell: null, agents: null, settingsCode };
+  const refreshAll = () => {
+    attempt('Agents page', () => { if (parts.agents) parts.agents.refresh(); });
+    attempt('Agent strip', () => { if (parts.shell) parts.shell.refreshStrip(); });
+  };
+  parts.shell = setUpShell({
+    el, attempt, guarded,
+    getProjectName: projectName,
+    getScreenTitle: () => (SCREENS.find((s) => s.id === currentScreen) || SCREENS[0]).name,
+    getViewer: () => globalThis.designForYouViewer,
+    showStart: () => show('start'),
+    getLiveAndTeam: () => ({ live: teamScreenApi ? teamScreenApi.getLive() : null, team: currentTeamData() }),
+    focusAgent: (name) => { if (parts.agents) parts.agents.focusAgent(name); },
+  });
+  parts.agents = setUpAgentsPage({
+    el, attempt, guarded, store,
+    getLive: () => (teamScreenApi ? teamScreenApi.getLive() : null),
+    getTeamData: currentTeamData,
+  });
+  parts.shell.onPage((page) => { if (page === 'agents') refreshAll(); });
+  attempt('Settings page: reset button', () => {
+    el('settings-reset').addEventListener('click', guarded('Reset my settings', () => {
+      const ok = store.clearSaved();
+      parts.agents.resetSettings(settingsCode.defaultSettings());
+      parts.shell.applyTheme('dark', { save: false });
+      el('settings-reset-done').textContent = ok ? 'Your saved settings were cleared.' : 'Your settings were put back to the start. This browser had nothing saved.';
+    }));
+  });
+  parts.refreshAll = refreshAll;
+  workspace = {
+    onScreen: (id) => { parts.shell.onScreen(id); refreshAll(); },
+    showPage: (page) => parts.shell.showPage(page),
+    decide: (session, proposal, kind) => settingsCode.decide(parts.agents.getSettings(), proposal, {
+      kind, getEffect: () => teamRunCode.describeEffect(session, proposal),
+    }),
+    mountProposals: (name) => parts.agents.mountProposals(name),
+    refresh: refreshAll,
+  };
+  workspace.onScreen(currentScreen);
+}
+
 async function loadProjectData() {
   const stateCode = await import(STATE_FILE);
   const limitsCode = await import(LIMITS_FILE);
@@ -317,20 +397,38 @@ async function loadReviewScreen(data) {
   let teamScreen = null;
   let teamCallbacks = null;
   const teamCode = await attempt('Design team code', () => import(TEAM_RUN_FILE));
+  if (teamCode !== FAILED) teamRunCode = teamCode;
   const teamScreenCode = teamCode === FAILED ? FAILED : await attempt('Design team screen code', () => import(TEAM_SCREEN_FILE));
   if (teamCode !== FAILED && teamScreenCode !== FAILED) {
     attempt('Design team screen', () => {
       teamScreen = teamScreenCode.setUpTeamScreen({
         el, attempt, guarded, announce, team: teamCode,
         onFinished: (result) => teamCallbacks.finished(result),
-        onFailed: (agent, reason) => teamCallbacks.failed(agent, reason),
+        onFailed: (agent, reason) => { if (workspace) workspace.showPage('project'); teamCallbacks.failed(agent, reason); },
+        ...(workspace ? {
+          decide: (session, proposal, kind) => workspace.decide(session, proposal, kind),
+          mountProposals: (name) => workspace.mountProposals(name),
+          onChange: () => workspace.refresh(),
+        } : {}),
       });
+      teamScreenApi = teamScreen;
     });
   }
   setUpReviewScreen({
     el, attempt, guarded, announce, getState: () => appState, onShow, onReset, taste, runDesignTeam, showResult,
-    ...(teamScreen ? {
-      startTeam: (state, callbacks) => { teamCallbacks = callbacks; teamScreen.start(state); },
+    // The agents are shown on the Agents page, so without the workspace code only the one-go button is offered.
+    ...(teamScreen && workspace ? {
+      // The agents are shown on the Agents page, so the workspace moves there first. If the run cannot start, it moves back.
+      startTeam: (state, callbacks) => {
+        teamCallbacks = callbacks;
+        if (workspace) workspace.showPage('agents');
+        try {
+          teamScreen.start(state);
+        } catch (error) {
+          if (workspace) workspace.showPage('project');
+          throw error;
+        }
+      },
       stopTeam: () => teamScreen.stop(),
       teamIsRunning: () => teamScreen.isRunning(),
     } : {}),
@@ -348,6 +446,7 @@ async function start() {
   attempt('Start again button', setUpStartAgainButton);
   attempt('Back to start button', setUpResultBackButton);
   attempt('Start screen', () => show('start', { moveFocus: false }));
+  await attempt('Workspace', loadWorkspace);
   const data = await attempt('Loading the project data code', loadProjectData);
   if (data !== FAILED) await attempt('Setup screen', () => loadSetupScreen(data));
   if (data !== FAILED) await attempt('Inspiration screens', () => loadInspirationScreens(data));

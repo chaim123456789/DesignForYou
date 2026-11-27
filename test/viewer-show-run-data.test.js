@@ -8,7 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { installImportHooks } from '../test-helpers/hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, themeHex, shownByDefault, drawnPartCount } from '../test-helpers/fake-page.js';
 import { buildScene, shapeParts } from '../docs/scene-data.js';
 import * as stateApi from '../docs/intake/state.js';
 import { runDesignTeam } from '../docs/intake/build-brain.js';
@@ -70,9 +70,10 @@ function drawing(page) {
     .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
 }
 const outlines = (page) => page.scene.children.find((c) => c.type === 'Group').children
-  .filter((o) => o.material && o.material.side === 1 && o.material.color.getHex() === 0xcc0000).length;
+  .filter((o) => o.material && o.material.side === 1 && o.material.color.getHex() === themeHex('--three-clash')).length;
 // D6: one key per drawn mesh. The design-team sample's typed furniture is drawn as several parts, each with the box's key.
-const expectedKeys = (run, version) => buildScene(run, version).flatMap((b) => Array(Math.max(1, shapeParts(b).length)).fill(b.key)).sort();
+// Look-and-feel L6: the Lighting and Decor layers are off by default, so their blocks are not drawn.
+const expectedKeys = (run, version) => buildScene(run, version).filter(shownByDefault).flatMap((b) => Array(drawnPartCount(b)).fill(b.key)).sort();
 const keysOf = (page) => drawing(page).map((d) => d[0]).sort();
 const floorButtons = (page) => ['floor-all', 'floor-ground', 'floor-upper'].map((id) => page.el(id));
 
@@ -84,7 +85,7 @@ test('Task 11: the viewer offers one function "show this run data", and the samp
     assert.equal(typeof viewer.showRunData, 'function');
     assert.equal(typeof viewer.showSample, 'function');
     assert.deepEqual(keysOf(page), expectedKeys(sample, SAMPLE_LAST), 'the sample is drawn from the sample run file');
-    assert.equal(outlines(page), buildScene(sample, SAMPLE_LAST).filter((b) => b.itemId !== undefined && b.clash).length);
+    assert.equal(outlines(page), buildScene(sample, SAMPLE_LAST).filter((b) => shownByDefault(b) && b.itemId !== undefined && b.clash).length);
     assert.equal(page.el('version-number').textContent, `${SAMPLE_LAST} of ${SAMPLE_LAST}`);
     assert.equal(page.el('scene-area').getAttribute('aria-label'), '3D view of the sample home');
     assert.deepEqual(page.problemLines(), []);

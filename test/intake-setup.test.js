@@ -7,11 +7,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { registerHooks } from '../test-helpers/register-hooks.js';
-import { createFakePage, installFakePage, waitFor, readDoc } from '../test-helpers/fake-page.js';
+import { createFakePage, installFakePage, waitFor, readDoc, readStyles } from '../test-helpers/fake-page.js';
 import { LIMITS } from '../docs/intake/limits.js';
 
 const html = readDoc('index.html');
-const css = readDoc('styles.css');
+const css = readStyles();
 
 let caseNumber = 0;
 
@@ -511,7 +511,7 @@ test('Task 7: if the code behind the setup screen cannot be loaded, the red mess
 // ---- Size and layout (what the stylesheet says) ----
 
 test('Task 7: the setup styles keep text at 16 px or more, boxes and buttons at 44 px or more, and let rows wrap on a narrow screen', () => {
-  const part = css.slice(css.indexOf('/* ---- Project setup screen'));
+  const part = css;
   assert.ok(part.length > 200);
   for (const m of part.matchAll(/font-size: ([\d.]+)(rem|px)/g)) {
     const px = m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]);
@@ -522,5 +522,5 @@ test('Task 7: the setup styles keep text at 16 px or more, boxes and buttons at 
   assert.match(part, /\.entry-row, \.rename-row, \.confirm-row \{ display: flex; flex-wrap: wrap;/);
   assert.doesNotMatch(part.replace(/(max-width|min-height|min-width): [\d.]+(rem|px)/g, ''), /(?<![-\w])width: \d+px/);
   // The controls everywhere share the 44 px minimum.
-  assert.match(css, /\.choice-button, \.nav-button, \.action-button \{[^}]*min-height: 2\.75rem;/);
+  assert.match(css, /\.choice-button, \.nav-button, \.action-button, [^{]*\{[^}]*min-height: 2\.75rem;/);
 });
